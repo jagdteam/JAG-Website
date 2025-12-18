@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,34 +33,34 @@ const HeroSection = () => {
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
         <p
           className="text-muted-foreground text-sm md:text-base mb-4 animate-fade-up"
-          style={{ animationDelay: "0.2s", animationFillMode: "both" }}
+          style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
         >
           UCI Master Students • Software Innovation
         </p>
         <h1
           className="text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight mb-6 animate-fade-up"
-          style={{ animationDelay: "0.4s", animationFillMode: "both" }}
+          style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
         >
           <span className="text-gradient">JAGD</span>
         </h1>
         <p
           className="text-xl md:text-2xl lg:text-3xl font-light text-muted-foreground mb-2 animate-fade-up"
-          style={{ animationDelay: "0.6s", animationFillMode: "both" }}
+          style={{ animationDelay: '0.6s', animationFillMode: 'both' }}
         >
           Building tomorrow's software.
         </p>
         <p
           className="text-lg md:text-xl text-muted-foreground/70 mb-12 animate-fade-up"
-          style={{ animationDelay: "0.8s", animationFillMode: "both" }}
+          style={{ animationDelay: '0.8s', animationFillMode: 'both' }}
         >
           Today.
         </p>
         <div
           className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
-          style={{ animationDelay: "1s", animationFillMode: "both" }}
+          style={{ animationDelay: '1s', animationFillMode: 'both' }}
         >
           <a
-            href="#products"
+            href="/projects"
             className="px-8 py-3 bg-foreground text-background rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300"
           >
             Explore Products
