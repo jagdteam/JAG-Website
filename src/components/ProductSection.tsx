@@ -12,28 +12,39 @@ interface Product {
 const products: Product[] = [
   {
     id: 1,
-    title: "Intelligent Systems",
-    subtitle: "AI-Powered Solutions",
-    description:
-      "Cutting-edge machine learning algorithms designed to transform how businesses operate and make decisions.",
+    title: "Our Mission",
+    subtitle: "Building Tomorrow's Software, Today",
+    description: "In a saturated market of CS graduates, "+
+    "we refuse to be background noise. We engineer our own escape out of the current industry landscape. "+
+    "Our projects are not just code; they are tests of our ability to architect, deploy, and maintain complex systems in a everchanging industry.",
     videoUrl:
       "https://assets.mixkit.co/videos/preview/mixkit-artificial-intelligence-animated-concept-24728-large.mp4",
   },
   {
     id: 2,
-    title: "Cloud Infrastructure",
-    subtitle: "Scalable & Secure",
+    title: "Our Story (So Far)",
+    subtitle: "How We Got Here",
     description:
-      "Enterprise-grade cloud solutions built for performance, reliability, and seamless scalability.",
+      "We are a team who share the same past, 4 years of undergrad wasted. No internships, no projects, no real world experience. We are here to change that. " +
+      "Our last chance is now, UCI's Master's program will be our opportunity to change our lives and build a future for ourselves.",
     videoUrl:
       "https://assets.mixkit.co/videos/preview/mixkit-cloud-computing-concept-animation-4817-large.mp4",
   },
   {
     id: 3,
-    title: "Developer Tools",
-    subtitle: "Built for Engineers",
+    title: "Technical Domain & Specialization",
+    subtitle: "Our Domain of Expertise",
     description:
-      "Streamlined development workflows and tools that accelerate innovation and collaboration.",
+      "A team of full-stack developers from completely different backgrounds & skillsets. Our strengths lie in the areas we are weakest in because we bring up each other's weaknesses.",
+    videoUrl:
+      "https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4",
+  },
+  {
+    id: 4,
+    title: "Accountability",
+    subtitle: "We Hold Each Other Accountable",
+    description:
+      "Leetcode & GitHub History UwU",
     videoUrl:
       "https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4",
   },
