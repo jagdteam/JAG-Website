@@ -25,7 +25,7 @@ const products: Product[] = [
     title: "Our Story (So Far)",
     subtitle: "How We Got Here",
     description:
-      "We are a team who share the same past, 4 years of undergrad wasted. No internships, no projects, no real world experience. We are here to change that. " +
+      "We are a team who share the same past, 4 years of undergrad wasted. No internships, no meaningful projects, no real world experience. We are here to change that. " +
       "Our last chance is now, UCI's Master's program will be our opportunity to change our lives and build a future for ourselves.",
     videoUrl:
       "https://assets.mixkit.co/videos/preview/mixkit-cloud-computing-concept-animation-4817-large.mp4",
