@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 
 interface TeamMember {
   name: string;
@@ -11,36 +11,36 @@ interface TeamMember {
 
 const team: TeamMember[] = [
   {
-    name: "Andrew Espinoza",
-    role: "CEO",
-    initial: "A",
+    name: 'Andrew Espinosa',
+    role: 'Front-End Software Engineer',
+    initial: 'A',
     bio: "Andrew leads JAGD with a vision to transform how software solutions are built and delivered. His strategic thinking and entrepreneurial spirit drive the company's mission to create impactful technology.",
-    expertise: ["Strategic Planning", "Product Vision", "Team Leadership"],
-    education: "M.S. Computer Science, UC Irvine",
+    expertise: ['Strategic Planning', 'Product Vision', 'Team Leadership'],
+    education: 'Master of Computer Science - University of California, Irvine',
   },
   {
-    name: "Giuseppi Pelayo",
-    role: "Tech Lead",
-    initial: "G",
-    bio: "Giuseppi architects the technical foundation of JAGD's products. With deep expertise in system design and emerging technologies, he ensures every solution is built for scale and performance.",
-    expertise: ["System Architecture", "Cloud Infrastructure", "Technical Strategy"],
-    education: "M.S. Computer Science, UC Irvine",
+    name: 'Giuseppi Pelayo',
+    role: 'Full-Stack Software Engineer',
+    initial: 'G',
+    bio: 'Giuseppi leads the technical vision at JAGD. Specializing in building high-performance applications from the ground up, he bridges the gap between complex engineering and seamless user experiences.',
+    expertise: ['Full-Stack Development', 'Technical Strategy', 'Rapid Prototyping & AI Integration'],
+    education: 'Master of Computer Science - University of California, Irvine',
   },
   {
-    name: "Johnny Fok",
-    role: "Full-Stack SWE",
-    initial: "J",
-    bio: "Johnny brings ideas to life through elegant code and intuitive interfaces. His full-stack expertise spans from pixel-perfect frontends to robust backend systems.",
-    expertise: ["React & TypeScript", "Node.js", "Database Design"],
-    education: "M.S. Computer Science, UC Irvine",
+    name: 'Johnny Fok',
+    role: 'Full-Stack Software Engineer',
+    initial: 'J',
+    bio: 'Johnny brings ideas to life through elegant code and intuitive interfaces. His full-stack expertise spans from pixel-perfect frontends to robust backend systems.',
+    expertise: ['React & TypeScript', 'Node.js', 'Database Design'],
+    education: 'Master of Computer Science - University of California, Irvine',
   },
   {
-    name: "Dylan Nguyen",
-    role: "Full-Stack SWE",
-    initial: "D",
-    bio: "Dylan crafts seamless user experiences backed by solid engineering principles. His attention to detail and passion for clean code elevates every project he touches.",
-    expertise: ["Frontend Development", "API Design", "DevOps"],
-    education: "M.S. Computer Science, UC Irvine",
+    name: 'Dylan Nguyen',
+    role: 'Full-Stack Software Engineer',
+    initial: 'D',
+    bio: 'Dylan crafts seamless user experiences backed by solid engineering principles. His attention to detail and passion for clean code elevates every project he touches.',
+    expertise: ['Frontend Development', 'API Design', 'DevOps'],
+    education: 'Master of Computer Science - University of California, Irvine',
   },
 ];
 
@@ -80,20 +80,11 @@ const TeamSection = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-background via-card/50 to-background" />
 
       <div className="relative z-10 max-w-6xl mx-auto">
-        <div
-          className={`text-center mb-20 transition-all duration-1000 ${
-            isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-          }`}
-        >
-          <p className="text-primary text-sm font-medium mb-4 tracking-widest uppercase">
-            The Minds Behind JAGD
-          </p>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-6">
-            Meet the Team
-          </h2>
+        <div className={`text-center mb-20 transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <p className="text-primary text-sm font-medium mb-4 tracking-widest uppercase">The Minds Behind JAGD</p>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-6">Meet the Team</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A collective of UCI Master students driven by innovation, excellence,
-            and the pursuit of transformative software solutions.
+            A collective of UCI Master students driven by innovation, excellence, and the pursuit of transformative software solutions.
           </p>
         </div>
 
@@ -103,30 +94,22 @@ const TeamSection = () => {
               key={member.name}
               onClick={() => handleMemberClick(member)}
               className={`group relative transition-all duration-700 cursor-pointer ${
-                isVisible
-                  ? "translate-y-0 opacity-100"
-                  : "translate-y-20 opacity-0"
+                isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
               }`}
               style={{ transitionDelay: `${index * 150}ms` }}
             >
               <div
                 className={`relative bg-card/50 border rounded-2xl p-8 text-center transition-all duration-500 hover:-translate-y-2 ${
-                  selectedMember?.name === member.name
-                    ? "border-primary bg-card"
-                    : "border-border/50 hover:bg-card hover:border-border"
+                  selectedMember?.name === member.name ? 'border-primary bg-card' : 'border-border/50 hover:bg-card hover:border-border'
                 }`}
               >
                 {/* Avatar */}
                 <div
                   className={`w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border flex items-center justify-center transition-all duration-500 ${
-                    selectedMember?.name === member.name
-                      ? "border-primary scale-105"
-                      : "border-primary/20 group-hover:scale-105"
+                    selectedMember?.name === member.name ? 'border-primary scale-105' : 'border-primary/20 group-hover:scale-105'
                   }`}
                 >
-                  <span className="text-3xl font-semibold text-primary">
-                    {member.initial}
-                  </span>
+                  <span className="text-3xl font-semibold text-primary">{member.initial}</span>
                 </div>
 
                 {/* Info */}
@@ -136,9 +119,7 @@ const TeamSection = () => {
                 {/* Selection indicator */}
                 <div
                   className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 transition-all duration-300 ${
-                    selectedMember?.name === member.name
-                      ? "bg-card border-b border-r border-primary opacity-100"
-                      : "opacity-0"
+                    selectedMember?.name === member.name ? 'bg-card border-b border-r border-primary opacity-100' : 'opacity-0'
                   }`}
                 />
 
@@ -152,9 +133,7 @@ const TeamSection = () => {
         {/* Expanded Member Profile */}
         <div
           className={`mt-16 overflow-hidden transition-all duration-700 ease-out ${
-            selectedMember
-              ? "max-h-[600px] opacity-100"
-              : "max-h-0 opacity-0"
+            selectedMember ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           {selectedMember && (
@@ -171,36 +150,24 @@ const TeamSection = () => {
                 {/* Profile Image */}
                 <div className="flex flex-col items-center md:items-start">
                   <div className="w-40 h-40 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-primary/30 to-primary/5 border border-primary/30 flex items-center justify-center mb-6">
-                    <span className="text-6xl md:text-7xl font-semibold text-primary">
-                      {selectedMember.initial}
-                    </span>
+                    <span className="text-6xl md:text-7xl font-semibold text-primary">{selectedMember.initial}</span>
                   </div>
                   <div className="text-center md:text-left">
-                    <h3 className="text-2xl md:text-3xl font-semibold mb-2">
-                      {selectedMember.name}
-                    </h3>
-                    <p className="text-primary font-medium">
-                      {selectedMember.role}
-                    </p>
+                    <h3 className="text-2xl md:text-3xl font-semibold mb-2">{selectedMember.name}</h3>
+                    <p className="text-primary font-medium">{selectedMember.role}</p>
                   </div>
                 </div>
 
                 {/* Bio & Details */}
                 <div className="md:col-span-2 space-y-8">
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
-                      About
-                    </h4>
-                    <p className="text-lg text-foreground/90 leading-relaxed">
-                      {selectedMember.bio}
-                    </p>
+                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">About</h4>
+                    <p className="text-lg text-foreground/90 leading-relaxed">{selectedMember.bio}</p>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-8">
                     <div>
-                      <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
-                        Expertise
-                      </h4>
+                      <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">Expertise</h4>
                       <div className="flex flex-wrap gap-2">
                         {selectedMember.expertise.map((skill) => (
                           <span
@@ -214,12 +181,8 @@ const TeamSection = () => {
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">
-                        Education
-                      </h4>
-                      <p className="text-foreground/90">
-                        {selectedMember.education}
-                      </p>
+                      <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-4">Education</h4>
+                      <p className="text-foreground/90">{selectedMember.education}</p>
                     </div>
                   </div>
                 </div>
