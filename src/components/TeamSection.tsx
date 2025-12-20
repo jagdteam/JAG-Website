@@ -16,10 +16,7 @@ const team: TeamMember[] = [
     initial: 'A',
     bio: "Andrew leads JAGD with a vision to transform how software solutions are built and delivered. His strategic thinking and entrepreneurial spirit drive the company's mission to create impactful technology.",
     expertise: ['Strategic Planning', 'Product Vision', 'Team Leadership'],
-    education: [
-      'Master of Computer Science - University of California, Irvine',
-      'Bachelor of Arts, Computer Science - University of California, Redlands',
-    ],
+    education: ['Master of Computer Science - University of California, Irvine', 'B.A., Computer Science - University of California, Redlands'],
   },
   {
     name: 'Giuseppi Pelayo',
@@ -27,10 +24,7 @@ const team: TeamMember[] = [
     initial: 'G',
     bio: 'Giuseppi leads the technical vision at JAGD. Specializing in building high-performance applications from the ground up, he bridges the gap between complex engineering and seamless user experiences.',
     expertise: ['Full-Stack Development', 'Technical Strategy', 'Rapid Prototyping & AI Integration'],
-    education: [
-      'Master of Computer Science - University of California, Irvine',
-      'Bachelor of Science, Computer Science - University of California, Riverside',
-    ],
+    education: ['Master of Computer Science - University of California, Irvine', 'B.S., Computer Science - University of California, Riverside'],
   },
   {
     name: 'Johnny Fok',
@@ -40,7 +34,7 @@ const team: TeamMember[] = [
     expertise: ['React & TypeScript', 'Node.js', 'Database Design'],
     education: [
       'Master of Computer Science - University of California, Irvine',
-      'Bachelor of Science, Computer Science - California State Polytechnic University, Pomona',
+      'B.S., Computer Science - California State Polytechnic University, Pomona',
     ],
   },
   {
@@ -49,7 +43,7 @@ const team: TeamMember[] = [
     initial: 'D',
     bio: 'Dylan crafts seamless user experiences backed by solid engineering principles. His attention to detail and passion for clean code elevates every project he touches.',
     expertise: ['Frontend Development', 'API Design', 'DevOps'],
-    education: ['Master of Computer Science - University of California, Irvine', 'Bachelor of Science, Computer Science - San Jose State University'],
+    education: ['Master of Computer Science - University of California, Irvine', 'B.S., Computer Science - San Jose State University'],
   },
 ];
 
