@@ -24,7 +24,7 @@ const team: TeamMember[] = [
     name: 'Giuseppi Pelayo',
     role: 'Full-Stack Software Engineer',
     initial: 'G',
-    image: '/assets/temp_pic_g.jpg',
+    image: '/assets/g_jagd.jpg',
     bio: 'Giuseppi leads the technical vision at JAGD. Specializing in building high-performance applications from the ground up, he bridges the gap between complex engineering and seamless user experiences.',
     expertise: ['Full-Stack Development', 'Technical Strategy', 'Rapid Prototyping & AI Integration'],
     education: ['Master of Computer Science - University of California, Irvine', 'B.S., Computer Science - University of California, Riverside'],
