@@ -25,8 +25,8 @@ const team: TeamMember[] = [
     role: 'Full-Stack Software Engineer',
     initial: 'G',
     image: '/assets/g_jagd.jpg',
-    bio: 'Giuseppi leads the technical vision at JAGD. Specializing in building high-performance applications from the ground up, he bridges the gap between complex engineering and seamless user experiences.',
-    expertise: ['Full-Stack Development', 'Technical Strategy', 'Rapid Prototyping & AI Integration'],
+    bio: 'Giuseppi is a Full-Stack Software Engineer who loves turning complex concepts into shipping products. He currently leads the technical vision at JAGD, where he focuses on rapid prototyping, AI integration, and scalable backend architecture. With a Master’s in Computer Science from UC Irvine, Giuseppi combines strong engineering fundamentals with a hands-on approach to building high-performance applications.',
+    expertise: ['Full-Stack Engineering', 'AI & API Integration', 'Cloud Infrastructure', 'Caffeine'],
     education: ['Master of Computer Science - University of California, Irvine', 'B.S., Computer Science - University of California, Riverside'],
   },
   {
