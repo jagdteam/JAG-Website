@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 
 interface Product {
   id: number;
@@ -103,15 +102,9 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
         <h2 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-tight mb-6">
           {product.title}
         </h2>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
           {product.description}
         </p>
-        <Link
-          to="/projects"
-          className="inline-flex items-center text-primary hover:text-primary/80 transition-colors text-sm font-medium"
-        >
-          Learn more <span className="ml-1">→</span>
-        </Link>
       </div>
     </div>
   );
