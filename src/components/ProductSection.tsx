@@ -14,9 +14,7 @@ const products: Product[] = [
     id: 1,
     title: "Our Mission",
     subtitle: "Building Tomorrow's Software, Today",
-    description: "In a saturated market of CS graduates, "+
-    "we refuse to be background noise. We engineer our own escape out of the current industry landscape. "+
-    "Our projects are not just code; they are tests of our ability to architect, deploy, and maintain complex systems in a everchanging industry.",
+    description: "To bridge the gap between academic theory and industry impact. We are driven to build software that matters. By tackling full-scale engineering challenges, we are proving our capability to navigate an ever-changing landscape. We don't just write code; we build resilient solutions that define who we are as engineers.",
     videoUrl:
       "https://assets.mixkit.co/videos/preview/mixkit-artificial-intelligence-animated-concept-24728-large.mp4",
   },
@@ -25,8 +23,7 @@ const products: Product[] = [
     title: "Our Story (So Far)",
     subtitle: "How We Got Here",
     description:
-      "We are a team who share the same past, 4 years of undergrad wasted. No internships, no meaningful projects, no real world experience. We are here to change that. " +
-      "Our last chance is now, UCI's Master's program will be our opportunity to change our lives and build a future for ourselves.",
+      "Driven by a hunger to excel, we are a team of UCI Master's students turning potential into performance. We realized that the best engineers aren't just taught; they are forged through building. We established JAGD to take ownership of our growth, applying advanced concepts to build real products and creating the future we want to see.",
     videoUrl:
       "https://assets.mixkit.co/videos/preview/mixkit-cloud-computing-concept-animation-4817-large.mp4",
   },
@@ -35,7 +32,7 @@ const products: Product[] = [
     title: "Technical Domain & Specialization",
     subtitle: "Our Domain of Expertise",
     description:
-      "A team of full-stack developers from completely different backgrounds & skillsets. Our strengths lie in the areas we are weakest in because we bring up each other's weaknesses.",
+      "We’re a mix of developers who don’t just code differently, we think differently. Our diverse backgrounds mean that we patch each other’s weaknesses in real-time, creating a collaborative environment where every technical gap is covered by a shared strength.",
     videoUrl:
       "https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4",
   },

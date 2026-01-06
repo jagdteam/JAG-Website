@@ -34,12 +34,9 @@ const team: TeamMember[] = [
     role: 'Full-Stack Software Engineer',
     initial: 'J',
     image: '/assets/jf_pfp.jpg',
-    bio: 'Johnny brings ideas to life through elegant code and intuitive interfaces. His full-stack expertise spans from pixel-perfect frontends to robust backend systems.',
-    expertise: ['React & TypeScript', 'Node.js', 'Database Design'],
-    education: [
-      'Master of Computer Science - University of California, Irvine',
-      'B.S., Computer Science - California State Polytechnic University, Pomona',
-    ],
+    bio: 'Johnny is a full-stack software engineer with a passion for building products and turning them into scalable, marketable solutions. He drives the rapid development of projects through his diverse experience in AI/ML, mobile development, and performance optimization.',
+    expertise: ['Python (flask)','Swift', 'C/C++', 'Java', 'SQLAlchemy', "LLM Integration/Training", "Performance Optimization", "AR/VR Development", "AWS"],
+    education: ['Master of Computer Science - University of California, Irvine', 'B.S., Computer Science - California State Polytechnic University, Pomona'],
   },
   {
     name: 'Dylan Nguyen',
