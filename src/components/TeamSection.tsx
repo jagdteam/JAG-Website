@@ -18,7 +18,7 @@ const team: TeamMember[] = [
     image: '',
     bio: "Andrew leads JAGD with a vision to transform how software solutions are built and delivered. His strategic thinking and entrepreneurial spirit drive the company's mission to create impactful technology.",
     expertise: ['Strategic Planning', 'Product Vision', 'Team Leadership'],
-    education: ['Master of Computer Science - University of California, Irvine', 'B.A., Computer Science - University of California, Redlands'],
+    education: ['Master of Computer Science - University of California, Irvine', 'B.A., Computer Science - University of Redlands, B.M., Music Performance - University of Redlands'],
   },
   {
     name: 'Giuseppi Pelayo',
