@@ -201,7 +201,7 @@ export const projects: Project[] = [
       {
         id: 'cl-log-2',
         date: '2025-12-22',
-        week: 'Week 2',
+        week: 'Week 1',
         type: 'feature',
         content: 'Built the ingestion engine. Solved edge cases with non-UTF8 files and implemented the chunking overlap strategy.',
         assignee: 'Johnny',
@@ -210,7 +210,7 @@ export const projects: Project[] = [
       {
         id: 'cl-log-3',
         date: '2025-12-29',
-        week: 'Week 3',
+        week: 'Week 1',
         type: 'feature',
         content: 'Implemented the file hashing system. Reduced re-indexing time from 40s to <2s for minor code changes.',
         assignee: 'Giuseppi',
