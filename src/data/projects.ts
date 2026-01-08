@@ -146,7 +146,7 @@ export const projects: Project[] = [
     id: 'clicr-cli',
     name: 'CliCR',
     initials: 'CR',
-    tagline: '"Command Line Interface Code Reader"',
+    tagline: 'Command Line Interface Code Reader',
     mediaUrl: '/assets/g_jagd.jpg',
     mediaType: 'image',
     description:
