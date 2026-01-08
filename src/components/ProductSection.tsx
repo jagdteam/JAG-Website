@@ -8,6 +8,7 @@ interface Product {
   subtitle: string;
   description: string;
   videoUrl: string;
+  backgroundAsset?: string;
 }
 
 const products: Product[] = [
@@ -26,14 +27,16 @@ const products: Product[] = [
     description:
       "Driven by a hunger to excel, we are a team of UCI Master's students turning potential into performance. We realized that the best engineers aren't just taught; they are forged through building. We established JAGD to take ownership of our growth, applying advanced concepts to build real products and creating the future we want to see.",
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-cloud-computing-concept-animation-4817-large.mp4',
+    backgroundAsset: '/assets/story_bg.jpg',
   },
   {
     id: 3,
     title: 'Technical Domain & Specialization',
     subtitle: 'Our Domain of Expertise',
     description:
-      'We’re a mix of developers who don’t just code differently, we think differently. Our diverse backgrounds mean that we patch each other’s weaknesses in real-time, creating a collaborative environment where every technical gap is covered by a shared strength.',
+      "We're a mix of developers who don't just code differently, we think differently. Our diverse backgrounds mean that we patch each other's weaknesses in real-time, creating a collaborative environment where every technical gap is covered by a shared strength.",
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4',
+    backgroundAsset: '/assets/domain_bg.mp4',
   },
   {
     id: 4,
@@ -41,8 +44,16 @@ const products: Product[] = [
     subtitle: 'We Hold Each Other Accountable',
     description: 'Leetcode & GitHub History UwU',
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4',
+    backgroundAsset: '/assets/accountability_bg.gif',
   },
 ];
+
+const getAssetType = (url: string): 'image' | 'video' | 'gif' => {
+  const extension = url.split('.').pop()?.toLowerCase();
+  if (extension === 'mp4' || extension === 'webm') return 'video';
+  if (extension === 'gif') return 'gif';
+  return 'image';
+};
 
 const ProductCard = ({ product, index }: { product: Product; index: number }) => {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -70,6 +81,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
   }, []);
 
   const showCarousel = index === 0;
+  const assetType = product.backgroundAsset ? getAssetType(product.backgroundAsset) : null;
 
   return (
     <div
@@ -101,6 +113,26 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
           radius={300}
           tilt={8}
           className="absolute inset-0 z-[1] opacity-90 pointer-events-none"
+        />
+      )}
+
+      {/* Custom Background Asset (for Story, Domain, Accountability cards) */}
+      {product.backgroundAsset && assetType === 'video' && (
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 m-auto w-full h-full object-cover z-[1] opacity-25 blur-[2px]"
+        >
+          <source src={product.backgroundAsset} type="video/mp4" />
+        </video>
+      )}
+      {product.backgroundAsset && (assetType === 'image' || assetType === 'gif') && (
+        <img
+          src={product.backgroundAsset}
+          alt=""
+          className="absolute inset-0 m-auto w-full h-full object-cover z-[1] opacity-25 blur-[2px]"
         />
       )}
 

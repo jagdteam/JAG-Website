@@ -5,6 +5,7 @@ import ProjectSelector from '@/components/ProjectSelector';
 import { projects } from '@/data/projects';
 import { useState } from 'react';
 import PageTransition from '@/components/PageTransition';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState(0);
@@ -20,7 +21,17 @@ const Projects = () => {
             selectedProject={selectedProject}
             onSelectProject={setSelectedProject}
           />
-          <ProjectDetails project={project} />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={project.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            >
+              <ProjectDetails project={project} />
+            </motion.div>
+          </AnimatePresence>
         </main>
         <ProjectFooter />
       </div>
