@@ -137,28 +137,28 @@ export const projects: Project[] = [
   },
   {
     id: 'clicr-cli',
-    name: 'Clicr',
-    tagline: 'Talk to Your Codebase',
+    name: 'CliCR',
+    tagline: '"Command Line Interface Code Reader"',
     description:
-      'A production-ready CLI tool that transforms static repositories into conversational knowledge bases. Built with Cohere, it enables developers to onboard faster by querying their code in natural language, featuring intelligent incremental ingestion to minimize API costs.',
+      'A production-ready CLI tool that transforms static repositories into conversational knowledge bases. Built with Cohere, CliCr enables developers to learn about their codebase faster by querying in natural language, featuring intelligent incremental ingestion to minimize API costs.',
     techStack: {
       frontend: ['Python', 'Rich (TUI)', 'Typer'],
       backend: ['Cohere API (Command R+)', 'LangChain', 'Python'],
-      database: ['ChromaDB (Vector Store)', 'SQLite'],
-      tools: ['Git', 'Poetry', 'PyTest', 'GitHub Actions'],
+      database: ['ChromaDB', 'SQLite'],
+      tools: ['Git', 'GitHub'],
     },
     features: [
-      'Natural language "Chat with Code" powered by Command R+',
-      'Smart incremental ingestion (hashing) to reduce API costs by 80%',
-      'Multi-turn conversation history with context preservation',
-      'Verifiable answers with native file-path citations',
+      'Natural language chatting powered by Cohere\'s Command R+ LLM',
+      'Automatic incremental ingestion via hashing to reduce API costs & re-indexing time',
+      'Saved Conversation history',
+      'Responses with answers & native file-path citations',
       'Universal support for 40+ programming languages & file types',
     ],
     architecture:
-      'Local-first RAG pipeline utilizing ChromaDB for persistence and Cohere Embed v3 for semantic search, ensuring data privacy and low latency.',
+      'A local-first CLI implementing Retrieval-Augmented Generation (RAG) for codebases. It features a decoupled ingestion pipeline with persistent vector storage via ChromaDB and utilizes Cohere’s Embed v3 for high-precision semantic search.',
     teamSize: '2 Engineers',
     duration: '1 Week',
-    status: 'MVP / Beta',
+    status: 'MVP Complete',
     statusColor: 'green',
     roadmap: [
       {
