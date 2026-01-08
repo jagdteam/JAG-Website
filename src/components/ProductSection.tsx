@@ -42,9 +42,9 @@ const products: Product[] = [
     id: 4,
     title: 'Accountability',
     subtitle: 'We Hold Each Other Accountable',
-    description: 'Leetcode & GitHub History UwU',
+    description: 'Leetcode & GitHub History',
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4',
-    backgroundAsset: '/assets/accountability_bg.gif',
+    backgroundAsset: '/assets/accountability.png',
   },
 ];
 
@@ -125,7 +125,10 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
           playsInline
           className="absolute inset-0 m-auto w-full h-full object-cover z-[1] opacity-25 blur-[2px]"
         >
-          <source src={product.backgroundAsset} type="video/mp4" />
+          <source
+            src={product.backgroundAsset}
+            type="video/mp4"
+          />
         </video>
       )}
       {product.backgroundAsset && (assetType === 'image' || assetType === 'gif') && (
