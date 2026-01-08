@@ -1,13 +1,20 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.playbackRate = 0.75;
     }
   }, []);
+
+  const handleExploreProducts = () => {
+    navigate('/projects');
+  };
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -59,18 +66,22 @@ const HeroSection = () => {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
           style={{ animationDelay: '1s', animationFillMode: 'both' }}
         >
-          <a
-            href="/projects"
+          <motion.button
+            onClick={handleExploreProducts}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
             className="px-8 py-3 bg-foreground text-background rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300"
           >
             Explore Products
-          </a>
-          <a
+          </motion.button>
+          <motion.a
             href="#team"
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
             className="px-8 py-3 text-primary text-sm font-medium hover:text-primary/80 transition-colors duration-300"
           >
             Meet the Team →
-          </a>
+          </motion.a>
         </div>
       </div>
 
