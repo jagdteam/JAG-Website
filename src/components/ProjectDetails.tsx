@@ -1,11 +1,11 @@
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, CircleDashed, Clock, Wrench, Sparkles, Paintbrush, Server } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { Project, ProjectPhase, DevLogEntry } from '@/data/projects';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { DevLogEntry, Project, ProjectPhase } from '@/data/projects';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CheckCircle2, CircleDashed, Clock, Paintbrush, Server, Sparkles, Wrench } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ProjectDetailsProps {
   project: Project;
@@ -37,7 +37,10 @@ const TechStackSection = ({ techStack }: { techStack: Project['techStack'] }) =>
           <h4 className="text-sm font-medium text-primary mb-3">{section.title}</h4>
           <ul className="space-y-1">
             {section.items.map((tech) => (
-              <li key={tech} className="text-foreground">
+              <li
+                key={tech}
+                className="text-foreground"
+              >
                 {tech}
               </li>
             ))}
@@ -107,7 +110,10 @@ const getDevLogTypeBadge = (type: DevLogEntry['type']) => {
     infra: 'Infra',
   };
   return (
-    <Badge variant="outline" className={`${styles[type]} text-xs gap-1`}>
+    <Badge
+      variant="outline"
+      className={`${styles[type]} text-xs gap-1`}
+    >
       {getDevLogTypeIcon(type)}
       {labels[type]}
     </Badge>
@@ -146,7 +152,10 @@ const OverviewTab = ({ project }: { project: Project }) => (
     <SpecRow label="Key Features">
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {project.features.map((feature, index) => (
-          <li key={index} className="flex items-start gap-2">
+          <li
+            key={index}
+            className="flex items-start gap-2"
+          >
             <span className="text-primary mt-1">•</span>
             <span>{feature}</span>
           </li>
@@ -197,7 +206,10 @@ const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-foreground">{phase.name}</h3>
-              <Badge variant="outline" className={getPhaseStatusColor(phase.status)}>
+              <Badge
+                variant="outline"
+                className={getPhaseStatusColor(phase.status)}
+              >
                 {phase.status === 'completed' && 'Completed'}
                 {phase.status === 'in-progress' && 'In Progress'}
                 {phase.status === 'planned' && 'Planned'}
@@ -208,13 +220,19 @@ const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
 
           {/* Progress Bar */}
           <div className="mb-4">
-            <Progress value={getPhaseProgress(phase.status)} className="h-1.5" />
+            <Progress
+              value={getPhaseProgress(phase.status)}
+              className="h-1.5"
+            />
           </div>
 
           {/* Phase Items */}
           <ul className="space-y-2">
             {phase.items.map((item, itemIndex) => (
-              <li key={itemIndex} className="flex items-start gap-3 text-sm">
+              <li
+                key={itemIndex}
+                className="flex items-start gap-3 text-sm"
+              >
                 {phase.status === 'completed' ? (
                   <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
                 ) : (
@@ -248,16 +266,13 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
   }
 
   // Group entries by week
-  const groupedByWeek = devLog.reduce(
-    (acc, entry) => {
-      if (!acc[entry.week]) {
-        acc[entry.week] = [];
-      }
-      acc[entry.week].push(entry);
-      return acc;
-    },
-    {} as Record<string, DevLogEntry[]>
-  );
+  const groupedByWeek = devLog.reduce((acc, entry) => {
+    if (!acc[entry.week]) {
+      acc[entry.week] = [];
+    }
+    acc[entry.week].push(entry);
+    return acc;
+  }, {} as Record<string, DevLogEntry[]>);
 
   return (
     <motion.div
@@ -268,7 +283,10 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
       className="py-8"
     >
       {Object.entries(groupedByWeek).map(([week, entries], weekIndex) => (
-        <div key={week} className="mb-8 last:mb-0">
+        <div
+          key={week}
+          className="mb-8 last:mb-0"
+        >
           {/* Week Header */}
           <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">{week}</h3>
 
@@ -290,7 +308,10 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
                   {/* Avatar */}
                   <div className="relative z-10 flex-shrink-0">
                     <Avatar className="w-8 h-8 border-2 border-background">
-                      <AvatarImage src={entry.assigneeImg} alt={entry.assignee} />
+                      <AvatarImage
+                        src={entry.assigneeImg}
+                        alt={entry.assignee}
+                      />
                       <AvatarFallback className="text-xs bg-muted">{getInitials(entry.assignee)}</AvatarFallback>
                     </Avatar>
                   </div>
@@ -341,29 +362,50 @@ const ProjectDetails = ({ project }: ProjectDetailsProps) => {
 
       {/* Tabbed Dashboard */}
       <section className="max-w-4xl mx-auto px-6">
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs
+          defaultValue="overview"
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-background">
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-background"
+            >
               Overview
             </TabsTrigger>
-            <TabsTrigger value="roadmap" className="data-[state=active]:bg-background">
+            <TabsTrigger
+              value="roadmap"
+              className="data-[state=active]:bg-background"
+            >
               Roadmap
             </TabsTrigger>
-            <TabsTrigger value="devlog" className="data-[state=active]:bg-background">
+            <TabsTrigger
+              value="devlog"
+              className="data-[state=active]:bg-background"
+            >
               Dev Log
             </TabsTrigger>
           </TabsList>
 
           <AnimatePresence mode="wait">
-            <TabsContent value="overview" className="mt-0">
+            <TabsContent
+              value="overview"
+              className="mt-0"
+            >
               <OverviewTab project={project} />
             </TabsContent>
 
-            <TabsContent value="roadmap" className="mt-0">
+            <TabsContent
+              value="roadmap"
+              className="mt-0"
+            >
               <RoadmapTab roadmap={project.roadmap} />
             </TabsContent>
 
-            <TabsContent value="devlog" className="mt-0">
+            <TabsContent
+              value="devlog"
+              className="mt-0"
+            >
               <DevLogTab devLog={project.devLog} />
             </TabsContent>
           </AnimatePresence>
