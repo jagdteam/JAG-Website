@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { projects } from '@/data/projects';
+import { useEffect, useRef, useState } from 'react';
 import { ThreeDCarousel } from './ui/ThreeDCarousel';
 
 interface Product {
@@ -97,14 +97,14 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
         <ThreeDCarousel
           projects={projects}
           isVisible={isVisible}
-          rotationDuration={30}
-          radius={280}
-          tilt={12}
-          className="absolute inset-0 z-[1] opacity-25 pointer-events-none"
+          rotationDuration={45}
+          radius={300}
+          tilt={8}
+          className="absolute inset-0 z-[1] opacity-90 pointer-events-none"
         />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/60 z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/40 to-background/30 z-[2]" />
 
       {/* Content */}
       <div

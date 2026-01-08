@@ -350,13 +350,41 @@ const ProjectDetails = ({ project }: ProjectDetailsProps) => {
 
       {/* Project Visual */}
       <div className="flex justify-center mb-12 px-6">
-        <div className="w-full max-w-2xl aspect-video bg-gradient-to-br from-primary/20 via-background to-primary/10 rounded-2xl border border-border/30 flex items-center justify-center">
-          <div className="text-6xl font-bold text-primary/30">
-            {project.name
-              .split(' ')
-              .map((w) => w[0])
-              .join('')}
-          </div>
+        <div className="w-full max-w-2xl aspect-video bg-gradient-to-br from-primary/20 via-background to-primary/10 rounded-2xl border border-border/30 flex items-center justify-center overflow-hidden">
+          {project.mediaUrl && project.mediaType ? (
+            <>
+              {project.mediaType === 'video' ? (
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                >
+                  <source src={project.mediaUrl} type="video/mp4" />
+                </video>
+              ) : (
+                <img
+                  src={project.mediaUrl}
+                  alt={project.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            <div className="text-6xl font-bold text-primary/30">
+              {project.initials || project.name
+                .split(' ')
+                .map((w) => w[0])
+                .join('')}
+            </div>
+          )}
         </div>
       </div>
 
