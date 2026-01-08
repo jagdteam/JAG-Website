@@ -20,7 +20,8 @@ const team: TeamMember[] = [
     expertise: ['Strategic Planning', 'Product Vision', 'Team Leadership'],
     education: [
       'Master of Computer Science - University of California, Irvine',
-      'B.A., Computer Science - University of Redlands, B.M., Music Performance - University of Redlands',
+      'B.A., Computer Science - University of Redlands',
+      'B.M., Music Performance - University of Redlands',
     ],
   },
   {
