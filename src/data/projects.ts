@@ -50,8 +50,8 @@ export const projects: Project[] = [
     name: 'ScholarLens',
     initials: 'SL',
     tagline: 'AI-Powered Grading Assistant & Analytics',
-    mediaUrl: '/assets/scholarlens-demo.gif',
-    mediaType: 'gif',
+    mediaUrl: '/favicon.ico',
+    mediaType: 'image',
     description:
       'An intelligent education platform designed to reduce teacher workload by automating essay evaluation. It leverages Google Gemini LLMs to analyze PDF submissions against custom rubrics, generating instant feedback, identifying class-wide learning gaps, and visualizing grade distribution trends.',
     techStack: {
@@ -146,8 +146,8 @@ export const projects: Project[] = [
     id: 'clicr-cli',
     name: 'CliCR',
     initials: 'CR',
-    tagline: '"Command Line Interface Code Reader"',
-    mediaUrl: '/assets/clicr-preview.png',
+    tagline: 'Command Line Interface Code Reader',
+    mediaUrl: '/assets/g_pfp.jpg',
     mediaType: 'image',
     description:
       'A production-ready CLI tool that transforms static repositories into conversational knowledge bases. Built with Cohere, CliCr enables developers to learn about their codebase faster by querying in natural language, featuring intelligent incremental ingestion to minimize API costs.',
@@ -158,7 +158,7 @@ export const projects: Project[] = [
       tools: ['Git', 'GitHub'],
     },
     features: [
-      'Natural language chatting powered by Cohere\'s Command R+ LLM',
+      "Natural language chatting powered by Cohere's Command R+ LLM",
       'Automatic incremental ingestion via hashing to reduce API costs & re-indexing time',
       'Saved Conversation history',
       'Responses with answers & native file-path citations',
@@ -233,7 +233,7 @@ export const projects: Project[] = [
     name: 'CodeLens',
     initials: 'CL',
     tagline: 'AI-Powered Visual Abstraction for Engineering Teams',
-    mediaUrl: '/assets/codelens-preview.png',
+    mediaUrl: '/assets/jf_pfp.jpg',
     mediaType: 'image',
     description:
       'An enterprise-grade developer tool designed to slash onboarding costs. It uses AI to synthesize complex code into high-level HUDs and automated diagrams, reducing developer ramp-up time and cognitive load.',
@@ -312,6 +312,8 @@ export const projects: Project[] = [
     name: 'Clutch',
     initials: 'CU',
     tagline: 'Uniting Everyone Under One Standard of Play',
+    mediaUrl: '/assets/clutch.jpg',
+    mediaType: 'image',
     description:
       'A mobile-first analytics platform designed to digitize and unify the game for the everyday person. Clutch replaces inconsistent manual scorekeeping with a standardized game state engine, leveraging computer vision to capture real-time performance data. We build a permanent career profile for every player, creating a universal metric of success that validates every milestone and connects people through a shared history of the game.',
     techStack: {
