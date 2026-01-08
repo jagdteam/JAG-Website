@@ -19,6 +19,7 @@ export interface DevLogEntry {
 export interface Project {
   id: string;
   name: string;
+  initials: string;
   tagline: string;
   description: string;
   techStack: {
@@ -38,13 +39,19 @@ export interface Project {
   liveDemo?: string;
   roadmap?: ProjectPhase[];
   devLog?: DevLogEntry[];
+  // Visual media support
+  mediaUrl?: string;
+  mediaType?: 'image' | 'gif' | 'video';
 }
 
 export const projects: Project[] = [
   {
     id: 'scholarlens-ai',
     name: 'ScholarLens',
+    initials: 'SL',
     tagline: 'AI-Powered Grading Assistant & Analytics',
+    mediaUrl: '/assets/scholarlens-demo.gif',
+    mediaType: 'gif',
     description:
       'An intelligent education platform designed to reduce teacher workload by automating essay evaluation. It leverages Google Gemini LLMs to analyze PDF submissions against custom rubrics, generating instant feedback, identifying class-wide learning gaps, and visualizing grade distribution trends.',
     techStack: {
@@ -138,7 +145,10 @@ export const projects: Project[] = [
   {
     id: 'clicr-cli',
     name: 'Clicr',
+    initials: 'CR',
     tagline: 'Talk to Your Codebase',
+    mediaUrl: '/assets/clicr-preview.png',
+    mediaType: 'image',
     description:
       'A production-ready CLI tool that transforms static repositories into conversational knowledge bases. Built with Cohere, it enables developers to onboard faster by querying their code in natural language, featuring intelligent incremental ingestion to minimize API costs.',
     techStack: {
@@ -221,7 +231,10 @@ export const projects: Project[] = [
   {
     id: 'codelens',
     name: 'CodeLens',
+    initials: 'CL',
     tagline: 'AI-Powered Visual Abstraction for Engineering Teams',
+    mediaUrl: '/assets/codelens-preview.png',
+    mediaType: 'image',
     description:
       'An enterprise-grade developer tool designed to slash onboarding costs. It uses AI to synthesize complex code into high-level HUDs and automated diagrams, reducing developer ramp-up time and cognitive load.',
     techStack: {
@@ -297,6 +310,7 @@ export const projects: Project[] = [
   {
     id: 'clutch',
     name: 'Clutch',
+    initials: 'CU',
     tagline: 'Uniting Everyone Under One Standard of Play',
     description:
       'A mobile-first analytics platform designed to digitize and unify the game for the everyday person. Clutch replaces inconsistent manual scorekeeping with a standardized game state engine, leveraging computer vision to capture real-time performance data. We build a permanent career profile for every player, creating a universal metric of success that validates every milestone and connects people through a shared history of the game.',
