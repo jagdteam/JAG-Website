@@ -173,9 +173,9 @@ export const projects: Project[] = [
     roadmap: [
       {
         id: 'cl-phase-1',
-        name: 'Phase 1: Core Ingestion',
+        name: 'Phase 1: Core Ingestion & RAG Pipeline',
         status: 'completed',
-        date: 'Dec 2025',
+        date: 'Jan 2026',
         items: [
           'Recursive file walking directory logic',
           'Text chunking strategy (500 chars)',
