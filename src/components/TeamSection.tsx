@@ -192,9 +192,10 @@ const TeamSection = () => {
       weeks.push(currentWeek);
     }
 
-    // Get month labels - one label per unique month (show ALL months)
-    const monthLabels: Array<{ month: string; weekIndex: number }> = [];
-    const seenMonths = new Set<number>();
+    // Calculate month spans with start and end week indices for centered labels
+    const monthSpans: Array<{ month: string; startWeek: number; endWeek: number }> = [];
+    let currentMonthStart = 0;
+    let lastMonth = -1;
 
     weeks.forEach((week, idx) => {
       const firstDay = week.find(d => d !== null);
@@ -202,14 +203,35 @@ const TeamSection = () => {
         const date = new Date(firstDay.date);
         const currentMonth = date.getMonth();
 
-        // Add label for first week of each unique month
-        if (!seenMonths.has(currentMonth)) {
-          const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-          monthLabels.push({ month: monthName, weekIndex: idx });
-          seenMonths.add(currentMonth);
+        if (lastMonth !== -1 && currentMonth !== lastMonth) {
+          // Close previous month span
+          const monthDate = new Date(weeks[currentMonthStart].find(d => d !== null)!.date);
+          monthSpans.push({
+            month: monthDate.toLocaleDateString('en-US', { month: 'short' }),
+            startWeek: currentMonthStart,
+            endWeek: idx - 1
+          });
+          currentMonthStart = idx;
         }
+        lastMonth = currentMonth;
       }
     });
+
+    // Add final month
+    if (lastMonth !== -1 && weeks[currentMonthStart]) {
+      const firstDay = weeks[currentMonthStart].find(d => d !== null);
+      if (firstDay) {
+        const monthDate = new Date(firstDay.date);
+        monthSpans.push({
+          month: monthDate.toLocaleDateString('en-US', { month: 'short' }),
+          startWeek: currentMonthStart,
+          endWeek: weeks.length - 1
+        });
+      }
+    }
+
+    // Calculate pixel positions - each week is 10px wide + 3px gap = 13px per week
+    const weekWidth = 13;
 
     return (
       <div className="mt-6">
@@ -257,24 +279,30 @@ const TeamSection = () => {
         )}
 
         <div className="relative">
-          {/* Month labels - using same flex structure as grid for perfect alignment */}
+          {/* Month labels - positioned at center of each month's span */}
           <div className="flex gap-1 mb-1">
             {/* Spacer matching day labels width */}
             <div className="flex flex-col gap-[3px] justify-start text-[10px] pr-1 invisible">
               <div style={{ height: '10px' }}>Mon</div>
             </div>
-            {/* Month labels aligned with weeks */}
-            <div className="flex gap-[3px]">
-              {weeks.map((_, weekIdx) => {
-                const monthLabel = monthLabels.find(m => m.weekIndex === weekIdx);
+            {/* Month labels container */}
+            <div className="relative" style={{ width: `${weeks.length * weekWidth - 3}px`, height: '14px' }}>
+              {monthSpans.map((span, idx) => {
+                // Calculate center position of the month span
+                const centerWeek = (span.startWeek + span.endWeek) / 2;
+                const leftPosition = centerWeek * weekWidth + 5; // +5 to center within week cell
+                
                 return (
-                  <div key={weekIdx} className="w-[10px] relative">
-                    {monthLabel && (
-                      <span className="text-[10px] text-muted-foreground absolute left-0 whitespace-nowrap">
-                        {monthLabel.month}
-                      </span>
-                    )}
-                  </div>
+                  <span
+                    key={idx}
+                    className="text-[10px] text-muted-foreground absolute whitespace-nowrap"
+                    style={{ 
+                      left: `${leftPosition}px`,
+                      transform: 'translateX(-50%)'
+                    }}
+                  >
+                    {span.month}
+                  </span>
                 );
               })}
             </div>
