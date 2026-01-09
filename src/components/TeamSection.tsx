@@ -192,9 +192,10 @@ const TeamSection = () => {
       weeks.push(currentWeek);
     }
 
-    // Get month labels - one label per unique month
+    // Get month labels - one label per unique month with minimum spacing
     const monthLabels: Array<{ month: string; weekIndex: number }> = [];
     let lastMonth = -1;
+    let lastLabelWeekIndex = -4; // Ensure minimum spacing of ~4 weeks between labels
 
     weeks.forEach((week, idx) => {
       const firstDay = week.find(d => d !== null);
@@ -202,10 +203,14 @@ const TeamSection = () => {
         const date = new Date(firstDay.date);
         const currentMonth = date.getMonth();
 
-        // Only add label when we encounter a new month
-        if (currentMonth !== lastMonth) {
+        // Only add label when we encounter a new month AND there's enough spacing
+        if (currentMonth !== lastMonth && (idx - lastLabelWeekIndex) >= 3) {
           const monthName = date.toLocaleDateString('en-US', { month: 'short' });
           monthLabels.push({ month: monthName, weekIndex: idx });
+          lastMonth = currentMonth;
+          lastLabelWeekIndex = idx;
+        } else if (currentMonth !== lastMonth) {
+          // Update lastMonth even if we skip the label to prevent duplicate month detection
           lastMonth = currentMonth;
         }
       }
