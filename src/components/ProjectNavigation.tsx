@@ -13,20 +13,8 @@ const ProjectNavigation = () => {
           <span className="text-sm">Back</span>
         </Link>
         <span className="text-lg font-semibold">Projects</span>
-        <div className="flex items-center gap-6 text-sm">
-          <a
-            href="#specs"
-            className="text-primary"
-          >
-            Tech Specs
-          </a>
-          <a
-            href="#features"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Features
-          </a>
-        </div>
+        {/* Empty spacer to balance the flex layout and keep "Projects" centered */}
+        <div className="w-[60px]"></div>
       </div>
     </nav>
   );

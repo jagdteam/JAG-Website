@@ -13,28 +13,30 @@ const Projects = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <ProjectNavigation />
-        <main className="pt-24 pb-20">
-          <ProjectSelector
-            projects={projects}
-            selectedProject={selectedProject}
-            onSelectProject={setSelectedProject}
-          />
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-            >
-              <ProjectDetails project={project} />
-            </motion.div>
-          </AnimatePresence>
-        </main>
+        <main className="pt-24 pb-20 flex flex-col items-center">
+          <div className="w-full max-w-7xl">
+            <ProjectSelector
+              projects={projects}
+              selectedProject={selectedProject}
+              onSelectProject={setSelectedProject}
+            />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              >
+                <ProjectDetails project={project} />
+              </motion.div>
+            </AnimatePresence>
+        </div>
+      </main>
         <ProjectFooter />
-      </div>
+        </div>
     </PageTransition>
   );
 };

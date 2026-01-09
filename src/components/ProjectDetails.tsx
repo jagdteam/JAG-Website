@@ -377,7 +377,10 @@ const ProjectDetails = ({ project }: ProjectDetailsProps) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 >
-                  <source src={project.mediaUrl} type="video/mp4" />
+                  <source
+                    src={project.mediaUrl}
+                    type="video/mp4"
+                  />
                 </video>
               ) : (
                 <img
@@ -392,10 +395,11 @@ const ProjectDetails = ({ project }: ProjectDetailsProps) => {
             </>
           ) : (
             <div className="text-6xl font-bold text-primary/30">
-              {project.initials || project.name
-                .split(' ')
-                .map((w) => w[0])
-                .join('')}
+              {project.initials ||
+                project.name
+                  .split(' ')
+                  .map((w) => w[0])
+                  .join('')}
             </div>
           )}
         </div>

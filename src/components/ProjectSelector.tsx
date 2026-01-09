@@ -28,7 +28,7 @@ interface ProjectSelectorProps {
 
 const ProjectSelector = ({ projects, selectedProject, onSelectProject }: ProjectSelectorProps) => {
   return (
-    <div className="flex justify-center mb-12">
+    <div className="flex justify-center mb-12 w-full">
       <div className="inline-flex bg-card/50 rounded-full p-1 border border-border/30">
         {projects.map((p, index) => (
           <button
@@ -47,4 +47,3 @@ const ProjectSelector = ({ projects, selectedProject, onSelectProject }: Project
 };
 
 export default ProjectSelector;
-
