@@ -73,6 +73,7 @@ export const projects: Project[] = [
     duration: '4 Weeks',
     status: 'MVP / In Development',
     statusColor: 'green',
+    github: 'https://github.com/jagdteam/Education-Project',
     roadmap: [
       {
         id: 'sl-phase-1',
@@ -98,49 +99,141 @@ export const projects: Project[] = [
     ],
     devLog: [
       {
-        id: 'sl-log-1',
-        date: '2024-10-08',
-        week: 'Week 1',
-        type: 'infra',
-        content: 'Set up Flask server with PostgreSQL connection, configured SQLAlchemy ORM with initial schema for essays and rubrics.',
-        assignee: 'Giuseppi',
-        assigneeImg: '/assets/g_jagd.jpg',
+            "id": "0875992f",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "feature",
+            "content": "added remaining files",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
       },
       {
-        id: 'sl-log-2',
-        date: '2024-10-12',
-        week: 'Week 1',
-        type: 'feature',
-        content: 'Implemented PDF upload endpoint with PyPDF text extraction, storing parsed content in vector DB.',
-        assignee: 'Johnny',
-        assigneeImg: '/assets/jf_pfp.jpg',
+            "id": "f948fdae",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "feature",
+            "content": "feat: connect Dashboard to backend API with mock data for testing",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
       },
       {
-        id: 'sl-log-3',
-        date: '2024-10-18',
-        week: 'Week 2',
-        type: 'feature',
-        content: 'Built the React grading component with rubric selection, live preview, and submission handling.',
-        assignee: 'Andrew',
+            "id": "a2148f09",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "infra",
+            "content": "updated frontend with loveable, need to redo api routing",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
       },
       {
-        id: 'sl-log-4',
-        date: '2024-10-22',
-        week: 'Week 2',
-        type: 'fix',
-        content: 'Resolved Gemini API rate limit issues by implementing exponential backoff and request queuing.',
-        assignee: 'Johnny',
-        assigneeImg: '/assets/jf_pfp.jpg',
+            "id": "75976e1c",
+            "date": "2026-01-05",
+            "week": "Week 1",
+            "type": "infra",
+            "content": "Removed redundant useApi.ts and included react useQuery library",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
       },
       {
-        id: 'sl-log-5',
-        date: '2024-10-28',
-        week: 'Week 3',
-        type: 'design',
-        content: 'Designed and implemented the teacher dashboard layout with Recharts for grade distribution visualization.',
-        assignee: 'Dylan',
+            "id": "a3914d0f",
+            "date": "2025-12-29",
+            "week": "Week 2",
+            "type": "feature",
+            "content": "Added the services folder with api functions & useApi file that mounts the useEffect operation into the desired tsx page to avoid redundant code in the tsx pages",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
       },
-    ],
+      {
+            "id": "b3023555",
+            "date": "2025-12-29",
+            "week": "Week 2",
+            "type": "infra",
+            "content": "created frontend",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
+      },
+      {
+            "id": "5eafec20",
+            "date": "2025-12-21",
+            "week": "Week 3",
+            "type": "infra",
+            "content": "commented main and changed server hosting",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
+      },
+      {
+            "id": "c6b7c01e",
+            "date": "2025-12-21",
+            "week": "Week 3",
+            "type": "infra",
+            "content": "commented main and changed server hosting",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
+      },
+      {
+            "id": "4e83ab32",
+            "date": "2025-12-21",
+            "week": "Week 3",
+            "type": "feature",
+            "content": "Added light documentation for backend db schema",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
+      },
+      {
+            "id": "eac2b0be",
+            "date": "2025-12-21",
+            "week": "Week 3",
+            "type": "infra",
+            "content": "modified backend web view, implemented AI JSON ouput to propagate db",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
+      },
+      {
+            "id": "2d15305d",
+            "date": "2025-12-20",
+            "week": "Week 3",
+            "type": "infra",
+            "content": "Updated daily README",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
+      },
+      {
+            "id": "29226883",
+            "date": "2025-12-20",
+            "week": "Week 3",
+            "type": "infra",
+            "content": "Created mock backend for testing",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
+      },
+      {
+            "id": "a04c3736",
+            "date": "2025-12-20",
+            "week": "Week 3",
+            "type": "infra",
+            "content": "Created mock backend for testing",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
+      },
+      {
+            "id": "13a792b7",
+            "date": "2025-12-18",
+            "week": "Week 4",
+            "type": "infra",
+            "content": "Merge branch 'main' of https://github.com/jagdteam/EssayEvaluator",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
+      },
+      {
+            "id": "e07af3a9",
+            "date": "2025-12-18",
+            "week": "Week 4",
+            "type": "feature",
+            "content": "Modified main.py to use regex to list students & added 1-21 student gemma test results",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
+      }
+],
   },
   {
     id: 'clicr-cli',
@@ -170,6 +263,7 @@ export const projects: Project[] = [
     duration: '1 Week',
     status: 'MVP Complete',
     statusColor: 'green',
+    github: 'https://github.com/jagdteam/clicr',
     roadmap: [
       {
         id: 'cl-phase-1',
@@ -200,33 +294,51 @@ export const projects: Project[] = [
     ],
     devLog: [
       {
-        id: 'cl-log-1',
-        date: '2025-12-15',
-        week: 'Week 1',
-        type: 'infra',
-        content: 'Technical Spike: Selected Cohere over OpenAI for better RAG citation support. Initialized ChromaDB schema.',
-        assignee: 'Giuseppi',
-        assigneeImg: '/assets/g_jagd.jpg',
+            "id": "33d87176",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "infra",
+            "content": "Removed redundant file",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
       },
       {
-        id: 'cl-log-2',
-        date: '2025-12-22',
-        week: 'Week 1',
-        type: 'feature',
-        content: 'Built the ingestion engine. Solved edge cases with non-UTF8 files and implemented the chunking overlap strategy.',
-        assignee: 'Johnny',
-        assigneeImg: '/assets/jf_pfp.jpg',
+            "id": "9a11e867",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "infra",
+            "content": "removing redundant files",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
       },
       {
-        id: 'cl-log-3',
-        date: '2025-12-29',
-        week: 'Week 1',
-        type: 'feature',
-        content: 'Implemented the file hashing system. Reduced re-indexing time from 40s to <2s for minor code changes.',
-        assignee: 'Giuseppi',
-        assigneeImg: '/assets/g_jagd.jpg',
+            "id": "c4eb00d1",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "feature",
+            "content": "added 3 extra flags for RAG prompting types",
+            "assignee": "Johnny Fok",
+            "assigneeImg": "/assets/jf_pfp.jpg"
       },
-    ],
+      {
+            "id": "2a9458b1",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "infra",
+            "content": "updated README",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
+      },
+      {
+            "id": "0e84094f",
+            "date": "2026-01-07",
+            "week": "Week 1",
+            "type": "infra",
+            "content": "Initial commit",
+            "assignee": "Giuseppi Pelayo",
+            "assigneeImg": "/assets/g_pfp.jpg"
+      }
+],
   },
   {
     id: 'codelens',
@@ -255,6 +367,7 @@ export const projects: Project[] = [
     duration: 'In Development',
     status: 'Beta/Research',
     statusColor: 'yellow',
+    github: 'https://github.com/jagdteam/CodeLens',
     roadmap: [
       {
         id: 'cl-phase-1',
@@ -278,34 +391,7 @@ export const projects: Project[] = [
         items: ['LLM-powered code summarization', 'RAG-based onboarding flows', 'Automated diagram generation', 'Team knowledge base sync'],
       },
     ],
-    devLog: [
-      {
-        id: 'cl-log-1',
-        date: '2024-09-15',
-        week: 'Week 1',
-        type: 'infra',
-        content: 'Research spike: Evaluated Tree-sitter vs Babel for AST parsing. Tree-sitter selected for multi-language support.',
-        assignee: 'Giuseppi',
-        assigneeImg: '/assets/g_jagd.jpg',
-      },
-      {
-        id: 'cl-log-2',
-        date: '2024-09-22',
-        week: 'Week 2',
-        type: 'design',
-        content: 'Architected the extension structure: separated core parsing logic from VS Code-specific rendering layer.',
-        assignee: 'Dylan',
-      },
-      {
-        id: 'cl-log-3',
-        date: '2024-10-01',
-        week: 'Week 3',
-        type: 'feature',
-        content: 'Implemented initial sidebar panel with collapsible function tree view and basic navigation.',
-        assignee: 'Giuseppi',
-        assigneeImg: '/assets/g_jagd.jpg',
-      },
-    ],
+    devLog: [],
   },
   {
     id: 'clutch',
@@ -336,6 +422,7 @@ export const projects: Project[] = [
     duration: '5 months',
     status: 'Planning',
     statusColor: 'blue',
+    github: 'https://github.com/jagdteam/Clutch',
     roadmap: [
       {
         id: 'clutch-phase-1',
@@ -359,26 +446,6 @@ export const projects: Project[] = [
         items: ['Mobile app scaffolding', 'Game state engine core', 'Basic CV integration', 'Alpha testing'],
       },
     ],
-    devLog: [
-      {
-        id: 'clutch-log-1',
-        date: '01-06-2026',
-        week: 'Week 1',
-        type: 'design',
-        content: 'Test camera angles, boundaries, and lighting conditions for computer vision.',
-        assignee: 'Giuseppi',
-        assigneeImg: '/assets/g_jagd.jpg',
-      },
-      {
-        id: 'clutch-log-1',
-        date: '01-07-2026',
-        week: 'Week 1',
-        type: 'design',
-        content:
-          'Discuss setup and tech stack selection and technical constraints. Evaluating React Native vs Flutter for cross-platform development.',
-        assignee: 'Giuseppi Pelayo',
-        assigneeImg: '/assets/g_jagd.jpg',
-      },
-    ],
+    devLog: [],
   },
 ];

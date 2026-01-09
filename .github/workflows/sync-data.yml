@@ -1,0 +1,41 @@
+name: Sync Team & Project Data
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install tsx globally
+        run: npm install -g tsx
+
+      - name: Run data sync
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: tsx scripts/sync-data.ts
+
+      - name: Commit and push if changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add src/data/teamStats.ts src/data/projects.ts
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update team stats and project dev logs [skip ci]" && git push)
