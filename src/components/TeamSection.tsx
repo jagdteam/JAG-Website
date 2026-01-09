@@ -192,10 +192,9 @@ const TeamSection = () => {
       weeks.push(currentWeek);
     }
 
-    // Get month labels - one label per unique month with minimum spacing
+    // Get month labels - one label per unique month (show ALL months)
     const monthLabels: Array<{ month: string; weekIndex: number }> = [];
-    let lastMonth = -1;
-    let lastLabelWeekIndex = -4; // Ensure minimum spacing of ~4 weeks between labels
+    const seenMonths = new Set<number>();
 
     weeks.forEach((week, idx) => {
       const firstDay = week.find(d => d !== null);
@@ -203,15 +202,11 @@ const TeamSection = () => {
         const date = new Date(firstDay.date);
         const currentMonth = date.getMonth();
 
-        // Only add label when we encounter a new month AND there's enough spacing
-        if (currentMonth !== lastMonth && (idx - lastLabelWeekIndex) >= 3) {
+        // Add label for first week of each unique month
+        if (!seenMonths.has(currentMonth)) {
           const monthName = date.toLocaleDateString('en-US', { month: 'short' });
           monthLabels.push({ month: monthName, weekIndex: idx });
-          lastMonth = currentMonth;
-          lastLabelWeekIndex = idx;
-        } else if (currentMonth !== lastMonth) {
-          // Update lastMonth even if we skip the label to prevent duplicate month detection
-          lastMonth = currentMonth;
+          seenMonths.add(currentMonth);
         }
       }
     });
@@ -262,17 +257,27 @@ const TeamSection = () => {
         )}
 
         <div className="relative">
-          {/* Month labels */}
-          <div className="flex ml-8 mb-1 relative" style={{ height: '14px' }}>
-            {monthLabels.map((label, idx) => (
-              <div
-                key={idx}
-                className="text-[10px] text-muted-foreground absolute whitespace-nowrap"
-                style={{ left: `${label.weekIndex * 13 + 32}px` }}
-              >
-                {label.month}
-              </div>
-            ))}
+          {/* Month labels - using same flex structure as grid for perfect alignment */}
+          <div className="flex gap-1 mb-1">
+            {/* Spacer matching day labels width */}
+            <div className="flex flex-col gap-[3px] justify-start text-[10px] pr-1 invisible">
+              <div style={{ height: '10px' }}>Mon</div>
+            </div>
+            {/* Month labels aligned with weeks */}
+            <div className="flex gap-[3px]">
+              {weeks.map((_, weekIdx) => {
+                const monthLabel = monthLabels.find(m => m.weekIndex === weekIdx);
+                return (
+                  <div key={weekIdx} className="w-[10px] relative">
+                    {monthLabel && (
+                      <span className="text-[10px] text-muted-foreground absolute left-0 whitespace-nowrap">
+                        {monthLabel.month}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Day labels + Grid */}
