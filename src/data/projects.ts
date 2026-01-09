@@ -1,9 +1,15 @@
+export interface RoadmapItem {
+  name: string;
+  status: 'not-started' | 'in-progress' | 'completed';
+  description?: string; // Optional - only show if you want extra detail on website
+}
+
 export interface ProjectPhase {
   id: string;
   name: string;
   status: 'completed' | 'in-progress' | 'planned';
   date: string;
-  items: string[];
+  items: RoadmapItem[];
 }
 
 export interface DevLogEntry {
@@ -73,29 +79,7 @@ export const projects: Project[] = [
     duration: '4 Weeks',
     status: 'MVP / In Development',
     statusColor: 'green',
-    roadmap: [
-      {
-        id: 'sl-phase-1',
-        name: 'Phase 1: Core Engine',
-        status: 'completed',
-        date: 'Oct 2024',
-        items: ['PDF parsing & text extraction', 'Vector DB setup for embeddings', 'Gemini API integration', 'Base Flask server architecture'],
-      },
-      {
-        id: 'sl-phase-2',
-        name: 'Phase 2: Grading UI',
-        status: 'in-progress',
-        date: 'Nov 2024',
-        items: ['Teacher dashboard with class overview', 'Student feedback view', 'Rubric builder interface', 'Real-time grading progress'],
-      },
-      {
-        id: 'sl-phase-3',
-        name: 'Phase 3: Analytics',
-        status: 'planned',
-        date: 'Dec 2024',
-        items: ['Class-wide insights & trends', 'Learning gap identification', 'Export reports to PDF', 'Admin panel for school districts'],
-      },
-    ],
+    // Roadmap data will be fetched from Notion using useProjectRoadmap hook
     devLog: [
       {
         id: 'sl-log-1',
@@ -144,7 +128,7 @@ export const projects: Project[] = [
   },
   {
     id: 'clicr-cli',
-    name: 'Clicr',
+    name: 'CliCR',
     initials: 'CR',
     tagline: '"Command Line Interface Code Reader"',
     mediaUrl: '/assets/clicr-preview.png',
@@ -170,43 +154,7 @@ export const projects: Project[] = [
     duration: '1 Week',
     status: 'MVP Complete',
     statusColor: 'green',
-    roadmap: [
-      {
-        id: 'cl-phase-1',
-        name: 'Phase 1: Core Ingestion',
-        status: 'completed',
-        date: 'Jan 2026',
-        items: [
-          'Recursively crawl the codebase and ingest the files',
-          'Chunk the files and embed them with Cohere Embed v3, then store them in ChromaDB',
-          'Build the CLI chat with Typer to retrieve user queries',
-        ],
-      },
-      {
-        id: 'cl-phase-2',
-        name: 'Phase 2: RAG Pipeline',
-        status: 'completed',
-        date: 'Jan 2026',
-        items: [
-          'Retrieval-Augmented Generation (RAG) pipeline',
-          'Command R+ response generation',
-          'Citation mapping',
-          'Performance benchmarking',
-        ],
-      },
-      {
-        id: 'cl-phase-3',
-        name: 'Phase 3: Optimization',
-        status: 'completed',
-        date: 'Jan 2026',
-        items: [
-          'Created multiple custom query modes for the CLI chat',
-          'Implemented a session export feature to save the chat history to a file',
-          'Created a rich TUI enhancements to the CLI chat',
-          'Performed performance benchmarking to optimize the CLI chat',
-        ],
-      },
-    ],
+    // Roadmap data will be fetched from Notion using useProjectRoadmap hook
     devLog: [
       {
         id: 'cl-log-1',
@@ -264,29 +212,7 @@ export const projects: Project[] = [
     duration: 'In Development',
     status: 'Beta/Research',
     statusColor: 'yellow',
-    roadmap: [
-      {
-        id: 'cl-phase-1',
-        name: 'Phase 1: VS Code Extension',
-        status: 'completed',
-        date: 'Sep 2024',
-        items: ['Basic sidebar rendering', 'Extension activation & lifecycle', 'VS Code API integration', 'Initial UI scaffolding'],
-      },
-      {
-        id: 'cl-phase-2',
-        name: 'Phase 2: Context Awareness',
-        status: 'in-progress',
-        date: 'Oct 2024',
-        items: ['Tree-sitter AST parsing', 'Function dependency mapping', 'Symbol extraction & indexing', 'Real-time code analysis'],
-      },
-      {
-        id: 'cl-phase-3',
-        name: 'Phase 3: AI Integration',
-        status: 'planned',
-        date: 'Nov 2024',
-        items: ['LLM-powered code summarization', 'RAG-based onboarding flows', 'Automated diagram generation', 'Team knowledge base sync'],
-      },
-    ],
+    // Roadmap data will be fetched from Notion using useProjectRoadmap hook
     devLog: [
       {
         id: 'cl-log-1',
@@ -343,29 +269,7 @@ export const projects: Project[] = [
     duration: '5 months',
     status: 'Planning',
     statusColor: 'blue',
-    roadmap: [
-      {
-        id: 'clutch-phase-1',
-        name: 'Phase 1: Early Research & Feasibility',
-        status: 'in-progress',
-        date: 'Jan 2026',
-        items: ['User research & interviews', 'Competitive analysis', 'Core feature prioritization', 'Technical feasibility study'],
-      },
-      {
-        id: 'clutch-phase-2',
-        name: 'Phase 2: Computer Vision Research & Implementation',
-        status: 'planned',
-        date: 'Feb 2026',
-        items: ['Computer Vision research', 'Implementation of computer vision', 'Prototype for user testing', 'Design review & iteration'],
-      },
-      {
-        id: 'clutch-phase-3',
-        name: 'Phase 3: MVP Development',
-        status: 'planned',
-        date: 'March 2026',
-        items: ['Mobile app scaffolding', 'Game state engine core', 'Basic CV integration', 'Alpha testing'],
-      },
-    ],
+    // Roadmap data will be fetched from Notion using useProjectRoadmap hook
     devLog: [
       {
         id: 'clutch-log-1',

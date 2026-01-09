@@ -4,8 +4,9 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { DevLogEntry, Project, ProjectPhase } from '@/data/projects';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, CircleDashed, Clock, Paintbrush, Server, Sparkles, Wrench } from 'lucide-react';
+import { CheckCircle2, CircleDashed, Clock, Paintbrush, Server, Sparkles, Wrench, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useProjectRoadmap } from '@/hooks/useProjectRoadmap';
 
 interface ProjectDetailsProps {
   project: Project;
@@ -227,18 +228,27 @@ const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
           </div>
 
           {/* Phase Items */}
-          <ul className="space-y-2">
+          <ul className="space-y-3">
             {phase.items.map((item, itemIndex) => (
               <li
                 key={itemIndex}
-                className="flex items-start gap-3 text-sm"
+                className="flex items-start gap-3"
               >
-                {phase.status === 'completed' ? (
+                {item.status === 'completed' ? (
                   <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                ) : item.status === 'in-progress' ? (
+                  <Clock className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
                 ) : (
                   <CircleDashed className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                 )}
-                <span className={phase.status === 'completed' ? 'text-muted-foreground' : 'text-foreground'}>{item}</span>
+                <div className="flex-1">
+                  <span className={`text-sm ${item.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground font-medium'}`}>
+                    {item.name}
+                  </span>
+                  {item.description && (
+                    <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -340,6 +350,9 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
 };
 
 const ProjectDetails = ({ project }: ProjectDetailsProps) => {
+  // Fetch roadmap data from Notion
+  const { roadmap, loading: roadmapLoading, error: roadmapError } = useProjectRoadmap(project.id);
+
   return (
     <>
       {/* Project Header */}
@@ -427,7 +440,20 @@ const ProjectDetails = ({ project }: ProjectDetailsProps) => {
               value="roadmap"
               className="mt-0"
             >
-              <RoadmapTab roadmap={project.roadmap} />
+              {roadmapLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <span className="ml-3 text-muted-foreground">Loading roadmap from Notion...</span>
+                </div>
+              ) : roadmapError ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Unable to load roadmap</p>
+                  <p className="text-sm mt-2">{roadmapError}</p>
+                </div>
+              ) : (
+                <RoadmapTab roadmap={roadmap} />
+              )}
             </TabsContent>
 
             <TabsContent

@@ -1,4 +1,6 @@
-# Welcome to your Lovable project
+# JAGD Company Website
+
+Official company website with Notion-powered project roadmaps.
 
 ## Project info
 
@@ -20,8 +22,31 @@ cd <JAGD-Company-Website>
 # Step 3: Install the necessary dependencies.
 npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Create .env.local file with your Notion credentials
+# See NOTION_INTEGRATION_GUIDE.md for details
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
+```
+
+## 📋 Notion Integration
+
+This project uses Notion as a CMS for project roadmap data. See **[NOTION_INTEGRATION_GUIDE.md](./NOTION_INTEGRATION_GUIDE.md)** for complete setup instructions.
+
+### Quick Start
+
+1. Set up your Notion database (see guide)
+2. Add environment variables to `.env.local`
+3. Run local backend: `npm run notion-server`
+4. Run frontend: `npm run dev`
+
+### Test Files
+
+All Notion-related test files are in the `notion-test/` folder:
+- `test-notion-connection.js` - Test Notion API connection
+- `local-server.cjs` - Local development backend server
+
+Run tests: `npm run test-notion`
 ```
 
 ## What technologies are used for this project?
