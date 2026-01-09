@@ -12,13 +12,27 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, '..', '.env');
 try {
   const envContent = fs.readFileSync(envPath, 'utf8');
-  const match = envContent.match(/GITHUB_TOKEN=(.+)/);
-  if (match) {
-    process.env.GITHUB_TOKEN = match[1].trim();
-    console.log(`✓ GitHub token loaded (length: ${match[1].trim().length})`);
+  console.log(`📄 .env file found at: ${envPath}`);
+
+  // Parse all environment variables from .env
+  const envLines = envContent.split('\n');
+  let tokenCount = 0;
+
+  for (const line of envLines) {
+    const match = line.match(/^([A-Z_]+)=(.+)$/);
+    if (match) {
+      const [, key, value] = match;
+      process.env[key] = value.trim();
+      if (key.includes('GITHUB_TOKEN')) {
+        tokenCount++;
+      }
+    }
   }
+
+  console.log(`✓ Loaded ${tokenCount} GitHub token(s) from .env`);
 } catch (e) {
   console.warn('⚠️  Could not load .env file:', envPath);
+  console.error('Error details:', e);
 }
 
 // Configuration
@@ -27,11 +41,20 @@ const FIVE_MONTHS_AGO = new Date();
 FIVE_MONTHS_AGO.setMonth(FIVE_MONTHS_AGO.getMonth() - 5);
 
 // Team member configuration
-const teamMembers = [
-  { name: 'Andrew Espinosa', github: 'adespinosa14', leetcode: 'adespinosa2002' },
-  { name: 'Giuseppi Pelayo', github: 'giuseppi', leetcode: 'giuseppi' },
-  { name: 'Johnny Fok', github: 'JohnFok119', leetcode: 'LupusOW' },
-  { name: 'Dylan Nguyen', github: 'DylanN143', leetcode: '' },
+interface TeamMemberConfig {
+  name: string;
+  github: string;
+  leetcode: string;
+  githubToken?: string; // Optional: personal token to show private contributions
+}
+
+// Optional: Add individual tokens for each member to show private contributions
+// Add tokens to .env: ANDREW_GITHUB_TOKEN, GIUSEPPI_GITHUB_TOKEN, etc.
+const teamMembers: TeamMemberConfig[] = [
+  { name: 'Andrew Espinosa', github: 'adespinosa14', leetcode: 'adespinosa2002', githubToken: process.env.ANDREW_GITHUB_TOKEN },
+  { name: 'Giuseppi Pelayo', github: 'giuseppi', leetcode: 'giuseppi', githubToken: process.env.GIUSEPPI_GITHUB_TOKEN },
+  { name: 'Johnny Fok', github: 'JohnFok119', leetcode: 'LupusOW', githubToken: process.env.JOHNNY_GITHUB_TOKEN },
+  { name: 'Dylan Nguyen', github: 'DylanN143', leetcode: '', githubToken: process.env.DYLAN_GITHUB_TOKEN },
 ];
 
 // Project configuration
@@ -85,20 +108,27 @@ async function fetchGitHub(url: string) {
   return response.json();
 }
 
-// Fetch GitHub contributions for a user
-async function fetchGitHubContributions(username: string): Promise<GitHubContribution[]> {
-  if (!GITHUB_TOKEN) {
-    console.warn(`⚠️  No GITHUB_TOKEN set, skipping GitHub contributions for ${username}`);
+// Fetch GitHub contributions for a user (includes private repos when using personal token)
+async function fetchGitHubContributions(username: string, userToken?: string): Promise<GitHubContribution[]> {
+  const token = userToken || GITHUB_TOKEN;
+
+  if (!token) {
+    console.warn(`⚠️  No token available for ${username}, skipping GitHub contributions`);
     return [];
   }
 
   try {
     // Use GitHub GraphQL API to get contribution data
+    // NOTE: Private contributions are included when:
+    // 1. Using a personal access token with 'repo' scope
+    // 2. Querying your own contributions (the token owner's username)
+    // 3. For organization repos, the token must have access to those repos
     const query = `
       query($username: String!, $from: DateTime!) {
         user(login: $username) {
           contributionsCollection(from: $from) {
             contributionCalendar {
+              totalContributions
               weeks {
                 contributionDays {
                   date
@@ -119,7 +149,7 @@ async function fetchGitHubContributions(username: string): Promise<GitHubContrib
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
       headers: {
-        'Authorization': `bearer ${GITHUB_TOKEN}`,
+        'Authorization': `bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ query, variables }),
@@ -318,7 +348,7 @@ async function syncData() {
   for (const member of teamMembers) {
     console.log(`  - ${member.name}`);
 
-    const githubContributions = await fetchGitHubContributions(member.github);
+    const githubContributions = await fetchGitHubContributions(member.github, member.githubToken);
     const leetcodeStats = await fetchLeetCodeStats(member.leetcode);
 
     teamStats.push({
