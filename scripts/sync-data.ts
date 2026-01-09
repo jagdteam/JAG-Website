@@ -250,10 +250,7 @@ async function fetchRepoCommits(repo: string, isPrivate: boolean = false): Promi
             authorName.toLowerCase().includes(m.name.split(' ')[0].toLowerCase()) ||
             authorName.toLowerCase().includes(m.name.split(' ')[1]?.toLowerCase() || '') ||
             // Also check GitHub username if available
-            (m.github && (
-              authorEmail.toLowerCase().includes(m.github.toLowerCase()) ||
-              authorName.toLowerCase().includes(m.github.toLowerCase())
-            ))
+            (m.github && (authorEmail.toLowerCase().includes(m.github.toLowerCase()) || authorName.toLowerCase().includes(m.github.toLowerCase())))
         );
 
         // Return null if not a team member - we'll filter these out
@@ -385,18 +382,14 @@ export const teamStats: TeamMemberStats[] = ${JSON.stringify(teamStats, null, 2)
 
     // Update devLog in the file content
     // Format as TypeScript array, not JSON string
-    const devLogStr = devLog.length === 0
-      ? '[]'
-      : '[\n' + devLog.map(entry =>
-          '      ' + JSON.stringify(entry, null, 6).replace(/\n/g, '\n      ')
-        ).join(',\n') + '\n]';
+    const devLogStr =
+      devLog.length === 0
+        ? '[]'
+        : '[\n' + devLog.map((entry) => '      ' + JSON.stringify(entry, null, 6).replace(/\n/g, '\n      ')).join(',\n') + '\n]';
 
     // Find and replace the devLog array for this project
     // Use a more robust pattern that handles nested brackets
-    const projectPattern = new RegExp(
-      `(id: '${project.id}',[\\s\\S]*?devLog: )\\[[\\s\\S]*?\\](,?\\s*})`,
-      'g'
-    );
+    const projectPattern = new RegExp(`(id: '${project.id}',[\\s\\S]*?devLog: )\\[[\\s\\S]*?\\](,?\\s*})`, 'g');
     projectsContent = projectsContent.replace(projectPattern, `$1${devLogStr}$2`);
 
     // Rate limiting delay
