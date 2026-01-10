@@ -16,7 +16,7 @@ const team: TeamMember[] = [
     name: 'Andrew Espinosa',
     role: 'Front-End Software Engineer',
     initial: 'A',
-    image: '',
+    image: '/assets/ade_pfp.jpeg',
     bio: "Andrew leads JAGD with a vision to transform how software solutions are built and delivered. His strategic thinking and entrepreneurial spirit drive the company's mission to create impactful technology.",
     expertise: ['Strategic Planning', 'Product Vision', 'Team Leadership'],
     education: [
