@@ -62,27 +62,27 @@ const getStatusColorClasses = (color: Project['statusColor']) => {
   return colorMap[color];
 };
 
-const getPhaseStatusColor = (status: ProjectPhase['status']) => {
-  switch (status) {
-    case 'completed':
-      return 'bg-green-500/20 text-green-400 border-green-500/30';
-    case 'in-progress':
-      return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    case 'planned':
-      return 'bg-muted text-muted-foreground border-border';
-  }
-};
+// const getPhaseStatusColor = (status: ProjectPhase['status']) => {
+//   switch (status) {
+//     case 'completed':
+//       return 'bg-green-500/20 text-green-400 border-green-500/30';
+//     case 'in-progress':
+//       return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+//     case 'planned':
+//       return 'bg-muted text-muted-foreground border-border';
+//   }
+// };
 
-const getPhaseProgress = (status: ProjectPhase['status']) => {
-  switch (status) {
-    case 'completed':
-      return 100;
-    case 'in-progress':
-      return 50;
-    case 'planned':
-      return 0;
-  }
-};
+// const getPhaseProgress = (status: ProjectPhase['status']) => {
+//   switch (status) {
+//     case 'completed':
+//       return 100;
+//     case 'in-progress':
+//       return 50;
+//     case 'planned':
+//       return 0;
+//   }
+// };
 
 const getDevLogTypeIcon = (type: DevLogEntry['type']) => {
   switch (type) {
@@ -207,14 +207,14 @@ const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-semibold text-foreground">{phase.name}</h3>
-              <Badge
+              {/* <Badge
                 variant="outline"
                 className={getPhaseStatusColor(phase.status)}
               >
                 {phase.status === 'completed' && 'Completed'}
                 {phase.status === 'in-progress' && 'In Progress'}
                 {phase.status === 'planned' && 'Planned'}
-              </Badge>
+              </Badge> */}
             </div>
             <span className="text-sm text-muted-foreground">{phase.date}</span>
           </div>
@@ -222,7 +222,7 @@ const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
           {/* Progress Bar */}
           <div className="mb-4">
             <Progress
-              value={getPhaseProgress(phase.status)}
+              // value={getPhaseProgress(phase.status)}
               className="h-1.5"
             />
           </div>
