@@ -32,7 +32,13 @@ try {
   console.log(`✓ Loaded ${tokenCount} GitHub token(s) from .env`);
 
   // Debug: Log which tokens are available
-  console.log(`  Tokens loaded:`, Object.keys(process.env).filter(k => k.includes('GITHUB_TOKEN')).map(k => `${k}=${process.env[k] ? '✓' : '✗'}`).join(', '));
+  console.log(
+    `  Tokens loaded:`,
+    Object.keys(process.env)
+      .filter((k) => k.includes('GITHUB_TOKEN'))
+      .map((k) => `${k}=${process.env[k] ? '✓' : '✗'}`)
+      .join(', ')
+  );
 } catch (e) {
   console.warn('⚠️  Could not load .env file:', envPath);
   console.error('Error details:', e);
@@ -61,7 +67,7 @@ const teamMembers: TeamMemberConfig[] = [
 ];
 
 console.log('🔍 Team member token status:');
-teamMembers.forEach(m => {
+teamMembers.forEach((m) => {
   console.log(`  ${m.name}: ${m.githubToken ? '✓ Has token' : '✗ No token'}`);
 });
 
@@ -190,7 +196,9 @@ async function fetchGitHubContributions(username: string, userToken?: string): P
       });
     });
 
-    console.log(`    ✓ ${username}: ${totalContributions} total contributions in period, ${contributions.filter(c => c.count > 0).length} active days`);
+    console.log(
+      `    ✓ ${username}: ${totalContributions} total contributions in period, ${contributions.filter((c) => c.count > 0).length} active days`
+    );
 
     return contributions;
   } catch (error) {
@@ -329,10 +337,10 @@ async function fetchRepoCommits(repo: string, isPrivate: boolean = false): Promi
       .slice(0, 50); // Keep only the 50 most recent team commits
 
     // Find max week number to invert the labels
-    const maxWeek = Math.max(...devLog.map(entry => entry.weekNumber), 0);
+    const maxWeek = Math.max(...devLog.map((entry) => entry.weekNumber), 0);
 
     // Invert week numbers and assign proper labels (Week 4 = most recent, Week 1 = oldest)
-    const finalDevLog: DevLogEntry[] = devLog.map(entry => {
+    const finalDevLog: DevLogEntry[] = devLog.map((entry) => {
       const invertedWeekNumber = maxWeek - entry.weekNumber + 1;
       const week = entry.weekNumber === 0 ? 'This Week' : `Week ${invertedWeekNumber}`;
 

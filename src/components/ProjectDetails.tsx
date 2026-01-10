@@ -1,13 +1,13 @@
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { DevLogEntry, Project, ProjectPhase } from '@/data/projects';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, CircleDashed, Clock, Paintbrush, Server, Sparkles, Wrench, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useProjectRoadmap } from '@/hooks/useProjectRoadmap';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CheckCircle2, CircleDashed, Clock, Loader2, Paintbrush, Server, Sparkles, Wrench } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ProjectDetailsProps {
   project: Project;
@@ -246,9 +246,7 @@ const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
                   <span className={`text-sm ${item.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground font-medium'}`}>
                     {item.name}
                   </span>
-                  {item.description && (
-                    <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-                  )}
+                  {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
                 </div>
               </li>
             ))}
@@ -308,9 +306,17 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
       transition={{ duration: 0.2 }}
       className="py-8"
     >
-      <Accordion type="multiple" defaultValue={[mostRecentWeek]} className="space-y-6">
+      <Accordion
+        type="multiple"
+        defaultValue={[mostRecentWeek]}
+        className="space-y-6"
+      >
         {sortedWeeks.map(([week, entries]) => (
-          <AccordionItem key={week} value={week} className="border-none">
+          <AccordionItem
+            key={week}
+            value={week}
+            className="border-none"
+          >
             <AccordionTrigger className="hover:no-underline pb-0">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{week}</h3>
             </AccordionTrigger>
