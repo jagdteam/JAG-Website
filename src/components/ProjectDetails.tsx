@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { DevLogEntry, Project, ProjectPhase } from '@/data/projects';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, CircleDashed, Clock, Paintbrush, Server, Sparkles, Wrench, Loader2 } from 'lucide-react';
@@ -284,6 +285,21 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
     return acc;
   }, {} as Record<string, DevLogEntry[]>);
 
+  // Sort weeks in chronological order (most recent first: This Week, Week 4, Week 3, Week 2, Week 1)
+  const sortedWeeks = Object.entries(groupedByWeek).sort(([weekA], [weekB]) => {
+    // Handle "This Week" special case - it should come first
+    if (weekA === 'This Week') return -1;
+    if (weekB === 'This Week') return 1;
+
+    // Extract week numbers and sort in descending order (Week 4 before Week 1)
+    const numA = parseInt(weekA.match(/\d+/)?.[0] || '0');
+    const numB = parseInt(weekB.match(/\d+/)?.[0] || '0');
+    return numB - numA;
+  });
+
+  // Get the first (most recent) week as default open
+  const mostRecentWeek = sortedWeeks[0]?.[0] || '';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -292,59 +308,60 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
       transition={{ duration: 0.2 }}
       className="py-8"
     >
-      {Object.entries(groupedByWeek).map(([week, entries], weekIndex) => (
-        <div
-          key={week}
-          className="mb-8 last:mb-0"
-        >
-          {/* Week Header */}
-          <h3 className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">{week}</h3>
+      <Accordion type="multiple" defaultValue={[mostRecentWeek]} className="space-y-6">
+        {sortedWeeks.map(([week, entries]) => (
+          <AccordionItem key={week} value={week} className="border-none">
+            <AccordionTrigger className="hover:no-underline pb-0">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{week}</h3>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              {/* Timeline */}
+              <div className="relative">
+                {/* Vertical line */}
+                <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
 
-          {/* Timeline */}
-          <div className="relative">
-            {/* Vertical line */}
-            <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+                {/* Entries */}
+                <div className="space-y-4">
+                  {entries.map((entry, entryIndex) => (
+                    <motion.div
+                      key={entry.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.2, delay: entryIndex * 0.05 }}
+                      className="relative flex gap-4 pl-0"
+                    >
+                      {/* Avatar */}
+                      <div className="relative z-10 flex-shrink-0">
+                        <Avatar className="w-8 h-8 border-2 border-background">
+                          <AvatarImage
+                            src={entry.assigneeImg}
+                            alt={entry.assignee}
+                          />
+                          <AvatarFallback className="text-xs bg-muted">{getInitials(entry.assignee)}</AvatarFallback>
+                        </Avatar>
+                      </div>
 
-            {/* Entries */}
-            <div className="space-y-4">
-              {entries.map((entry, entryIndex) => (
-                <motion.div
-                  key={entry.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2, delay: weekIndex * 0.1 + entryIndex * 0.05 }}
-                  className="relative flex gap-4 pl-0"
-                >
-                  {/* Avatar */}
-                  <div className="relative z-10 flex-shrink-0">
-                    <Avatar className="w-8 h-8 border-2 border-background">
-                      <AvatarImage
-                        src={entry.assigneeImg}
-                        alt={entry.assignee}
-                      />
-                      <AvatarFallback className="text-xs bg-muted">{getInitials(entry.assignee)}</AvatarFallback>
-                    </Avatar>
-                  </div>
+                      {/* Content */}
+                      <div className="flex-1 bg-card/30 border border-border/30 rounded-lg p-4 hover:border-border/60 transition-colors">
+                        {/* Top row */}
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="font-medium text-foreground text-sm">{entry.assignee}</span>
+                          <span className="text-muted-foreground text-xs">•</span>
+                          <span className="text-muted-foreground text-xs">{entry.date}</span>
+                          {getDevLogTypeBadge(entry.type)}
+                        </div>
 
-                  {/* Content */}
-                  <div className="flex-1 bg-card/30 border border-border/30 rounded-lg p-4 hover:border-border/60 transition-colors">
-                    {/* Top row */}
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="font-medium text-foreground text-sm">{entry.assignee}</span>
-                      <span className="text-muted-foreground text-xs">•</span>
-                      <span className="text-muted-foreground text-xs">{entry.date}</span>
-                      {getDevLogTypeBadge(entry.type)}
-                    </div>
-
-                    {/* Content */}
-                    <p className="text-sm text-muted-foreground leading-relaxed">{entry.content}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
+                        {/* Content */}
+                        <p className="text-sm text-muted-foreground leading-relaxed">{entry.content}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </motion.div>
   );
 };
