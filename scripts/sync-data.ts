@@ -30,6 +30,9 @@ try {
   }
 
   console.log(`✓ Loaded ${tokenCount} GitHub token(s) from .env`);
+
+  // Debug: Log which tokens are available
+  console.log(`  Tokens loaded:`, Object.keys(process.env).filter(k => k.includes('GITHUB_TOKEN')).map(k => `${k}=${process.env[k] ? '✓' : '✗'}`).join(', '));
 } catch (e) {
   console.warn('⚠️  Could not load .env file:', envPath);
   console.error('Error details:', e);
@@ -56,6 +59,11 @@ const teamMembers: TeamMemberConfig[] = [
   { name: 'Johnny Fok', github: 'JohnFok119', leetcode: 'LupusOW', githubToken: process.env.JOHNNY_GITHUB_TOKEN },
   { name: 'Dylan Nguyen', github: 'DylanN143', leetcode: '', githubToken: process.env.DYLAN_GITHUB_TOKEN },
 ];
+
+console.log('🔍 Team member token status:');
+teamMembers.forEach(m => {
+  console.log(`  ${m.name}: ${m.githubToken ? '✓ Has token' : '✗ No token'}`);
+});
 
 // Project configuration
 const projects = [
@@ -117,6 +125,8 @@ async function fetchGitHubContributions(username: string, userToken?: string): P
     return [];
   }
 
+  console.log(`    Fetching contributions for ${username} using ${userToken ? 'personal' : 'org'} token`);
+
   try {
     // Use GitHub GraphQL API to get contribution data
     // NOTE: Private contributions are included when:
@@ -168,6 +178,7 @@ async function fetchGitHubContributions(username: string, userToken?: string): P
     }
 
     const weeks = data.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
+    const totalContributions = data.data?.user?.contributionsCollection?.contributionCalendar?.totalContributions || 0;
     const contributions: GitHubContribution[] = [];
 
     weeks.forEach((week: any) => {
@@ -178,6 +189,8 @@ async function fetchGitHubContributions(username: string, userToken?: string): P
         });
       });
     });
+
+    console.log(`    ✓ ${username}: ${totalContributions} total contributions in period, ${contributions.filter(c => c.count > 0).length} active days`);
 
     return contributions;
   } catch (error) {
