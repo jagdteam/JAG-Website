@@ -299,24 +299,36 @@ async function fetchRepoCommits(repo: string, isPrivate: boolean = false): Promi
           type = 'design';
         }
 
-        // Calculate week
+        // Calculate week (temporary, will be inverted later)
         const weekNumber = Math.ceil((Date.now() - commitDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-        const week = weekNumber === 0 ? 'This Week' : `Week ${weekNumber}`;
 
         return {
           id: commit.sha.substring(0, 8),
           date: commitDate.toISOString().split('T')[0],
-          week,
+          weekNumber, // Store raw number for now
           type,
           content: message,
           assignee: teamMember.name,
           assigneeImg: getTeamMemberImage(teamMember.name),
         };
       })
-      .filter((entry): entry is DevLogEntry => entry !== null) // Remove non-team member commits
-      .slice(0, 15); // Keep only the 15 most recent team commits
+      .filter((entry): entry is any => entry !== null) // Remove non-team member commits
+      .slice(0, 50); // Keep only the 50 most recent team commits
 
-    return devLog;
+    // Find max week number to invert the labels
+    const maxWeek = Math.max(...devLog.map(entry => entry.weekNumber), 0);
+
+    // Invert week numbers and assign proper labels (Week 4 = most recent, Week 1 = oldest)
+    const finalDevLog: DevLogEntry[] = devLog.map(entry => {
+      const invertedWeekNumber = maxWeek - entry.weekNumber + 1;
+      const week = entry.weekNumber === 0 ? 'This Week' : `Week ${invertedWeekNumber}`;
+
+      // Remove temporary weekNumber field
+      const { weekNumber, ...rest } = entry;
+      return { ...rest, week };
+    });
+
+    return finalDevLog;
   } catch (error: any) {
     if (error.message?.includes('409')) {
       console.warn(`⚠️  Repo ${repo} is empty (no commits yet)`);
