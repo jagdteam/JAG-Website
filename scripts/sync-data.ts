@@ -366,6 +366,7 @@ function getTeamMemberImage(name: string): string | undefined {
     'Giuseppi Pelayo': '/assets/g_pfp.jpg',
     'Johnny Fok': '/assets/jf_pfp.jpg',
     'Dylan Nguyen': '/assets/dn_pfp.jpg',
+    'Andrew Espinosa': '/assets/ade_pfp.jpeg',
   };
   return imageMap[name];
 }
