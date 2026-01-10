@@ -119,7 +119,7 @@ app.get('/api/notion/roadmap', async (req, res) => {
       };
 
       // Log each item being processed
-      console.log(`  ✓ ${item.name} [${status}] → ${project} / ${phase}`);
+      console.log(`  ✓ ${item.name} [${status}] → Project: "${project}" / Phase: "${phase}" / Phase Name: "${phaseName}"`);
 
       // Initialize project if doesn't exist
       if (!projectsMap[project]) {
@@ -132,7 +132,6 @@ app.get('/api/notion/roadmap', async (req, res) => {
           id: `${project}-${phase.toLowerCase().replace(/\s+/g, '-')}`,
           name: phaseName,
           phaseKey: phase, // Store the original Phase column value for sorting
-          status: 'planned', // Will be updated based on items
           date: date,
           items: [],
         };
@@ -142,42 +141,34 @@ app.get('/api/notion/roadmap', async (req, res) => {
       projectsMap[project][phase].items.push(item);
     });
 
-    // Determine phase status based on items
-    Object.values(projectsMap).forEach(phases => {
-      Object.values(phases).forEach(phase => {
-        const allCompleted = phase.items.every(item => item.status === 'completed');
-        const someInProgress = phase.items.some(item => item.status === 'in-progress');
-        const someCompleted = phase.items.some(item => item.status === 'completed');
-        
-        if (allCompleted) {
-          phase.status = 'completed';
-        } else if (someInProgress || someCompleted) {
-          phase.status = 'in-progress';
-        } else {
-          phase.status = 'planned';
-        }
-      });
-    });
-
     // Convert to array format and sort phases
     // Define explicit phase order (Phase 1 FIRST, then Phase 2, etc.)
     const phaseOrder = ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5', 'Phase 6', 'Phase 7', 'Phase 8', 'Phase 9', 'Phase 10'];
     
     const result = {};
     Object.entries(projectsMap).forEach(([project, phases]) => {
+      // Convert to array
+      const phasesArray = Object.values(phases);
+      
+      console.log(`\n🔍 Before sorting ${project}:`, phasesArray.map(p => `${p.name} (phaseKey: ${p.phaseKey})`));
+      
       // Sort phases by their position in the phaseOrder array
-      result[project] = Object.values(phases).sort((a, b) => {
+      const sortedPhases = phasesArray.sort((a, b) => {
         // Get index in phaseOrder array (if not found, put at end)
         const indexA = phaseOrder.indexOf(a.phaseKey) !== -1 ? phaseOrder.indexOf(a.phaseKey) : 999;
         const indexB = phaseOrder.indexOf(b.phaseKey) !== -1 ? phaseOrder.indexOf(b.phaseKey) : 999;
         
-        console.log(`  Comparing: ${a.phaseKey} (index ${indexA}) vs ${b.phaseKey} (index ${indexB})`);
+        console.log(`  Comparing: "${a.phaseKey}" (index ${indexA}) vs "${b.phaseKey}" (index ${indexB}) → ${indexA - indexB}`);
         
         return indexA - indexB;
       });
       
+      console.log(`✅ After sorting ${project}:`, sortedPhases.map(p => p.name));
+      
       // Clean up phaseKey before returning (not needed in frontend)
-      result[project].forEach(phase => delete phase.phaseKey);
+      sortedPhases.forEach(phase => delete phase.phaseKey);
+      
+      result[project] = sortedPhases;
       
       console.log(`\n📦 Project: ${project} → ${Object.keys(phases).length} phases`);
     });

@@ -7,7 +7,6 @@ export interface RoadmapItem {
 export interface ProjectPhase {
   id: string;
   name: string;
-  status: 'completed' | 'in-progress' | 'planned';
   date: string;
   items: RoadmapItem[];
 }
