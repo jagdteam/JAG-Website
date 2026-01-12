@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import type { DevLogEntry } from '@/data/projects';
 import { useProjectCommits } from '@/hooks/useProjectCommits';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clock, Globe, Loader2 } from 'lucide-react';
+import { Clock, Globe, Loader2, Paintbrush, Server, Sparkles, Wrench } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const WEBSITE_REPO = 'jagdteam/JAGD-Company-Website';
@@ -91,6 +91,19 @@ const integrations = [
   },
 ];
 
+const getDevLogTypeIcon = (type: DevLogEntry['type']) => {
+  switch (type) {
+    case 'feature':
+      return <Sparkles className="w-3 h-3" />;
+    case 'fix':
+      return <Wrench className="w-3 h-3" />;
+    case 'design':
+      return <Paintbrush className="w-3 h-3" />;
+    case 'infra':
+      return <Server className="w-3 h-3" />;
+  }
+};
+
 const getDevLogTypeBadge = (type: DevLogEntry['type']) => {
   const styles = {
     feature: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
@@ -107,8 +120,9 @@ const getDevLogTypeBadge = (type: DevLogEntry['type']) => {
   return (
     <Badge
       variant="outline"
-      className={`text-xs px-2 py-0.5 ${styles[type]}`}
+      className={`${styles[type]} text-xs gap-1`}
     >
+      {getDevLogTypeIcon(type)}
       {labels[type]}
     </Badge>
   );
@@ -218,7 +232,9 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           <span className="font-medium text-foreground text-sm">{entry.assignee}</span>
                           <span className="text-muted-foreground text-xs">•</span>
-                          <span className="text-muted-foreground text-xs">{entry.date}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {new Date(entry.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                          </span>
                           {getDevLogTypeBadge(entry.type)}
                         </div>
 
@@ -393,7 +409,7 @@ const AccountabilitySection = () => {
                     <Badge
                       key={type}
                       variant="outline"
-                      className={`text-xs px-3 py-1 ${
+                      className={`text-xs px-3 py-1 gap-1.5 ${
                         type === 'feature'
                           ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
                           : type === 'fix'
@@ -403,7 +419,8 @@ const AccountabilitySection = () => {
                           : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
                       }`}
                     >
-                      {type === 'feature' ? '✨' : type === 'fix' ? '🐛' : type === 'design' ? '🎨' : '🔧'} {count} {type}
+                      {getDevLogTypeIcon(type as DevLogEntry['type'])}
+                      {type.charAt(0).toUpperCase() + type.slice(1)} | {count}
                     </Badge>
                   ));
                 })()}
@@ -411,7 +428,7 @@ const AccountabilitySection = () => {
                   variant="outline"
                   className="bg-green-500/10 text-green-400 border-green-500/20 px-3 py-1"
                 >
-                  ✅ {commits.length} total
+                  ✅ {commits.length} Total
                 </Badge>
               </div>
             )}

@@ -354,7 +354,9 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           <span className="font-medium text-foreground text-sm">{entry.assignee}</span>
                           <span className="text-muted-foreground text-xs">•</span>
-                          <span className="text-muted-foreground text-xs">{entry.date}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {new Date(entry.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}
+                          </span>
                           {getDevLogTypeBadge(entry.type)}
                         </div>
 
