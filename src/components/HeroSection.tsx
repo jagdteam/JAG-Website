@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
@@ -72,7 +72,7 @@ const HeroSection = () => {
             transition={{ duration: 0.1 }}
             className="px-8 py-3 bg-foreground text-background rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300"
           >
-            Explore Products
+            Explore Projects
           </motion.button>
           <motion.a
             href="#team"

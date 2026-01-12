@@ -158,7 +158,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
 const ProductSection = () => {
   return (
     <section
-      id="products"
+      id="projects"
       className="relative"
     >
       {products.map((product, index) => (
