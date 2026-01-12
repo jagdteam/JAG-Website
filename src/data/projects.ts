@@ -1,3 +1,19 @@
+/**
+ * Projects Data
+ *
+ * NOTE: This file contains static project metadata.
+ * Dynamic data (commits, roadmaps) is now loaded from the backend API:
+ *
+ * - devLog: Fetched from GitHub API via `/api/github/commits`
+ *   - Uses useProjectCommits() hook in ProjectDetails.tsx
+ *   - Data automatically filtered to team members and formatted
+ *
+ * - roadmap: Fetched from Notion API via `/api/notion/roadmap`
+ *   - Uses useProjectRoadmap() hook in ProjectDetails.tsx
+ *
+ * All dynamic data is cached until midnight PST to minimize API calls.
+ */
+
 export interface RoadmapItem {
   name: string;
   status: 'not-started' | 'in-progress' | 'completed';
@@ -42,8 +58,8 @@ export interface Project {
   statusColor: 'red' | 'yellow' | 'green' | 'blue';
   github?: string;
   liveDemo?: string;
-  roadmap?: ProjectPhase[];
-  devLog?: DevLogEntry[];
+  roadmap?: ProjectPhase[]; // DEPRECATED: Now loaded from Notion API
+  devLog?: DevLogEntry[]; // DEPRECATED: Now loaded from GitHub API
   // Visual media support
   mediaUrl?: string;
   mediaType?: 'image' | 'gif' | 'video';
@@ -78,332 +94,7 @@ export const projects: Project[] = [
     duration: '4 Weeks',
     status: 'MVP / In Development',
     statusColor: 'green',
-    devLog: [
-      {
-            "id": "0875992f",
-            "date": "2026-01-07",
-            "type": "feature",
-            "content": "added remaining files",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 4"
-      },
-      {
-            "id": "f948fdae",
-            "date": "2026-01-07",
-            "type": "feature",
-            "content": "feat: connect Dashboard to backend API with mock data for testing",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 4"
-      },
-      {
-            "id": "a2148f09",
-            "date": "2026-01-07",
-            "type": "infra",
-            "content": "updated frontend with loveable, need to redo api routing",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 4"
-      },
-      {
-            "id": "75976e1c",
-            "date": "2026-01-05",
-            "type": "infra",
-            "content": "Removed redundant useApi.ts and included react useQuery library",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 4"
-      },
-      {
-            "id": "a3914d0f",
-            "date": "2025-12-29",
-            "type": "feature",
-            "content": "Added the services folder with api functions & useApi file that mounts the useEffect operation into the desired tsx page to avoid redundant code in the tsx pages",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 3"
-      },
-      {
-            "id": "b3023555",
-            "date": "2025-12-29",
-            "type": "infra",
-            "content": "created frontend",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 3"
-      },
-      {
-            "id": "5eafec20",
-            "date": "2025-12-21",
-            "type": "infra",
-            "content": "commented main and changed server hosting",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 2"
-      },
-      {
-            "id": "c6b7c01e",
-            "date": "2025-12-21",
-            "type": "infra",
-            "content": "commented main and changed server hosting",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 2"
-      },
-      {
-            "id": "4e83ab32",
-            "date": "2025-12-21",
-            "type": "feature",
-            "content": "Added light documentation for backend db schema",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 2"
-      },
-      {
-            "id": "eac2b0be",
-            "date": "2025-12-21",
-            "type": "infra",
-            "content": "modified backend web view, implemented AI JSON ouput to propagate db",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 2"
-      },
-      {
-            "id": "2d15305d",
-            "date": "2025-12-20",
-            "type": "infra",
-            "content": "Updated daily README",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 2"
-      },
-      {
-            "id": "29226883",
-            "date": "2025-12-20",
-            "type": "infra",
-            "content": "Created mock backend for testing",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 2"
-      },
-      {
-            "id": "a04c3736",
-            "date": "2025-12-20",
-            "type": "infra",
-            "content": "Created mock backend for testing",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 2"
-      },
-      {
-            "id": "13a792b7",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "Merge branch 'main' of https://github.com/jagdteam/EssayEvaluator",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "e07af3a9",
-            "date": "2025-12-18",
-            "type": "feature",
-            "content": "Modified main.py to use regex to list students & added 1-21 student gemma test results",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "3dfb7761",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "Merge branch 'main' of https://github.com/jagdteam/EssayEvaluator",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "db0ba59b",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "updated README dev log",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "fa267692",
-            "date": "2025-12-18",
-            "type": "feature",
-            "content": "merged johnny -> main with archived reports, essays & added the batch process main.py",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "e29e54fb",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "modified essay count",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "b779bc58",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "changed main name for merge",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "ca9c5413",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "separated essays to individual pdfs",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "506af845",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "Merge branch 'main' of https://github.com/jagdteam/EssayEvaluator",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "c1341f95",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "configured table of contents",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "8e3b90ec",
-            "date": "2025-12-18",
-            "type": "feature",
-            "content": "added new set of essays & requirements.txt",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "76d7dcab",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "configured prereq in README",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "d1544a57",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "configured prereq in README",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "b54418ed",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "removed redundant README line",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "810562bb",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "updated README dev log",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "805b29fa",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "updated README",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "049569eb",
-            "date": "2025-12-18",
-            "type": "infra",
-            "content": "1 api call batch process 5 students",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "597f4b2f",
-            "date": "2025-12-18",
-            "type": "feature",
-            "content": "added batch processing for 5 students + class report",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "e368d0cf",
-            "date": "2025-12-17",
-            "type": "feature",
-            "content": "added all student essays",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "c6532de9",
-            "date": "2025-12-17",
-            "type": "feature",
-            "content": "added PDF functionality",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "990d4fb2",
-            "date": "2025-12-17",
-            "type": "feature",
-            "content": "added essay and rubric functionality",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "71cfb0c5",
-            "date": "2025-12-17",
-            "type": "infra",
-            "content": "init sandbox",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "5ade6018",
-            "date": "2025-12-17",
-            "type": "infra",
-            "content": "Initial commit",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      }
-],
+    // devLog: Loaded dynamically from GitHub API
   },
   {
     id: 'clicr-cli',
@@ -433,53 +124,7 @@ export const projects: Project[] = [
     duration: '1 Week',
     status: 'MVP Complete',
     statusColor: 'green',
-    devLog: [
-      {
-            "id": "33d87176",
-            "date": "2026-01-07",
-            "type": "infra",
-            "content": "Removed redundant file",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "9a11e867",
-            "date": "2026-01-07",
-            "type": "infra",
-            "content": "removing redundant files",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "c4eb00d1",
-            "date": "2026-01-07",
-            "type": "feature",
-            "content": "added 3 extra flags for RAG prompting types",
-            "assignee": "Johnny Fok",
-            "assigneeImg": "/assets/jf_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "2a9458b1",
-            "date": "2026-01-07",
-            "type": "infra",
-            "content": "updated README",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      },
-      {
-            "id": "0e84094f",
-            "date": "2026-01-07",
-            "type": "infra",
-            "content": "Initial commit",
-            "assignee": "Giuseppi Pelayo",
-            "assigneeImg": "/assets/g_pfp.jpg",
-            "week": "Week 1"
-      }
-],
+    // devLog: Loaded dynamically from GitHub API
   },
   {
     id: 'codelens',
@@ -508,7 +153,7 @@ export const projects: Project[] = [
     duration: 'In Development',
     status: 'Beta/Research',
     statusColor: 'yellow',
-    devLog: [],
+    // devLog: Loaded dynamically from GitHub API
   },
   {
     id: 'clutch',
@@ -539,6 +184,6 @@ export const projects: Project[] = [
     duration: '5 months',
     status: 'Planning',
     statusColor: 'blue',
-    devLog: [],
+    // devLog: Loaded dynamically from GitHub API
   },
 ];

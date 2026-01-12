@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { fetchProjectRoadmap } from '@/lib/notion';
 import type { ProjectPhase } from '@/data/projects';
+import { fetchProjectRoadmap } from '@/lib/api/notion';
+import { useEffect, useState } from 'react';
 
 /**
  * Hook to fetch and manage roadmap data from Notion for a specific project
@@ -19,18 +19,19 @@ export function useProjectRoadmap(projectId: string) {
       try {
         setLoading(true);
         setError(null);
-        
+
         console.log(`🔍 Fetching roadmap for project: ${projectId}`);
         const data = await fetchProjectRoadmap(projectId);
         console.log(`✅ Received roadmap data:`, data);
-        
+
         if (mounted) {
           setRoadmap(data);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error(`❌ Error loading roadmap for ${projectId}:`, err);
         if (mounted) {
-          setError(err.message || 'Failed to load roadmap');
+          const errorMessage = err instanceof Error ? err.message : 'Failed to load roadmap';
+          setError(errorMessage);
         }
       } finally {
         if (mounted) {
@@ -48,4 +49,3 @@ export function useProjectRoadmap(projectId: string) {
 
   return { roadmap, loading, error };
 }
-

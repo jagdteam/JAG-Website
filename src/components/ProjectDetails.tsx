@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { DevLogEntry, Project, ProjectPhase } from '@/data/projects';
+import { useProjectCommits } from '@/hooks/useProjectCommits';
 import { useProjectRoadmap } from '@/hooks/useProjectRoadmap';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, CircleDashed, Clock, Loader2, Paintbrush, Server, Sparkles, Wrench } from 'lucide-react';
@@ -376,6 +377,18 @@ const ProjectDetails = ({ project }: ProjectDetailsProps) => {
   // Fetch roadmap data from Notion
   const { roadmap, loading: roadmapLoading, error: roadmapError } = useProjectRoadmap(project.id);
 
+  // Extract repo slug from GitHub URL (e.g., "https://github.com/jagdteam/clicr" -> "jagdteam/clicr")
+  const getRepoSlug = (githubUrl?: string): string | undefined => {
+    if (!githubUrl) return undefined;
+    const match = githubUrl.match(/github\.com\/([^/]+\/[^/]+)/);
+    return match ? match[1] : undefined;
+  };
+
+  const repoSlug = getRepoSlug(project.github);
+
+  // Fetch commits for this project
+  const { commits, loading: commitsLoading, error: commitsError } = useProjectCommits(repoSlug);
+
   return (
     <>
       {/* Project Header */}
@@ -487,7 +500,20 @@ const ProjectDetails = ({ project }: ProjectDetailsProps) => {
               value="devlog"
               className="mt-0"
             >
-              <DevLogTab devLog={project.devLog} />
+              {commitsLoading ? (
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <span className="ml-3 text-muted-foreground">Loading commit history...</span>
+                </div>
+              ) : commitsError ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Unable to load commit history</p>
+                  <p className="text-sm mt-2">{commitsError}</p>
+                </div>
+              ) : (
+                <DevLogTab devLog={commits} />
+              )}
             </TabsContent>
           </AnimatePresence>
         </Tabs>
