@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { DevLogEntry } from '@/data/projects';
 import { useProjectCommits } from '@/hooks/useProjectCommits';
-import { Globe, Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Clock, Globe, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 const WEBSITE_REPO = 'jagdteam/JAGD-Company-Website';
@@ -90,42 +91,55 @@ const integrations = [
   },
 ];
 
-const getTypeIcon = (type: DevLogEntry['type']) => {
-  switch (type) {
-    case 'feature':
-      return '✨';
-    case 'fix':
-      return '🐛';
-    case 'design':
-      return '🎨';
-    case 'infra':
-      return '🔧';
-  }
+const getDevLogTypeBadge = (type: DevLogEntry['type']) => {
+  const styles = {
+    feature: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    fix: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    design: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+    infra: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  };
+  const labels = {
+    feature: 'Feature',
+    fix: 'Fix',
+    design: 'Design',
+    infra: 'Infra',
+  };
+  return (
+    <Badge
+      variant="outline"
+      className={`text-xs px-2 py-0.5 ${styles[type]}`}
+    >
+      {labels[type]}
+    </Badge>
+  );
 };
 
-const getTypeBadgeClass = (type: DevLogEntry['type']) => {
-  switch (type) {
-    case 'feature':
-      return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-    case 'fix':
-      return 'bg-red-500/10 text-red-400 border-red-500/20';
-    case 'design':
-      return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-    case 'infra':
-      return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-  }
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 };
 
 const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
   if (!devLog || devLog.length === 0) {
     return (
-      <div className="text-center py-16 text-muted-foreground">
-        <p>No dev log entries yet. Start contributing to see your progress here!</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2 }}
+        className="text-center py-12 text-muted-foreground"
+      >
+        <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+        <p>Development log coming soon</p>
+      </motion.div>
     );
   }
 
-  // Group by week (Week 4 = most recent)
+  // Group entries by week
   const groupedByWeek = devLog.reduce((acc, entry) => {
     if (!acc[entry.week]) {
       acc[entry.week] = [];
@@ -134,103 +148,92 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
     return acc;
   }, {} as Record<string, DevLogEntry[]>);
 
-  // Sort weeks in descending order (Week 4 -> Week 3 -> Week 2 -> Week 1)
-  const sortedWeeks = Object.entries(groupedByWeek).sort(([a], [b]) => b.localeCompare(a));
+  // Sort weeks in chronological order (most recent first: This Week, Week 4, Week 3, Week 2, Week 1)
+  const sortedWeeks = Object.entries(groupedByWeek).sort(([weekA], [weekB]) => {
+    // Handle "This Week" special case - it should come first
+    if (weekA === 'This Week') return -1;
+    if (weekB === 'This Week') return 1;
 
-  // Group entries within each week by type
-  const groupByType = (entries: DevLogEntry[]) => {
-    return entries.reduce((acc, entry) => {
-      if (!acc[entry.type]) {
-        acc[entry.type] = [];
-      }
-      acc[entry.type].push(entry);
-      return acc;
-    }, {} as Record<DevLogEntry['type'], DevLogEntry[]>);
-  };
+    // Extract week numbers and sort in descending order (Week 4 before Week 1)
+    const numA = parseInt(weekA.match(/\d+/)?.[0] || '0');
+    const numB = parseInt(weekB.match(/\d+/)?.[0] || '0');
+    return numB - numA;
+  });
+
+  // Get the first (most recent) week as default open
+  const mostRecentWeek = sortedWeeks[0]?.[0] || '';
 
   return (
-    <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="py-8"
+    >
       <Accordion
-        type="single"
-        collapsible
-        className="space-y-3"
+        type="multiple"
+        defaultValue={[mostRecentWeek]}
+        className="space-y-6"
       >
-        {sortedWeeks.map(([week, entries]) => {
-          const groupedByType = groupByType(entries);
-          return (
-            <AccordionItem
-              key={week}
-              value={week}
-              className="border border-border/50 rounded-2xl overflow-hidden bg-card/30 backdrop-blur-sm"
-            >
-              <AccordionTrigger className="px-6 py-4 hover:no-underline group">
-                <div className="flex items-center gap-4 w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-                      {week.replace('Week ', '')}
-                    </div>
-                    <div className="text-left">
-                      <h4 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">{week}</h4>
-                      <p className="text-xs text-muted-foreground">{entries.length} commits</p>
-                    </div>
-                  </div>
-                  <div className="ml-auto flex gap-2">
-                    {Object.entries(groupedByType).map(([type, typeEntries]) => (
-                      <Badge
-                        key={type}
-                        variant="outline"
-                        className={`${getTypeBadgeClass(type as DevLogEntry['type'])} text-xs px-2 py-0.5`}
-                      >
-                        {getTypeIcon(type as DevLogEntry['type'])} {typeEntries.length}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-6">
-                <div className="space-y-6 pt-4">
-                  {Object.entries(groupedByType).map(([type, typeEntries]) => (
-                    <div key={type}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg">{getTypeIcon(type as DevLogEntry['type'])}</span>
-                        <h5 className="text-sm font-medium text-foreground capitalize">{type}</h5>
-                        <div className="flex-1 h-px bg-border/30 ml-2" />
+        {sortedWeeks.map(([week, entries]) => (
+          <AccordionItem
+            key={week}
+            value={week}
+            className="border-none"
+          >
+            <AccordionTrigger className="hover:no-underline pb-0">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{week}</h3>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              {/* Timeline */}
+              <div className="relative">
+                {/* Vertical line */}
+                <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+
+                {/* Entries */}
+                <div className="space-y-4">
+                  {entries.map((entry, entryIndex) => (
+                    <motion.div
+                      key={entry.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.2, delay: entryIndex * 0.05 }}
+                      className="relative flex gap-4 pl-0"
+                    >
+                      {/* Avatar */}
+                      <div className="relative z-10 flex-shrink-0">
+                        <Avatar className="w-8 h-8 border-2 border-background">
+                          <AvatarImage
+                            src={entry.assigneeImg}
+                            alt={entry.assignee}
+                          />
+                          <AvatarFallback className="text-xs bg-muted">{getInitials(entry.assignee)}</AvatarFallback>
+                        </Avatar>
                       </div>
-                      <ul className="space-y-2">
-                        {typeEntries.map((entry) => (
-                          <li
-                            key={entry.id}
-                            className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/20 hover:border-border/40 transition-colors"
-                          >
-                            <Avatar className="w-7 h-7 mt-0.5">
-                              <AvatarImage src={entry.assigneeImg} />
-                              <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                                {entry.assignee
-                                  .split(' ')
-                                  .map((n) => n[0])
-                                  .join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-foreground/90 leading-relaxed">{entry.content}</p>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <span className="text-xs text-muted-foreground">{entry.assignee}</span>
-                                <span className="text-xs text-muted-foreground">•</span>
-                                <span className="text-xs text-muted-foreground">{entry.date}</span>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+
+                      {/* Content */}
+                      <div className="flex-1 bg-card/30 border border-border/30 rounded-lg p-4 hover:border-border/60 transition-colors">
+                        {/* Top row */}
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="font-medium text-foreground text-sm">{entry.assignee}</span>
+                          <span className="text-muted-foreground text-xs">•</span>
+                          <span className="text-muted-foreground text-xs">{entry.date}</span>
+                          {getDevLogTypeBadge(entry.type)}
+                        </div>
+
+                        {/* Content */}
+                        <p className="text-sm text-muted-foreground leading-relaxed">{entry.content}</p>
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
       </Accordion>
-    </div>
+    </motion.div>
   );
 };
 
@@ -369,41 +372,98 @@ const AccountabilitySection = () => {
 
         {/* Dev Log Section */}
         <div className={`transition-all duration-1000 delay-400 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
               <h3 className="text-2xl md:text-3xl font-semibold mb-2">Development Log</h3>
               <p className="text-sm text-muted-foreground">
                 Real-time commit history from <span className="font-mono text-primary">jagdteam/JAGD-Company-Website</span>
               </p>
             </div>
+
+            {/* Type Summary Badges */}
             {!loading && !error && commits.length > 0 && (
-              <Badge
-                variant="outline"
-                className="bg-green-500/10 text-green-400 border-green-500/20 px-3 py-1"
-              >
-                ✅ {commits.length} commits tracked
-              </Badge>
+              <div className="flex items-center gap-2 flex-wrap">
+                {(() => {
+                  const typeCounts = commits.reduce((acc, commit) => {
+                    acc[commit.type] = (acc[commit.type] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>);
+
+                  return Object.entries(typeCounts).map(([type, count]) => (
+                    <Badge
+                      key={type}
+                      variant="outline"
+                      className={`text-xs px-3 py-1 ${
+                        type === 'feature'
+                          ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                          : type === 'fix'
+                          ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                          : type === 'design'
+                          ? 'bg-pink-500/10 text-pink-400 border-pink-500/20'
+                          : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                      }`}
+                    >
+                      {type === 'feature' ? '✨' : type === 'fix' ? '🐛' : type === 'design' ? '🎨' : '🔧'} {count} {type}
+                    </Badge>
+                  ));
+                })()}
+                <Badge
+                  variant="outline"
+                  className="bg-green-500/10 text-green-400 border-green-500/20 px-3 py-1"
+                >
+                  ✅ {commits.length} total
+                </Badge>
+              </div>
             )}
           </div>
 
-          {/* Dev Log Content */}
-          <div className="bg-card/30 backdrop-blur-sm border border-border/50 rounded-3xl p-8">
-            {loading && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
-                <p className="text-sm text-muted-foreground">Loading dev log from GitHub...</p>
-              </div>
-            )}
+          {/* Dev Log Content - No border/box */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+              <p className="text-sm text-muted-foreground">Loading dev log from GitHub...</p>
+            </div>
+          )}
 
-            {error && (
-              <div className="text-center py-16">
-                <p className="text-red-400 mb-2">Failed to load dev log</p>
-                <p className="text-sm text-muted-foreground">{error}</p>
-              </div>
-            )}
+          {error && (
+            <div className="text-center py-16">
+              <p className="text-red-400 mb-2">Failed to load dev log</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
+          )}
 
-            {!loading && !error && <DevLogTab devLog={commits} />}
-          </div>
+          {!loading && !error && <DevLogTab devLog={commits} />}
+        </div>
+
+        {/* Call to Action */}
+        <div
+          className={`text-center mt-16 pt-16 border-t border-border/30 transition-all duration-1000 delay-600 ${
+            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+          }`}
+        >
+          <h4 className="text-xl md:text-2xl font-semibold mb-3">Want to see the rest of our dev logs?</h4>
+          <p className="text-sm text-muted-foreground mb-6 max-w-2xl mx-auto">
+            Explore detailed development logs for all our projects, including ScholarLens, CliCR, CodeLens, and Clutch.
+          </p>
+          <a
+            href="/projects"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-foreground text-background rounded-full text-sm font-medium hover:bg-foreground/90 transition-all duration-300"
+          >
+            View All Projects
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </a>
         </div>
       </div>
     </section>
