@@ -38,14 +38,6 @@ const products: Product[] = [
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4',
     backgroundAsset: '/assets/domain_bg.mp4',
   },
-  {
-    id: 4,
-    title: 'Accountability',
-    subtitle: 'We Hold Each Other Accountable',
-    description: 'Leetcode & GitHub History',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4',
-    backgroundAsset: '/assets/accountability.png',
-  },
 ];
 
 const getAssetType = (url: string): 'image' | 'video' | 'gif' => {

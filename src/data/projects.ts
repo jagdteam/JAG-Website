@@ -190,4 +190,39 @@ export const projects: Project[] = [
     github: 'https://github.com/jagdteam/Clutch',
     // devLog: Loaded dynamically from GitHub API
   },
+  {
+    id: 'jagd-website',
+    name: 'JAGD Company Website',
+    initials: 'JW',
+    tagline: 'Our Portfolio & Accountability Platform',
+    mediaUrl: '/favicon.ico',
+    mediaType: 'image',
+    description:
+      'A modern, high-performance company website built with React, TypeScript, and TailwindCSS. This platform showcases our projects, team, and technical capabilities while serving as a real-time accountability system. We integrated GitHub, LeetCode, and Notion APIs via Vercel serverless functions to dynamically display our contributions, coding activity, and project roadmaps—demonstrating our ability to build production-grade, data-driven applications.',
+    techStack: {
+      frontend: ['React', 'TypeScript', 'TailwindCSS', 'Shadcn UI', 'Framer Motion', 'Vite'],
+      backend: ['Vercel Serverless Functions', 'Node.js', 'GitHub GraphQL API', 'LeetCode API', 'Notion API'],
+      database: ['Server-side caching', 'Edge caching with PST midnight reset'],
+      tools: ['GitHub Actions', 'Vercel', 'Git', 'REST & GraphQL APIs'],
+    },
+    features: [
+      'Dynamic GitHub contribution graphs (5-month view with personal tokens)',
+      'Real-time LeetCode activity tracking with problem breakdowns',
+      'Notion-powered project roadmaps with live status updates',
+      'Automated dev log generation from commit history',
+      'Smart caching strategy (midnight PST reset) to minimize API calls',
+      'Serverless architecture for scalable, cost-effective deployment',
+      'Team member filtering for multi-contributor repositories',
+      'Responsive 3D project carousel with physics-based animations',
+    ],
+    architecture:
+      'Modern JAMstack architecture with React SPA frontend and Vercel serverless backend. Uses GitHub GraphQL API for contribution calendars, REST API for commit history, unofficial LeetCode API for coding stats, and Notion API for roadmap data. All API responses are cached server-side with automatic expiration at midnight PST to balance freshness with rate limits.',
+    teamSize: '4 Engineers',
+    duration: '6 Weeks (Ongoing)',
+    status: 'Production / Iterating',
+    statusColor: 'green',
+    github: 'https://github.com/jagdteam/JAGD-Company-Website',
+    liveDemo: 'https://jagd.com',
+    // devLog: Loaded dynamically from GitHub API
+  },
 ];
