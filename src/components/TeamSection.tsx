@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { TeamMemberActivity } from '@/components/TeamMemberActivity';
+import { useEffect, useRef, useState } from 'react';
 
 interface TeamMember {
   name: string;
@@ -9,8 +9,8 @@ interface TeamMember {
   bio: string;
   expertise: string[];
   education: string[];
-  github: string;      // GitHub username
-  leetcode?: string;   // LeetCode username (optional)
+  github: string; // GitHub username
+  leetcode?: string; // LeetCode username (optional)
 }
 
 const team: TeamMember[] = [
@@ -34,7 +34,7 @@ const team: TeamMember[] = [
     role: 'Full-Stack Software Engineer',
     initial: 'G',
     image: '/assets/g_pfp.jpg',
-    bio: 'Giuseppi is a Full-Stack Software Engineer who loves turning complex concepts into shipping products. He currently leads the technical vision at JAGD, where he focuses on rapid prototyping, AI integration, and scalable backend architecture. With a Master\'s in Computer Science from UC Irvine, Giuseppi combines strong engineering fundamentals with a hands-on approach to building high-performance applications.',
+    bio: "Giuseppi is a Full-Stack Software Engineer who loves turning complex concepts into shipping products. He currently leads the technical vision at JAGD, where he focuses on rapid prototyping, AI integration, and scalable backend architecture. With a Master's in Computer Science from UC Irvine, Giuseppi combines strong engineering fundamentals with a hands-on approach to building high-performance applications.",
     expertise: [
       'Full-Stack Engineering',
       'Mobile Development',
@@ -60,7 +60,7 @@ const team: TeamMember[] = [
     image: '/assets/jf_pfp.jpg',
     bio: 'Johnny is a full-stack software engineer with a passion for building products and turning them into scalable, marketable solutions. He drives the rapid development of projects through his diverse experience in AI/ML, mobile development, and performance optimization.',
     expertise: [
-      'Python (flask)',
+      'Python (Flask)',
       'Swift',
       'C/C++',
       'Java',

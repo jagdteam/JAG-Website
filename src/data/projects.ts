@@ -94,6 +94,7 @@ export const projects: Project[] = [
     duration: '4 Weeks',
     status: 'MVP / In Development',
     statusColor: 'green',
+    github: 'https://github.com/jagdteam/Education-Project',
     // devLog: Loaded dynamically from GitHub API
   },
   {
@@ -124,6 +125,7 @@ export const projects: Project[] = [
     duration: '1 Week',
     status: 'MVP Complete',
     statusColor: 'green',
+    github: 'https://github.com/jagdteam/clicr',
     // devLog: Loaded dynamically from GitHub API
   },
   {
@@ -153,6 +155,7 @@ export const projects: Project[] = [
     duration: 'In Development',
     status: 'Beta/Research',
     statusColor: 'yellow',
+    github: 'https://github.com/jagdteam/CodeLens',
     // devLog: Loaded dynamically from GitHub API
   },
   {
@@ -184,6 +187,7 @@ export const projects: Project[] = [
     duration: '5 months',
     status: 'Planning',
     statusColor: 'blue',
+    github: 'https://github.com/jagdteam/Clutch',
     // devLog: Loaded dynamically from GitHub API
   },
 ];
