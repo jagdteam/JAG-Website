@@ -369,6 +369,12 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
     );
   }
 
+  // Calculate type counts for summary badges
+  const typeCounts = devLog.reduce((acc, commit) => {
+    acc[commit.type] = (acc[commit.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   // Group entries by week
   const groupedByWeek = devLog.reduce((acc, entry) => {
     if (!acc[entry.week]) {
@@ -401,6 +407,34 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
       transition={{ duration: 0.2 }}
       className="py-8"
     >
+      {/* Summary Badges */}
+      <div className="flex items-center gap-2 flex-wrap mb-8">
+        {Object.entries(typeCounts).map(([type, count]) => (
+          <Badge
+            key={type}
+            variant="outline"
+            className={`text-xs px-3 py-1 gap-1.5 ${
+              type === 'feature'
+                ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                : type === 'fix'
+                ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                : type === 'design'
+                ? 'bg-pink-500/10 text-pink-400 border-pink-500/20'
+                : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+            }`}
+          >
+            {getDevLogTypeIcon(type as DevLogEntry['type'])}
+            {type.charAt(0).toUpperCase() + type.slice(1)} | {count}
+          </Badge>
+        ))}
+        <Badge
+          variant="outline"
+          className="bg-green-500/10 text-green-400 border-green-500/20 px-3 py-1"
+        >
+          ✅ {devLog.length} Total
+        </Badge>
+      </div>
+
       <Accordion
         type="multiple"
         defaultValue={[mostRecentWeek]}
