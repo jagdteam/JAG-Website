@@ -209,7 +209,7 @@ export const projects: Project[] = [
       frontend: ['React Native', 'Expo', 'NativeWind'],
       backend: ['Python', 'FastAPI'],
       database: ['Supabase (PostgreSQL)'],
-      tools: ['DigitalOcean', 'GitHub Actions', 'Lovable'],
+      tools: ['DigitalOcean', 'GitHub Actions'],
       ai_cv: ['YOLOv8 (Edge AI)', 'OpenCV', 'Roboflow'],
     },
     features: [
