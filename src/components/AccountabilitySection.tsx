@@ -174,9 +174,6 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
     return numB - numA;
   });
 
-  // Get the first (most recent) week as default open
-  const mostRecentWeek = sortedWeeks[0]?.[0] || '';
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -187,7 +184,7 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
     >
       <Accordion
         type="multiple"
-        defaultValue={[mostRecentWeek]}
+        defaultValue={[]}
         className="space-y-6"
       >
         {sortedWeeks.map(([week, entries]) => (

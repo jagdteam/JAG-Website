@@ -166,6 +166,12 @@ const OverviewTab = ({ project }: { project: Project }) => (
       </ul>
     </SpecRow>
 
+    {project.leadEngineers && project.leadEngineers.length > 0 && (
+      <SpecRow label="Lead Engineer">
+        <p className="text-lg">{project.leadEngineers.join(' & ')}</p>
+      </SpecRow>
+    )}
+
     <SpecRow label="Team Size">
       <p className="text-lg">{project.teamSize}</p>
     </SpecRow>
@@ -207,11 +213,11 @@ const getStatusBadgeClass = (status: string) => {
 
 const calculateSprintProgress = (sprint: Sprint) => {
   if (!sprint.epics || sprint.epics.length === 0) return 0;
-  
-  const allTickets = sprint.epics.flatMap(epic => epic.tickets || []);
+
+  const allTickets = sprint.epics.flatMap((epic) => epic.tickets || []);
   if (allTickets.length === 0) return 0;
-  
-  const completedTickets = allTickets.filter(t => t.status === 'completed').length;
+
+  const completedTickets = allTickets.filter((t) => t.status === 'completed').length;
   return Math.round((completedTickets / allTickets.length) * 100);
 };
 
@@ -253,7 +259,8 @@ const RoadmapTab = ({ roadmap }: { roadmap?: Sprint[] }) => (
             </div>
             {sprint.startDate && sprint.endDate && (
               <span className="text-sm text-muted-foreground">
-                {new Date(sprint.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(sprint.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {new Date(sprint.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} -{' '}
+                {new Date(sprint.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             )}
           </div>
@@ -272,7 +279,10 @@ const RoadmapTab = ({ roadmap }: { roadmap?: Sprint[] }) => (
 
           {/* Epics - Collapsible */}
           {sprint.epics && sprint.epics.length > 0 ? (
-            <Accordion type="multiple" className="space-y-3">
+            <Accordion
+              type="multiple"
+              className="space-y-3"
+            >
               {sprint.epics.map((epic, epicIndex) => (
                 <AccordionItem
                   key={epic.id}
@@ -288,18 +298,19 @@ const RoadmapTab = ({ roadmap }: { roadmap?: Sprint[] }) => (
                             {epic.name || `Epic ${epicIndex + 1}`}
                           </span>
                           {epic.priority && (
-                            <Badge variant="outline" className="text-xs">
+                            <Badge
+                              variant="outline"
+                              className="text-xs"
+                            >
                               {epic.priority}
                             </Badge>
                           )}
                         </div>
-                        {epic.description && (
-                          <p className="text-xs text-muted-foreground mt-1">{epic.description}</p>
-                        )}
+                        {epic.description && <p className="text-xs text-muted-foreground mt-1">{epic.description}</p>}
                       </div>
                       {epic.tickets && epic.tickets.length > 0 && (
                         <span className="text-xs text-muted-foreground">
-                          {epic.tickets.filter(t => t.status === 'completed').length}/{epic.tickets.length} tasks
+                          {epic.tickets.filter((t) => t.status === 'completed').length}/{epic.tickets.length} tasks
                         </span>
                       )}
                     </div>
@@ -315,23 +326,32 @@ const RoadmapTab = ({ roadmap }: { roadmap?: Sprint[] }) => (
                             {getStatusIcon(ticket.status)}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`text-sm ${ticket.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                <span
+                                  className={`text-sm ${ticket.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground'}`}
+                                >
                                   {ticket.name || 'Untitled Ticket'}
                                 </span>
                                 {ticket.storyPoints && (
-                                  <Badge variant="secondary" className="text-xs">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
                                     {ticket.storyPoints} pts
                                   </Badge>
                                 )}
-                                {ticket.assignees && ticket.assignees.length > 0 && ticket.assignees.map((assignee, idx) => (
-                                  <Badge key={idx} variant="outline" className="text-xs">
-                                    {assignee}
-                                  </Badge>
-                                ))}
+                                {ticket.assignees &&
+                                  ticket.assignees.length > 0 &&
+                                  ticket.assignees.map((assignee, idx) => (
+                                    <Badge
+                                      key={idx}
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {assignee}
+                                    </Badge>
+                                  ))}
                               </div>
-                              {ticket.description && (
-                                <p className="text-xs text-muted-foreground mt-1">{ticket.description}</p>
-                              )}
+                              {ticket.description && <p className="text-xs text-muted-foreground mt-1">{ticket.description}</p>}
                             </div>
                           </li>
                         ))}

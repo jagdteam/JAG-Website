@@ -83,6 +83,7 @@ export interface Project {
   };
   features: string[];
   architecture: string;
+  leadEngineers?: string[]; // Lead engineer(s) for the project
   teamSize: string;
   duration: string;
   status: string;
@@ -122,6 +123,7 @@ export const projects: Project[] = [
       'Secure REST API endpoints for frontend-backend communication',
     ],
     architecture: 'Modern Monolithic Architecture: Python Flask REST API serving a React Single Page Application (SPA)',
+    leadEngineers: ['Andrew Espinosa'],
     teamSize: '4 Engineers',
     duration: '4 Weeks',
     status: 'MVP / In Development',
@@ -152,7 +154,8 @@ export const projects: Project[] = [
       'Universal support for 40+ programming languages & file types',
     ],
     architecture:
-      'A local-first CLI implementing Retrieval-Augmented Generation (RAG) for codebases. It features a decoupled ingestion pipeline with persistent vector storage via ChromaDB and utilizes Cohere’s Embed v3 for high-precision semantic search.',
+      "A local-first CLI implementing Retrieval-Augmented Generation (RAG) for codebases. It features a decoupled ingestion pipeline with persistent vector storage via ChromaDB and utilizes Cohere's Embed v3 for high-precision semantic search.",
+    leadEngineers: ['Giuseppi Pelayo', 'Johnny Fok'],
     teamSize: '2 Engineers',
     duration: '1 Week',
     status: 'MVP Complete',
@@ -184,6 +187,7 @@ export const projects: Project[] = [
       'Cost-reduction tracking for developer ramp-up efficiency',
     ],
     architecture: 'Hybrid system utilizing local AST parsing and cloud-based AI to map internal project dependencies into visual mental models.',
+    leadEngineers: ['Johnny Fok'],
     teamSize: '2 Engineers',
     duration: 'In Development',
     status: 'Beta/Research',
@@ -200,27 +204,28 @@ export const projects: Project[] = [
     mediaUrl: '/assets/clutch.jpg',
     mediaType: 'image',
     description:
-      'A mobile-first analytics platform designed to digitize and unify the game for the everyday person. Clutch replaces inconsistent manual scorekeeping with a standardized game state engine, leveraging computer vision to capture real-time performance data. We build a permanent career profile for every player, creating a universal metric of success that validates every milestone and connects people through a shared history of the game.',
+      'A mobile-first analytics platform designed to digitize and unify the game for the everyday person. Clutch replaces inconsistent manual scorekeeping with a standardized game state engine, leveraging AI and edge computer vision (YOLOv8) to capture real-time performance data. We build a permanent career profile for every player, creating a universal metric of success that validates every milestone and connects people through a shared history of the game.',
     techStack: {
-      frontend: ['Mobile Framework (TBD)'],
-      backend: ['TBD'],
-      database: ['Real-time DB (TBD)'],
-      tools: ['TBD'],
-      ai_cv: ['Computer Vision Libraries (TBD)'],
+      frontend: ['React Native', 'Expo', 'NativeWind'],
+      backend: ['Python', 'FastAPI'],
+      database: ['Supabase (PostgreSQL)'],
+      tools: ['DigitalOcean', 'GitHub Actions', 'Lovable'],
+      ai_cv: ['YOLOv8 (Edge AI)', 'OpenCV', 'Roboflow'],
     },
     features: [
-      'Real-time Game State Engine (Scalable)',
-      'Automated shot detection & scoring',
-      'Offline-first synchronization',
-      'Personal stats & progression tracking',
-      'Interactive "Career Mode" dashboard',
-      'Community hub & pickup game coordination',
+      'Edge-based Computer Vision (No internet required for gameplay)',
+      'Real-time shot tracking & "Heat Check" analytics',
+      'Proprietary MMR Ranking System (Global Ladder)',
+      'Video Game HUD with Live AR Overlays',
+      'Hybrid Cloud Sync (Offline-first architecture)',
+      'Community "Pickup" matchmaking',
     ],
-    architecture: 'TBD (Mobile-first with Edge AI inference planned)',
+    architecture: 'Hybrid Edge-Cloud (On-Device Inference + Python Sync Engine)',
+    leadEngineers: ['Giuseppi Pelayo'],
     teamSize: '4 Engineers',
     duration: '5 months',
-    status: 'Planning',
-    statusColor: 'blue',
+    status: 'In Development',
+    statusColor: 'yellow', // Changed from blue to indicate active building
     github: 'https://github.com/jagdteam/Clutch',
     // devLog: Loaded dynamically from GitHub API
   },
