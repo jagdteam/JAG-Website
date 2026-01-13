@@ -7,7 +7,7 @@ import type { Sprint } from '@/data/projects';
  * Production: Uses Vercel deployment
  * Development: Can override with VITE_NOTION_API_URL env var for local testing
  */
-const NOTION_API_BASE = import.meta.env.VITE_NOTION_API_URL || 'https://jagdnotionapiserver.vercel.app/api/notion';
+const NOTION_API_BASE = 'https://jagdnotionapiserver.vercel.app/api/notion';
 
 /**
  * Test Notion API connection
@@ -41,7 +41,7 @@ export async function testNotionConnection(): Promise<{
  */
 export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
   try {
-    const response = await fetch(`${NOTION_API_BASE}/roadmap`);
+    const response = await fetch(`${NOTION_API_BASE}/sprints`);
     const result = await response.json();
     
     if (!result.success) {
@@ -62,8 +62,8 @@ export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
  */
 export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]> {
   try {
-    const url = `${NOTION_API_BASE}/roadmap?projectSlug=${encodeURIComponent(projectSlug)}`;
-    console.log(`📡 Fetching from: ${url}`);
+    const url = `${NOTION_API_BASE}/sprints?projectSlug=${encodeURIComponent(projectSlug)}`;
+    console.log(`📡 Fetching roadmap from: ${url}`);
     
     const response = await fetch(url);
     const result = await response.json();
@@ -74,9 +74,9 @@ export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]
       throw new Error(result.error || 'Failed to fetch project roadmap');
     }
 
-    // Return the roadmap for the specific project (now returns Sprint[] with epics and tickets)
-    const roadmapData: Sprint[] = result.data[projectSlug] || result.data || [];
-    console.log(`🗺️ Extracted roadmap for ${projectSlug}:`, roadmapData);
+    // Backend now returns Sprint[] directly
+    const roadmapData: Sprint[] = Array.isArray(result.data) ? result.data : [];
+    console.log(`✅ Received ${roadmapData.length} sprints for ${projectSlug}`);
     
     return roadmapData;
   } catch (error: any) {

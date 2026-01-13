@@ -75,7 +75,7 @@ teamMembers.forEach((m) => {
 const projects = [
   { id: 'scholarlens-ai', repo: 'jagdteam/Education-Project', isPrivate: true }, // Private repo
   { id: 'clicr-cli', repo: 'jagdteam/clicr' },
-  { id: 'codelens', repo: 'jagdteam/CodeLens' },
+  { id: 'CodeLens', repo: 'jagdteam/CodeLens' },
   { id: 'clutch', repo: 'jagdteam/Clutch', isPrivate: true }, // Private repo (in planning)
 ];
 

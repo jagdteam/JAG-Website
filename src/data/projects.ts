@@ -8,7 +8,7 @@
  *   - Uses useProjectCommits() hook in ProjectDetails.tsx
  *   - Data automatically filtered to team members and formatted
  *
- * - roadmap: Fetched from Notion API via `/api/notion/roadmap`
+ * - roadmap: Fetched from Notion API via `/api/notion/sprints`
  *   - Uses useProjectRoadmap() hook in ProjectDetails.tsx
  *
  * All dynamic data is cached until midnight PST to minimize API calls.
@@ -21,7 +21,7 @@ export interface Ticket {
   name: string;
   status: 'not-started' | 'in-progress' | 'completed';
   description: string;
-  assignee: string | null;
+  assignees: string[]; // Array of assignee names
   storyPoints: number | null;
 }
 
@@ -91,6 +91,7 @@ export interface Project {
   liveDemo?: string;
   roadmap?: Sprint[]; // Loaded from Notion API (replaces old ProjectPhase structure)
   devLog?: DevLogEntry[]; // DEPRECATED: Now loaded from GitHub API
+  notionProjectSlug?: string; // Optional: Override for Notion API calls if different from id
   // Visual media support
   mediaUrl?: string;
   mediaType?: 'image' | 'gif' | 'video';
@@ -164,6 +165,7 @@ export const projects: Project[] = [
     name: 'CodeLens',
     initials: 'CL',
     tagline: 'AI-Powered Visual Abstraction for Engineering Teams',
+    notionProjectSlug: 'CodeLens', // Notion database uses "CodeLens" with capital C and L
     mediaUrl: '/favicon.ico',
     mediaType: 'image',
     description:
@@ -194,6 +196,7 @@ export const projects: Project[] = [
     name: 'Clutch',
     initials: 'CU',
     tagline: 'Uniting Everyone Under One Standard of Play',
+    notionProjectSlug: 'Clutch',
     mediaUrl: '/assets/clutch.jpg',
     mediaType: 'image',
     description:

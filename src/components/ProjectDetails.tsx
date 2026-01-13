@@ -323,11 +323,11 @@ const RoadmapTab = ({ roadmap }: { roadmap?: Sprint[] }) => (
                                     {ticket.storyPoints} pts
                                   </Badge>
                                 )}
-                                {ticket.assignee && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {ticket.assignee}
+                                {ticket.assignees && ticket.assignees.length > 0 && ticket.assignees.map((assignee, idx) => (
+                                  <Badge key={idx} variant="outline" className="text-xs">
+                                    {assignee}
                                   </Badge>
-                                )}
+                                ))}
                               </div>
                               {ticket.description && (
                                 <p className="text-xs text-muted-foreground mt-1">{ticket.description}</p>
@@ -505,7 +505,7 @@ const DevLogTab = ({ devLog }: { devLog?: DevLogEntry[] }) => {
 
 const ProjectDetails = ({ project }: ProjectDetailsProps) => {
   // Fetch roadmap data from Notion
-  const { roadmap, loading: roadmapLoading, error: roadmapError } = useProjectRoadmap(project.id);
+  const { roadmap, loading: roadmapLoading, error: roadmapError } = useProjectRoadmap(project);
 
   // Extract repo slug from GitHub URL (e.g., "https://github.com/jagdteam/clicr" -> "jagdteam/clicr")
   const getRepoSlug = (githubUrl?: string): string | undefined => {

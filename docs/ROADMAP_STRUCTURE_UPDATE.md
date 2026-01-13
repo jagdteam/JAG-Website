@@ -70,7 +70,7 @@ interface Ticket {
   name: string;
   status: 'not-started' | 'in-progress' | 'completed';
   description: string;
-  assignee: string | null;
+  assignees: string[]; // Array of assignee names (supports multiple assignees)
   storyPoints: number | null;
 }
 ```
