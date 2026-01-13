@@ -1,14 +1,14 @@
-import type { ProjectPhase } from '@/data/projects';
+import type { Sprint } from '@/data/projects';
 import { fetchProjectRoadmap } from '@/lib/api/notion';
 import { useEffect, useState } from 'react';
 
 /**
  * Hook to fetch and manage roadmap data from Notion for a specific project
  * @param projectId - The project ID/slug (e.g., 'scholarlens-ai')
- * @returns Object containing roadmap data, loading state, and error
+ * @returns Object containing roadmap data (sprints), loading state, and error
  */
 export function useProjectRoadmap(projectId: string) {
-  const [roadmap, setRoadmap] = useState<ProjectPhase[]>([]);
+  const [roadmap, setRoadmap] = useState<Sprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +21,7 @@ export function useProjectRoadmap(projectId: string) {
         setError(null);
 
         console.log(`🔍 Fetching roadmap for project: ${projectId}`);
-        const data = await fetchProjectRoadmap(projectId);
+        const data: Sprint[] = await fetchProjectRoadmap(projectId);
         console.log(`✅ Received roadmap data:`, data);
 
         if (mounted) {

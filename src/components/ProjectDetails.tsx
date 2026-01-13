@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { DevLogEntry, Project, ProjectPhase } from '@/data/projects';
+import type { DevLogEntry, Project, Sprint } from '@/data/projects';
 import { useProjectCommits } from '@/hooks/useProjectCommits';
 import { useProjectRoadmap } from '@/hooks/useProjectRoadmap';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -182,8 +182,41 @@ const OverviewTab = ({ project }: { project: Project }) => (
   </motion.div>
 );
 
-// Roadmap Tab Content
-const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
+// Helper functions for roadmap status
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle2 className="w-4 h-4 text-green-400" />;
+    case 'in-progress':
+      return <Clock className="w-4 h-4 text-yellow-400" />;
+    default:
+      return <CircleDashed className="w-4 h-4 text-muted-foreground" />;
+  }
+};
+
+const getStatusBadgeClass = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-500/20 text-green-400 border-green-500/30';
+    case 'in-progress':
+      return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+    default:
+      return 'bg-muted text-muted-foreground border-border';
+  }
+};
+
+const calculateSprintProgress = (sprint: Sprint) => {
+  if (!sprint.epics || sprint.epics.length === 0) return 0;
+  
+  const allTickets = sprint.epics.flatMap(epic => epic.tickets || []);
+  if (allTickets.length === 0) return 0;
+  
+  const completedTickets = allTickets.filter(t => t.status === 'completed').length;
+  return Math.round((completedTickets / allTickets.length) * 100);
+};
+
+// Roadmap Tab Content - New Sprint/Epic/Ticket Structure
+const RoadmapTab = ({ roadmap }: { roadmap?: Sprint[] }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -197,61 +230,122 @@ const RoadmapTab = ({ roadmap }: { roadmap?: ProjectPhase[] }) => (
         <p>Roadmap coming soon</p>
       </div>
     ) : (
-      roadmap.map((phase, index) => (
+      roadmap.map((sprint, index) => (
         <motion.div
-          key={phase.id}
+          key={sprint.id}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
           className="bg-card/50 border border-border/50 rounded-xl p-6 hover:border-border transition-colors"
         >
-          {/* Phase Header */}
+          {/* Sprint Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
-              <h3 className="text-lg font-semibold text-foreground">{phase.name}</h3>
-              {/* <Badge
+              <h3 className="text-lg font-semibold text-foreground">{sprint.name}</h3>
+              <Badge
                 variant="outline"
-                className={getPhaseStatusColor(phase.status)}
+                className={getStatusBadgeClass(sprint.status)}
               >
-                {phase.status === 'completed' && 'Completed'}
-                {phase.status === 'in-progress' && 'In Progress'}
-                {phase.status === 'planned' && 'Planned'}
-              </Badge> */}
+                {sprint.status === 'completed' && 'Completed'}
+                {sprint.status === 'in-progress' && 'In Progress'}
+                {sprint.status === 'not-started' && 'Not Started'}
+              </Badge>
             </div>
-            <span className="text-sm text-muted-foreground">{phase.date}</span>
+            {sprint.startDate && sprint.endDate && (
+              <span className="text-sm text-muted-foreground">
+                {new Date(sprint.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(sprint.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            )}
           </div>
 
           {/* Progress Bar */}
-          <div className="mb-4">
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs text-muted-foreground">Progress</span>
+              <span className="text-xs text-muted-foreground">{calculateSprintProgress(sprint)}%</span>
+            </div>
             <Progress
-              // value={getPhaseProgress(phase.status)}
+              value={calculateSprintProgress(sprint)}
               className="h-1.5"
             />
           </div>
 
-          {/* Phase Items */}
-          <ul className="space-y-3">
-            {phase.items.map((item, itemIndex) => (
-              <li
-                key={itemIndex}
-                className="flex items-start gap-3"
-              >
-                {item.status === 'completed' ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                ) : item.status === 'in-progress' ? (
-                  <Clock className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                ) : (
-                  <CircleDashed className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                )}
-                <div className="flex-1">
-                  <span className={`text-sm ${item.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground font-medium'}`}>
-                    {item.name}
-                  </span>
-                  {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
-                </div>
-              </li>
-            ))}
-          </ul>
+          {/* Epics - Collapsible */}
+          {sprint.epics && sprint.epics.length > 0 ? (
+            <Accordion type="multiple" className="space-y-3">
+              {sprint.epics.map((epic, epicIndex) => (
+                <AccordionItem
+                  key={epic.id}
+                  value={epic.id}
+                  className="border border-border/30 rounded-lg px-4 bg-background/30"
+                >
+                  <AccordionTrigger className="hover:no-underline py-3">
+                    <div className="flex items-center gap-3 text-left flex-1">
+                      {getStatusIcon(epic.status)}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`font-medium ${epic.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                            {epic.name || `Epic ${epicIndex + 1}`}
+                          </span>
+                          {epic.priority && (
+                            <Badge variant="outline" className="text-xs">
+                              {epic.priority}
+                            </Badge>
+                          )}
+                        </div>
+                        {epic.description && (
+                          <p className="text-xs text-muted-foreground mt-1">{epic.description}</p>
+                        )}
+                      </div>
+                      {epic.tickets && epic.tickets.length > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {epic.tickets.filter(t => t.status === 'completed').length}/{epic.tickets.length} tasks
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3 pt-2">
+                    {epic.tickets && epic.tickets.length > 0 ? (
+                      <ul className="space-y-2 pl-7">
+                        {epic.tickets.map((ticket) => (
+                          <li
+                            key={ticket.id}
+                            className="flex items-start gap-3 p-2 rounded-md hover:bg-muted/30 transition-colors"
+                          >
+                            {getStatusIcon(ticket.status)}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-sm ${ticket.status === 'completed' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                                  {ticket.name || 'Untitled Ticket'}
+                                </span>
+                                {ticket.storyPoints && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {ticket.storyPoints} pts
+                                  </Badge>
+                                )}
+                                {ticket.assignee && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {ticket.assignee}
+                                  </Badge>
+                                )}
+                              </div>
+                              {ticket.description && (
+                                <p className="text-xs text-muted-foreground mt-1">{ticket.description}</p>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground pl-7">No tickets yet</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">No epics defined for this sprint</p>
+          )}
         </motion.div>
       ))
     )}

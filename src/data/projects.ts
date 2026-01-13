@@ -14,10 +14,41 @@
  * All dynamic data is cached until midnight PST to minimize API calls.
  */
 
+// New roadmap structure: Sprint -> Epic -> Ticket
+
+export interface Ticket {
+  id: string;
+  name: string;
+  status: 'not-started' | 'in-progress' | 'completed';
+  description: string;
+  assignee: string | null;
+  storyPoints: number | null;
+}
+
+export interface Epic {
+  id: string;
+  name: string;
+  status: 'not-started' | 'in-progress' | 'completed';
+  description: string;
+  priority: string | null;
+  tickets: Ticket[];
+}
+
+export interface Sprint {
+  id: string;
+  name: string;
+  sprintNumber: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  status: 'not-started' | 'in-progress' | 'completed';
+  epics: Epic[];
+}
+
+// DEPRECATED: Old interfaces kept for backward compatibility
 export interface RoadmapItem {
   name: string;
   status: 'not-started' | 'in-progress' | 'completed';
-  description?: string; // Optional - only show if you want extra detail on website
+  description?: string;
 }
 
 export interface ProjectPhase {
@@ -58,7 +89,7 @@ export interface Project {
   statusColor: 'red' | 'yellow' | 'green' | 'blue';
   github?: string;
   liveDemo?: string;
-  roadmap?: ProjectPhase[]; // DEPRECATED: Now loaded from Notion API
+  roadmap?: Sprint[]; // Loaded from Notion API (replaces old ProjectPhase structure)
   devLog?: DevLogEntry[]; // DEPRECATED: Now loaded from GitHub API
   // Visual media support
   mediaUrl?: string;

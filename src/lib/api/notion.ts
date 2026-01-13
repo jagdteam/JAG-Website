@@ -1,4 +1,4 @@
-import type { ProjectPhase } from '@/data/projects';
+import type { Sprint } from '@/data/projects';
 
 /**
  * Notion API Base URL
@@ -37,9 +37,9 @@ export async function testNotionConnection(): Promise<{
 
 /**
  * Fetch roadmap data for all projects from Notion
- * @returns Object mapping project slugs to their roadmap phases
+ * @returns Object mapping project slugs to their roadmap sprints
  */
-export async function fetchAllRoadmaps(): Promise<Record<string, ProjectPhase[]>> {
+export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
   try {
     const response = await fetch(`${NOTION_API_BASE}/roadmap`);
     const result = await response.json();
@@ -56,11 +56,11 @@ export async function fetchAllRoadmaps(): Promise<Record<string, ProjectPhase[]>
 }
 
 /**
- * Fetch roadmap phases for a specific project by slug
+ * Fetch roadmap sprints for a specific project by slug
  * @param projectSlug - The project slug to filter by (e.g., 'scholarlens-ai')
- * @returns Array of ProjectPhase objects for the project
+ * @returns Array of Sprint objects for the project
  */
-export async function fetchProjectRoadmap(projectSlug: string): Promise<ProjectPhase[]> {
+export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]> {
   try {
     const url = `${NOTION_API_BASE}/roadmap?projectSlug=${encodeURIComponent(projectSlug)}`;
     console.log(`📡 Fetching from: ${url}`);
@@ -74,8 +74,8 @@ export async function fetchProjectRoadmap(projectSlug: string): Promise<ProjectP
       throw new Error(result.error || 'Failed to fetch project roadmap');
     }
 
-    // Return the roadmap for the specific project
-    const roadmapData = result.data[projectSlug] || [];
+    // Return the roadmap for the specific project (now returns Sprint[] with epics and tickets)
+    const roadmapData: Sprint[] = result.data[projectSlug] || result.data || [];
     console.log(`🗺️ Extracted roadmap for ${projectSlug}:`, roadmapData);
     
     return roadmapData;
