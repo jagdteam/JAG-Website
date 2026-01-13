@@ -169,7 +169,7 @@ export const projects: Project[] = [
     initials: 'CL',
     tagline: 'AI-Powered Visual Abstraction for Engineering Teams',
     notionProjectSlug: 'CodeLens', // Notion database uses "CodeLens" with capital C and L
-    mediaUrl: '/favicon.ico',
+    mediaUrl: 'assets/Lens.png',
     mediaType: 'image',
     description:
       'An enterprise-grade developer tool designed to slash onboarding costs. It uses AI to synthesize complex code into high-level HUDs and automated diagrams, reducing developer ramp-up time and cognitive load.',
