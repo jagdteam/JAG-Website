@@ -22,15 +22,24 @@ export function useProjectRoadmap(project: Project) {
 
         // Use notionProjectSlug if provided, otherwise fall back to id
         const slug = project.notionProjectSlug || project.id;
-        console.log(`🔍 Fetching roadmap for project: ${project.id} (Notion slug: ${slug})`);
+        
+        if (import.meta.env.DEV) {
+          console.log(`🔍 Fetching roadmap for project: ${project.id} (Notion slug: ${slug})`);
+        }
+        
         const data: Sprint[] = await fetchProjectRoadmap(slug);
-        console.log(`✅ Received roadmap data:`, data);
+        
+        if (import.meta.env.DEV) {
+          console.log(`✅ Received ${data.length} sprints`);
+        }
 
         if (mounted) {
           setRoadmap(data);
         }
       } catch (err) {
-        console.error(`❌ Error loading roadmap for ${project.id}:`, err);
+        if (import.meta.env.DEV) {
+          console.error(`❌ Error loading roadmap for ${project.id}:`, err);
+        }
         if (mounted) {
           const errorMessage = err instanceof Error ? err.message : 'Failed to load roadmap';
           setError(errorMessage);

@@ -42,16 +42,22 @@ function getCachedData<T>(key: string): T | null {
     
     // Check if cache is still valid (less than 24 hours old)
     if (now - timestamp < CACHE_DURATION) {
-      console.log(`✅ Using cached data for: ${key} (age: ${Math.round((now - timestamp) / 1000 / 60)} minutes)`);
+      if (import.meta.env.DEV) {
+        console.log(`✅ Using cached data for: ${key} (age: ${Math.round((now - timestamp) / 1000 / 60)} minutes)`);
+      }
       return data;
     }
 
     // Cache expired, remove it
-    console.log(`⏰ Cache expired for: ${key}`);
+    if (import.meta.env.DEV) {
+      console.log(`⏰ Cache expired for: ${key}`);
+    }
     localStorage.removeItem(CACHE_KEY_PREFIX + key);
     return null;
   } catch (error) {
-    console.warn(`⚠️  Error reading cache for ${key}:`, error);
+    if (import.meta.env.DEV) {
+      console.warn(`⚠️  Error reading cache for ${key}:`, error);
+    }
     return null;
   }
 }
@@ -68,9 +74,13 @@ function setCachedData<T>(key: string, data: T): void {
       timestamp: Date.now(),
     };
     localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(cached));
-    console.log(`💾 Cached data for: ${key}`);
+    if (import.meta.env.DEV) {
+      console.log(`💾 Cached data for: ${key}`);
+    }
   } catch (error) {
-    console.warn(`⚠️  Error setting cache for ${key}:`, error);
+    if (import.meta.env.DEV) {
+      console.warn(`⚠️  Error setting cache for ${key}:`, error);
+    }
   }
 }
 
@@ -85,9 +95,13 @@ export function clearNotionCache(): void {
         localStorage.removeItem(key);
       }
     });
-    console.log(`🗑️  Cleared all Notion cache`);
+    if (import.meta.env.DEV) {
+      console.log(`🗑️  Cleared all Notion cache`);
+    }
   } catch (error) {
-    console.warn(`⚠️  Error clearing cache:`, error);
+    if (import.meta.env.DEV) {
+      console.warn(`⚠️  Error clearing cache:`, error);
+    }
   }
 }
 
@@ -132,7 +146,9 @@ export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
 
   // Cache miss, fetch from API
   try {
-    console.log(`📡 Fetching all roadmaps from API...`);
+    if (import.meta.env.DEV) {
+      console.log(`📡 Fetching all roadmaps from API...`);
+    }
     const response = await fetch(`${NOTION_API_BASE}/sprints`);
     const result = await response.json();
     
@@ -145,9 +161,22 @@ export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
     
     return result.data;
   } catch (error: unknown) {
-    console.error('Error fetching Notion roadmap:', error);
+    if (import.meta.env.DEV) {
+      console.error('Error fetching Notion roadmap:', error);
+    }
     throw new Error('Failed to fetch roadmap');
   }
+}
+
+/**
+ * Validate project slug format
+ * @param slug - Project slug to validate
+ * @returns true if valid, false otherwise
+ */
+function isValidProjectSlug(slug: string): boolean {
+  // Allow alphanumeric, hyphens, and underscores only
+  const validSlugPattern = /^[a-zA-Z0-9_-]+$/;
+  return validSlugPattern.test(slug) && slug.length > 0 && slug.length <= 100;
 }
 
 /**
@@ -156,6 +185,15 @@ export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
  * @returns Array of Sprint objects for the project
  */
 export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]> {
+  // Input validation
+  if (!projectSlug || typeof projectSlug !== 'string') {
+    throw new Error('Invalid project slug: must be a non-empty string');
+  }
+
+  if (!isValidProjectSlug(projectSlug)) {
+    throw new Error('Invalid project slug format: only alphanumeric characters, hyphens, and underscores allowed');
+  }
+
   const cacheKey = `roadmap_${projectSlug}`;
   
   // Try to get from cache first
@@ -167,12 +205,21 @@ export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]
   // Cache miss, fetch from API
   try {
     const url = `${NOTION_API_BASE}/sprints?projectSlug=${encodeURIComponent(projectSlug)}`;
-    console.log(`📡 Fetching roadmap from: ${url}`);
+    if (import.meta.env.DEV) {
+      console.log(`📡 Fetching roadmap from: ${url}`);
+    }
     
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const result = await response.json();
     
-    console.log(`📥 Response:`, result);
+    if (import.meta.env.DEV) {
+      console.log(`📥 Received response for ${projectSlug}`);
+    }
     
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch project roadmap');
@@ -180,15 +227,20 @@ export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]
 
     // Backend now returns Sprint[] directly
     const roadmapData: Sprint[] = Array.isArray(result.data) ? result.data : [];
-    console.log(`✅ Received ${roadmapData.length} sprints for ${projectSlug}`);
+    
+    if (import.meta.env.DEV) {
+      console.log(`✅ Received ${roadmapData.length} sprints for ${projectSlug}`);
+    }
     
     // Cache the result
     setCachedData(cacheKey, roadmapData);
     
     return roadmapData;
   } catch (error: unknown) {
-    console.error(`❌ Error fetching roadmap for project ${projectSlug}:`, error);
-    throw new Error('Failed to fetch roadmap');
+    if (import.meta.env.DEV) {
+      console.error(`❌ Error fetching roadmap for project ${projectSlug}:`, error);
+    }
+    throw new Error('Failed to fetch project roadmap');
   }
 }
 
