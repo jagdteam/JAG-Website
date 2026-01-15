@@ -3,6 +3,8 @@
  * Connects to JAGD API Server for GitHub data
  */
 
+import { validateGitHubUsername, validateRepoFormat } from './validators';
+
 /**
  * API Base URL - Points to the backend server
  * Production: Uses Vercel deployment
@@ -64,14 +66,22 @@ export async function testGitHubConnection(): Promise<{
  * @returns Contribution calendar data
  */
 export async function fetchGitHubContributions(username: string): Promise<GitHubContribution[]> {
+  if (!validateGitHubUsername(username)) {
+    throw new Error('Invalid GitHub username format');
+  }
+
   try {
     const url = `${API_BASE}/github/contributions?username=${encodeURIComponent(username)}`;
-    console.log(`📡 Fetching GitHub contributions from: ${url}`);
+    if (import.meta.env.DEV) {
+      console.log(`📡 Fetching GitHub contributions from: ${url}`);
+    }
 
     const response = await fetch(url);
     const result = await response.json();
 
-    console.log(`📥 Response:`, result);
+    if (import.meta.env.DEV) {
+      console.log(`📥 Response:`, result);
+    }
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch GitHub contributions');
@@ -79,7 +89,9 @@ export async function fetchGitHubContributions(username: string): Promise<GitHub
 
     return result.data;
   } catch (error: any) {
-    console.error(`❌ Error fetching GitHub contributions for ${username}:`, error);
+    if (import.meta.env.DEV) {
+      console.error(`❌ Error fetching GitHub contributions for ${username}:`, error);
+    }
     throw error;
   }
 }
@@ -90,14 +102,22 @@ export async function fetchGitHubContributions(username: string): Promise<GitHub
  * @returns Array of filtered and processed commits
  */
 export async function fetchRepoCommits(repo: string): Promise<GitHubCommit[]> {
+  if (!validateRepoFormat(repo)) {
+    throw new Error('Invalid repository format. Expected: owner/repo');
+  }
+
   try {
     const url = `${API_BASE}/github/commits?repo=${encodeURIComponent(repo)}`;
-    console.log(`📡 Fetching commits from: ${url}`);
+    if (import.meta.env.DEV) {
+      console.log(`📡 Fetching commits from: ${url}`);
+    }
 
     const response = await fetch(url);
     const result = await response.json();
 
-    console.log(`📥 Response:`, result);
+    if (import.meta.env.DEV) {
+      console.log(`📥 Response:`, result);
+    }
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch repository commits');
@@ -105,7 +125,9 @@ export async function fetchRepoCommits(repo: string): Promise<GitHubCommit[]> {
 
     return result.data;
   } catch (error: any) {
-    console.error(`❌ Error fetching commits for repo ${repo}:`, error);
+    if (import.meta.env.DEV) {
+      console.error(`❌ Error fetching commits for repo ${repo}:`, error);
+    }
     throw error;
   }
 }

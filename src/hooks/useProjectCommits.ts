@@ -20,7 +20,9 @@ export function useProjectCommits(repo: string | undefined) {
         setError(null);
 
         if (!repo) {
-          console.log('⚠️  No repository provided, skipping commits fetch');
+          if (import.meta.env.DEV) {
+            console.log('⚠️  No repository provided, skipping commits fetch');
+          }
           if (mounted) {
             setCommits([]);
             setLoading(false);
@@ -28,15 +30,21 @@ export function useProjectCommits(repo: string | undefined) {
           return;
         }
 
-        console.log(`🔍 Fetching commits for repo: ${repo}`);
+        if (import.meta.env.DEV) {
+          console.log(`🔍 Fetching commits for repo: ${repo}`);
+        }
         const data = await fetchRepoCommits(repo);
-        console.log(`✅ Received ${data.length} commits`);
+        if (import.meta.env.DEV) {
+          console.log(`✅ Received ${data.length} commits`);
+        }
 
         if (mounted) {
           setCommits(data);
         }
       } catch (err: any) {
-        console.error(`❌ Error loading commits for ${repo}:`, err);
+        if (import.meta.env.DEV) {
+          console.error(`❌ Error loading commits for ${repo}:`, err);
+        }
         if (mounted) {
           setError(err.message || 'Failed to load project commits');
         }

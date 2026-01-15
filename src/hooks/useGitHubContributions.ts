@@ -19,15 +19,21 @@ export function useGitHubContributions(username: string) {
         setLoading(true);
         setError(null);
         
-        console.log(`🔍 Fetching GitHub contributions for: ${username}`);
+        if (import.meta.env.DEV) {
+          console.log(`🔍 Fetching GitHub contributions for: ${username}`);
+        }
         const data = await fetchGitHubContributions(username);
-        console.log(`✅ Received ${data.length} contribution days`);
+        if (import.meta.env.DEV) {
+          console.log(`✅ Received ${data.length} contribution days`);
+        }
         
         if (mounted) {
           setContributions(data);
         }
       } catch (err: any) {
-        console.error(`❌ Error loading GitHub contributions for ${username}:`, err);
+        if (import.meta.env.DEV) {
+          console.error(`❌ Error loading GitHub contributions for ${username}:`, err);
+        }
         if (mounted) {
           setError(err.message || 'Failed to load GitHub contributions');
         }
