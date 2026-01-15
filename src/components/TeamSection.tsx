@@ -133,7 +133,9 @@ const TeamSection = () => {
   };
 
   const handleImageError = (name: string) => {
-    console.error(`TeamSection: Failed to load image for ${name}. Ensure file exists in public/assets/`);
+    if (import.meta.env.DEV) {
+      console.error(`TeamSection: Failed to load image for ${name}. Ensure file exists in public/assets/`);
+    }
     setImageErrors((prev) => ({ ...prev, [name]: true }));
   };
 
