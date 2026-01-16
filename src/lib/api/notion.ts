@@ -10,13 +10,109 @@ import type { Sprint } from '@/data/projects';
 const NOTION_API_BASE = 'https://jagdnotionapiserver.vercel.app/api/notion';
 
 /**
+ * Cache duration in milliseconds (24 hours)
+ */
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
+
+/**
+ * Cache key prefix for localStorage
+ */
+const CACHE_KEY_PREFIX = 'notion_cache_';
+
+/**
+ * Interface for cached data
+ */
+interface CachedData<T> {
+  data: T;
+  timestamp: number;
+}
+
+/**
+ * Get data from cache if valid
+ * @param key - Cache key
+ * @returns Cached data if valid, null otherwise
+ */
+function getCachedData<T>(key: string): T | null {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY_PREFIX + key);
+    if (!cached) return null;
+
+    const { data, timestamp }: CachedData<T> = JSON.parse(cached);
+    const now = Date.now();
+    
+    // Check if cache is still valid (less than 24 hours old)
+    if (now - timestamp < CACHE_DURATION) {
+      if (import.meta.env.DEV) {
+        console.log(`✅ Using cached data for: ${key} (age: ${Math.round((now - timestamp) / 1000 / 60)} minutes)`);
+      }
+      return data;
+    }
+
+    // Cache expired, remove it
+    if (import.meta.env.DEV) {
+      console.log(`⏰ Cache expired for: ${key}`);
+    }
+    localStorage.removeItem(CACHE_KEY_PREFIX + key);
+    return null;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn(`⚠️  Error reading cache for ${key}:`, error);
+    }
+    return null;
+  }
+}
+
+/**
+ * Store data in cache
+ * @param key - Cache key
+ * @param data - Data to cache
+ */
+function setCachedData<T>(key: string, data: T): void {
+  try {
+    const cached: CachedData<T> = {
+      data,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(cached));
+    if (import.meta.env.DEV) {
+      console.log(`💾 Cached data for: ${key}`);
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn(`⚠️  Error setting cache for ${key}:`, error);
+    }
+  }
+}
+
+/**
+ * Clear all Notion cache
+ */
+export function clearNotionCache(): void {
+  try {
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith(CACHE_KEY_PREFIX)) {
+        localStorage.removeItem(key);
+      }
+    });
+    if (import.meta.env.DEV) {
+      console.log(`🗑️  Cleared all Notion cache`);
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn(`⚠️  Error clearing cache:`, error);
+    }
+  }
+}
+
+/**
  * Test Notion API connection
  * @returns Promise with success status and message
  */
 export async function testNotionConnection(): Promise<{
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }> {
   try {
     const response = await fetch(`${NOTION_API_BASE}/test`);
@@ -27,20 +123,32 @@ export async function testNotionConnection(): Promise<{
       message: data.message,
       data: data.count,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      message: `Connection failed: ${error.message}. Make sure the backend server is running on port 3001.`,
+      message: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}. Make sure the backend server is running on port 3001.`,
     };
   }
 }
 
 /**
- * Fetch roadmap data for all projects from Notion
+ * Fetch roadmap data for all projects from Notion (with caching)
  * @returns Object mapping project slugs to their roadmap sprints
  */
 export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
+  const cacheKey = 'all_roadmaps';
+  
+  // Try to get from cache first
+  const cached = getCachedData<Record<string, Sprint[]>>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // Cache miss, fetch from API
   try {
+    if (import.meta.env.DEV) {
+      console.log(`📡 Fetching all roadmaps from API...`);
+    }
     const response = await fetch(`${NOTION_API_BASE}/sprints`);
     const result = await response.json();
     
@@ -48,27 +156,70 @@ export async function fetchAllRoadmaps(): Promise<Record<string, Sprint[]>> {
       throw new Error(result.error || 'Failed to fetch roadmap');
     }
 
+    // Cache the result
+    setCachedData(cacheKey, result.data);
+    
     return result.data;
-  } catch (error: any) {
-    console.error('Error fetching Notion roadmap:', error);
-    throw error;
+  } catch (error: unknown) {
+    if (import.meta.env.DEV) {
+      console.error('Error fetching Notion roadmap:', error);
+    }
+    throw new Error('Failed to fetch roadmap');
   }
 }
 
 /**
- * Fetch roadmap sprints for a specific project by slug
+ * Validate project slug format
+ * @param slug - Project slug to validate
+ * @returns true if valid, false otherwise
+ */
+function isValidProjectSlug(slug: string): boolean {
+  // Allow alphanumeric, hyphens, and underscores only
+  const validSlugPattern = /^[a-zA-Z0-9_-]+$/;
+  return validSlugPattern.test(slug) && slug.length > 0 && slug.length <= 100;
+}
+
+/**
+ * Fetch roadmap sprints for a specific project by slug (with caching)
  * @param projectSlug - The project slug to filter by (e.g., 'scholarlens-ai')
  * @returns Array of Sprint objects for the project
  */
 export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]> {
+  // Input validation
+  if (!projectSlug || typeof projectSlug !== 'string') {
+    throw new Error('Invalid project slug: must be a non-empty string');
+  }
+
+  if (!isValidProjectSlug(projectSlug)) {
+    throw new Error('Invalid project slug format: only alphanumeric characters, hyphens, and underscores allowed');
+  }
+
+  const cacheKey = `roadmap_${projectSlug}`;
+  
+  // Try to get from cache first
+  const cached = getCachedData<Sprint[]>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // Cache miss, fetch from API
   try {
     const url = `${NOTION_API_BASE}/sprints?projectSlug=${encodeURIComponent(projectSlug)}`;
-    console.log(`📡 Fetching roadmap from: ${url}`);
+    if (import.meta.env.DEV) {
+      console.log(`📡 Fetching roadmap from: ${url}`);
+    }
     
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const result = await response.json();
     
-    console.log(`📥 Response:`, result);
+    if (import.meta.env.DEV) {
+      console.log(`📥 Received response for ${projectSlug}`);
+    }
     
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch project roadmap');
@@ -76,12 +227,20 @@ export async function fetchProjectRoadmap(projectSlug: string): Promise<Sprint[]
 
     // Backend now returns Sprint[] directly
     const roadmapData: Sprint[] = Array.isArray(result.data) ? result.data : [];
-    console.log(`✅ Received ${roadmapData.length} sprints for ${projectSlug}`);
+    
+    if (import.meta.env.DEV) {
+      console.log(`✅ Received ${roadmapData.length} sprints for ${projectSlug}`);
+    }
+    
+    // Cache the result
+    setCachedData(cacheKey, roadmapData);
     
     return roadmapData;
-  } catch (error: any) {
-    console.error(`❌ Error fetching roadmap for project ${projectSlug}:`, error);
-    throw error;
+  } catch (error: unknown) {
+    if (import.meta.env.DEV) {
+      console.error(`❌ Error fetching roadmap for project ${projectSlug}:`, error);
+    }
+    throw new Error('Failed to fetch project roadmap');
   }
 }
 

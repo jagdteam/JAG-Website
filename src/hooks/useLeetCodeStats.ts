@@ -20,7 +20,9 @@ export function useLeetCodeStats(username: string) {
         setError(null);
 
         if (!username) {
-          console.log('⚠️  No LeetCode username provided, skipping');
+          if (import.meta.env.DEV) {
+            console.log('⚠️  No LeetCode username provided, skipping');
+          }
           if (mounted) {
             setStats(null);
             setLoading(false);
@@ -28,15 +30,21 @@ export function useLeetCodeStats(username: string) {
           return;
         }
 
-        console.log(`🔍 Fetching LeetCode stats for: ${username}`);
+        if (import.meta.env.DEV) {
+          console.log(`🔍 Fetching LeetCode stats for: ${username}`);
+        }
         const data = await fetchLeetCodeStats(username);
-        console.log(`✅ Received LeetCode stats:`, data);
+        if (import.meta.env.DEV) {
+          console.log(`✅ Received LeetCode stats:`, data);
+        }
 
         if (mounted) {
           setStats(data);
         }
       } catch (err: any) {
-        console.error(`❌ Error loading LeetCode stats for ${username}:`, err);
+        if (import.meta.env.DEV) {
+          console.error(`❌ Error loading LeetCode stats for ${username}:`, err);
+        }
         if (mounted) {
           setError(err.message || 'Failed to load LeetCode stats');
           setStats(null); // LeetCode is optional, so null is okay

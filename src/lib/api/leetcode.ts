@@ -3,6 +3,8 @@
  * Connects to JAGD API Server for LeetCode data
  */
 
+import { validateLeetCodeUsername } from './validators';
+
 /**
  * API Base URL - Points to the backend server
  * Production: Uses Vercel deployment
@@ -56,18 +58,31 @@ export async function testLeetCodeConnection(): Promise<{
  */
 export async function fetchLeetCodeStats(username: string): Promise<LeetCodeStats | null> {
   if (!username) {
-    console.warn('⚠️  No LeetCode username provided');
+    if (import.meta.env.DEV) {
+      console.warn('⚠️  No LeetCode username provided');
+    }
+    return null;
+  }
+
+  if (!validateLeetCodeUsername(username)) {
+    if (import.meta.env.DEV) {
+      console.warn('⚠️  Invalid LeetCode username format');
+    }
     return null;
   }
 
   try {
     const url = `${API_BASE}/leetcode/stats?username=${encodeURIComponent(username)}`;
-    console.log(`📡 Fetching LeetCode stats from: ${url}`);
+    if (import.meta.env.DEV) {
+      console.log(`📡 Fetching LeetCode stats from: ${url}`);
+    }
 
     const response = await fetch(url);
     const result = await response.json();
 
-    console.log(`📥 Response:`, result);
+    if (import.meta.env.DEV) {
+      console.log(`📥 Response:`, result);
+    }
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch LeetCode stats');
@@ -75,7 +90,9 @@ export async function fetchLeetCodeStats(username: string): Promise<LeetCodeStat
 
     return result.data;
   } catch (error: any) {
-    console.error(`❌ Error fetching LeetCode stats for ${username}:`, error);
+    if (import.meta.env.DEV) {
+      console.error(`❌ Error fetching LeetCode stats for ${username}:`, error);
+    }
     // Return null instead of throwing - LeetCode is optional
     return null;
   }
