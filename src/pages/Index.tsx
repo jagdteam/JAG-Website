@@ -7,11 +7,13 @@ import Navigation from '@/components/Navigation';
 import PageTransition from '@/components/PageTransition';
 import ProductSection from '@/components/ProductSection';
 import TeamSection from '@/components/TeamSection';
+import ParallaxBackground from '@/components/shaders/ParallaxBackground';
 
 const Index = () => {
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
+      <ParallaxBackground />
+      <div className="min-h-screen relative z-0">
         <Navigation />
         <HeroSection />
         <ProductSection />
