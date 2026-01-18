@@ -131,7 +131,7 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
         />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/40 to-background/30 z-[2]" />
+      <div className="absolute inset-0 bg-background/20 z-[2]" />
 
       {/* Content */}
       <div
