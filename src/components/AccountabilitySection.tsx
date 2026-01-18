@@ -264,10 +264,8 @@ const AccountabilitySection = () => {
   return (
     <section
       id="accountability"
-      className="relative min-h-screen py-32 px-6 overflow-hidden bg-background"
+      className="relative min-h-screen py-32 px-6 overflow-hidden"
     >
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
 
       {/* Decorative elements */}
       <div className="absolute top-20 right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
