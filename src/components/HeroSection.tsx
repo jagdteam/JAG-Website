@@ -1,16 +1,8 @@
 import { motion } from 'framer-motion';
-import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 0.75;
-    }
-  }, []);
 
   const handleExploreProducts = () => {
     navigate('/projects');
@@ -18,23 +10,6 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background video/gradient */}
-      <div className="absolute inset-0">
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-30"
-        >
-          <source
-            src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-futuristic-devices-99786-large.mp4"
-            type="video/mp4"
-          />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
-      </div>
 
       {/* Content */}
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
