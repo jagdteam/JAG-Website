@@ -9,8 +9,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-20">
       {/* Content */}
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
         <p

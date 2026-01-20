@@ -27,8 +27,8 @@ const ContactSection = () => {
       ref={sectionRef}
       className="relative py-32 px-6 overflow-hidden"
     >
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent" />
+      {/* Subtle gradient - barely visible for seamless flow */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-transparent pointer-events-none" />
 
       <div
         className={`relative z-10 max-w-3xl mx-auto text-center transition-all duration-1000 ${

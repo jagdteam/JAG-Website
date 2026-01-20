@@ -78,17 +78,17 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
   return (
     <div
       ref={cardRef}
-      className={`relative min-h-screen flex items-center justify-center overflow-hidden transition-all duration-1000 ${
-        isVisible ? 'opacity-100' : 'opacity-0'
-      }`}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden py-20"
     >
-      {/* Video Background */}
+      {/* Video Background - with smooth fade in/out */}
       <video
         ref={videoRef}
         muted
         loop
         playsInline
-        className="absolute inset-0 w-full h-full object-cover opacity-40"
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] ${
+          isVisible ? 'opacity-20' : 'opacity-0'
+        }`}
       >
         <source
           src={product.videoUrl}
@@ -115,7 +115,9 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
           muted
           loop
           playsInline
-          className="absolute inset-0 m-auto w-full h-full object-cover z-[1] opacity-25 blur-[2px]"
+          className={`absolute inset-0 m-auto w-full h-full object-cover z-[1] blur-[2px] transition-opacity duration-[1500ms] ${
+            isVisible ? 'opacity-15' : 'opacity-0'
+          }`}
         >
           <source
             src={product.backgroundAsset}
@@ -127,11 +129,14 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
         <img
           src={product.backgroundAsset}
           alt=""
-          className="absolute inset-0 m-auto w-full h-full object-cover z-[1] opacity-25 blur-[2px]"
+          className={`absolute inset-0 m-auto w-full h-full object-cover z-[1] blur-[2px] transition-opacity duration-[1500ms] ${
+            isVisible ? 'opacity-15' : 'opacity-0'
+          }`}
         />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/40 to-background/30 z-[2]" />
+      {/* Subtle gradient overlay - much softer for seamless transitions */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-transparent z-[2] pointer-events-none" />
 
       {/* Content */}
       <div

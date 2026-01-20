@@ -165,9 +165,10 @@ const TeamSection = () => {
     <section
       id="team"
       ref={sectionRef}
-      className="relative py-32 px-6 overflow-hidden bg-background"
+      className="relative py-32 px-6 overflow-hidden"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-card/50 to-background" />
+      {/* Subtle gradient - barely visible for seamless flow */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-transparent pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl mx-auto">
         <div className={`text-center mb-20 transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
