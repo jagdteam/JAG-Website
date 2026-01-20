@@ -6,6 +6,7 @@ import { projects } from '@/data/projects';
 import { useState } from 'react';
 import PageTransition from '@/components/PageTransition';
 import { AnimatePresence, motion } from 'framer-motion';
+import ParallaxBackground from '@/components/shaders/ParallaxBackground';
 
 const Projects = () => {
   const [selectedProject, setSelectedProject] = useState(0);
@@ -13,7 +14,8 @@ const Projects = () => {
 
   return (
     <PageTransition>
-    <div className="min-h-screen bg-background">
+      <ParallaxBackground />
+      <div className="min-h-screen relative z-0">
         <ProjectNavigation />
         <main className="pt-24 pb-20 flex flex-col items-center">
           <div className="w-full max-w-7xl">
@@ -33,10 +35,10 @@ const Projects = () => {
                 <ProjectDetails project={project} />
               </motion.div>
             </AnimatePresence>
-        </div>
-      </main>
+          </div>
+        </main>
         <ProjectFooter />
-        </div>
+      </div>
     </PageTransition>
   );
 };
