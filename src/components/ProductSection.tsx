@@ -26,8 +26,8 @@ const products: Product[] = [
     subtitle: 'How We Got Here',
     description:
       "Driven by a hunger to excel, we are a team of UCI Master's students turning potential into performance. We realized that the best engineers aren't just taught; they are forged through building. We established JAGD to take ownership of our growth, applying advanced concepts to build real products and creating the future we want to see.",
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-cloud-computing-concept-animation-4817-large.mp4',
-    backgroundAsset: '/assets/story_bg.jpg',
+    videoUrl: '',
+    backgroundAsset: '',
   },
   {
     id: 3,
@@ -35,8 +35,8 @@ const products: Product[] = [
     subtitle: 'Our Domain of Expertise',
     description:
       "We're a mix of developers who don't just code differently, we think differently. Our diverse backgrounds mean that we patch each other's weaknesses in real-time, creating a collaborative environment where every technical gap is covered by a shared strength.",
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-programming-code-moving-on-a-dark-screen-28814-large.mp4',
-    backgroundAsset: '/assets/domain_bg.mp4',
+    videoUrl: '',
+    backgroundAsset: '',
   },
 ];
 

@@ -19,8 +19,8 @@ const team: TeamMember[] = [
     role: 'Front-End Software Engineer',
     initial: 'A',
     image: '/assets/ade_pfp.jpeg',
-    bio: "Andrew leads JAGD with a vision to transform how software solutions are built and delivered. His strategic thinking and entrepreneurial spirit drive the company's mission to create impactful technology.",
-    expertise: ['Strategic Planning', 'Product Vision', 'Team Leadership'],
+    bio: "Andrew is a dedicated Front-End Engineer focused on crafting intuitive and responsive user experiences. With a strong academic foundation in Computer Science, he combines technical precision with a passion for clean code to help build scalable software solutions at JAGD.",
+  expertise: ['Front-End Development', 'UI/UX Implementation', 'Software Architecture'],
     education: [
       'Master of Computer Science - University of California, Irvine',
       'B.A., Computer Science - University of Redlands',

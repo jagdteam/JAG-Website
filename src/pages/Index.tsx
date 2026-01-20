@@ -16,10 +16,10 @@ const Index = () => {
       <div className="min-h-screen relative z-0">
         <Navigation />
         <HeroSection />
-        <ProductSection />
         <AccountabilitySection />
         <TeamSection />
         <AboutSection />
+        <ProductSection />
         <ContactSection />
         <Footer />
       </div>

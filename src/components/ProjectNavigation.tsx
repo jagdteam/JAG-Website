@@ -1,9 +1,24 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 const ProjectNavigation = () => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/20">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled ? 'bg-background/50 backdrop-blur-md border-b border-border/30' : 'bg-transparent'
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link
           to="/"
