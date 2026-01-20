@@ -46,6 +46,8 @@ try {
 
 // Configuration
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+const NOTION_API_KEY = process.env.NOTION_API_KEY || '';
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID || '';
 const FIVE_MONTHS_AGO = new Date();
 FIVE_MONTHS_AGO.setMonth(FIVE_MONTHS_AGO.getMonth() - 5);
 
@@ -100,6 +102,34 @@ interface DevLogEntry {
   content: string;
   assignee: string;
   assigneeImg?: string;
+}
+
+interface Epic {
+  id: string;
+  name: string;
+  description: string | null;
+  status: 'not-started' | 'in-progress' | 'completed';
+  progress: number;
+  tasks: Task[];
+}
+
+interface Task {
+  id: string;
+  title: string;
+  status: 'not-started' | 'in-progress' | 'completed';
+  assignees: string[];
+  dueDate: string | null;
+  description: string | null;
+}
+
+interface Sprint {
+  id: string;
+  name: string;
+  sprintNumber: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  status: 'not-started' | 'in-progress' | 'completed';
+  epics: Epic[];
 }
 
 // GitHub API helper
@@ -207,6 +237,126 @@ async function fetchGitHubContributions(username: string, userToken?: string): P
   }
 }
 
+// Fetch Notion roadmap data for all projects
+async function fetchNotionRoadmaps(): Promise<Record<string, Sprint[]>> {
+  if (!NOTION_API_KEY || !NOTION_DATABASE_ID) {
+    console.warn('⚠️  Notion API credentials not found, skipping roadmap sync');
+    return {};
+  }
+
+  try {
+    console.log('    Fetching roadmaps from Notion...');
+    
+    const response = await fetch('https://api.notion.com/v1/databases/' + NOTION_DATABASE_ID + '/query', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        page_size: 100,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Notion API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const pages = data.results || [];
+
+    // Group sprints by project
+    const roadmapsByProject: Record<string, Sprint[]> = {};
+
+    for (const page of pages) {
+      try {
+        // Extract project slug from properties
+        const projectProp = page.properties?.Project;
+        const projectSlug = projectProp?.select?.name || null;
+
+        if (!projectSlug) {
+          console.warn(`    ⚠️  Skipping page ${page.id}: no project slug`);
+          continue;
+        }
+
+        // Extract sprint data
+        const nameProp = page.properties?.Name || page.properties?.title;
+        const sprintName = nameProp?.title?.[0]?.plain_text || 'Unnamed Sprint';
+
+        const sprintNumberProp = page.properties?.['Sprint Number'];
+        const sprintNumber = sprintNumberProp?.number || null;
+
+        const statusProp = page.properties?.Status;
+        const statusName = statusProp?.status?.name || statusProp?.select?.name || 'not-started';
+        const status = mapNotionStatus(statusName);
+
+        const startDateProp = page.properties?.['Start Date'];
+        const startDate = startDateProp?.date?.start || null;
+
+        const endDateProp = page.properties?.['End Date'];
+        const endDate = endDateProp?.date?.start || null;
+
+        // Fetch epics for this sprint (if you have a relation property)
+        const epics: Epic[] = await fetchSprintEpics(page.id);
+
+        const sprint: Sprint = {
+          id: page.id,
+          name: sprintName,
+          sprintNumber,
+          startDate,
+          endDate,
+          status,
+          epics,
+        };
+
+        // Add to project's roadmap
+        if (!roadmapsByProject[projectSlug]) {
+          roadmapsByProject[projectSlug] = [];
+        }
+        roadmapsByProject[projectSlug].push(sprint);
+      } catch (error) {
+        console.error(`    ❌ Error processing page ${page.id}:`, error);
+      }
+    }
+
+    // Sort sprints by sprint number within each project
+    Object.keys(roadmapsByProject).forEach((projectSlug) => {
+      roadmapsByProject[projectSlug].sort((a, b) => {
+        if (a.sprintNumber === null) return 1;
+        if (b.sprintNumber === null) return -1;
+        return a.sprintNumber - b.sprintNumber;
+      });
+    });
+
+    console.log(
+      `    ✓ Fetched roadmaps for ${Object.keys(roadmapsByProject).length} project(s): ${Object.entries(roadmapsByProject)
+        .map(([slug, sprints]) => `${slug} (${sprints.length} sprints)`)
+        .join(', ')}`
+    );
+
+    return roadmapsByProject;
+  } catch (error) {
+    console.error('Error fetching Notion roadmaps:', error);
+    return {};
+  }
+}
+
+// Helper: Map Notion status to our status type
+function mapNotionStatus(notionStatus: string): 'not-started' | 'in-progress' | 'completed' {
+  const lower = notionStatus.toLowerCase();
+  if (lower.includes('progress') || lower === 'in progress') return 'in-progress';
+  if (lower.includes('complete') || lower === 'completed' || lower === 'done') return 'completed';
+  return 'not-started';
+}
+
+// Helper: Fetch epics for a sprint (modify based on your Notion structure)
+async function fetchSprintEpics(sprintId: string): Promise<Epic[]> {
+  // If you have a separate database for epics, query it here
+  // For now, return empty array - you can expand this based on your Notion setup
+  return [];
+}
+
 // Fetch LeetCode stats (using unofficial API)
 async function fetchLeetCodeStats(username: string): Promise<LeetCodeStats | null> {
   if (!username) return null;
@@ -287,7 +437,7 @@ async function fetchRepoCommits(repo: string, isPrivate: boolean = false): Promi
     // Fetch 100 commits to ensure we get enough from team members (filtering out forked repo commits)
     const commits = await fetchGitHub(`https://api.github.com/repos/${repo}/commits?per_page=100`);
 
-    const devLog: DevLogEntry[] = commits
+    const devLog: Array<any> = commits
       .map((commit: any, index: number) => {
         const authorName = commit.commit.author.name;
         const authorEmail = commit.commit.author.email;
@@ -462,6 +612,49 @@ export const teamStats: TeamMemberStats[] = ${JSON.stringify(teamStats, null, 2)
 
   fs.writeFileSync(projectsPath, projectsContent, 'utf-8');
   console.log(`✅ Project dev logs updated in ${projectsPath}\n`);
+
+  // 3. Sync Notion roadmaps
+  console.log('🗓️  Fetching Notion roadmaps...');
+  const roadmaps = await fetchNotionRoadmaps();
+
+  // Write roadmaps.ts
+  const roadmapsPath = path.join(process.cwd(), 'src', 'data', 'roadmaps.ts');
+  const roadmapsContent = `// Auto-generated by scripts/sync-data.ts
+// Last updated: ${new Date().toISOString()}
+
+export interface Task {
+  id: string;
+  title: string;
+  status: 'not-started' | 'in-progress' | 'completed';
+  assignees: string[];
+  dueDate: string | null;
+  description: string | null;
+}
+
+export interface Epic {
+  id: string;
+  name: string;
+  description: string | null;
+  status: 'not-started' | 'in-progress' | 'completed';
+  progress: number;
+  tasks: Task[];
+}
+
+export interface Sprint {
+  id: string;
+  name: string;
+  sprintNumber: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  status: 'not-started' | 'in-progress' | 'completed';
+  epics: Epic[];
+}
+
+export const roadmaps: Record<string, Sprint[]> = ${JSON.stringify(roadmaps, null, 2)};
+`;
+
+  fs.writeFileSync(roadmapsPath, roadmapsContent, 'utf-8');
+  console.log(`✅ Roadmaps written to ${roadmapsPath}\n`);
 
   console.log('✨ Data sync complete!');
 }

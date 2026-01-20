@@ -166,7 +166,7 @@ const TeamSection = () => {
       id="team"
       ref={sectionRef}
       className="relative py-32 px-6 overflow-hidden"
-      className="relative py-32 px-6 overflow-hidden"
+      className="relative min-h-screen py-32 px-6 overflow-hidden"
     >
       {/* Subtle gradient - barely visible for seamless flow */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-transparent pointer-events-none" />
