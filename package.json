@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "sync-data": "tsx scripts/sync-data.ts",
+    "refresh-data": "tsx scripts/refresh-data.ts",
     "test-notion": "node notion-test/test-notion-connection.js",
     "notion-server": "node notion-test/local-server.cjs"
   },
