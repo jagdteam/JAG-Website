@@ -26,8 +26,10 @@ All data sources (GitHub, LeetCode, and Notion) are now integrated into a unifie
 
 **New Functions:**
 - `fetchNotionRoadmaps()` - Fetches all roadmaps from Notion database
-- `mapNotionStatus()` - Maps Notion status to standard format
-- `fetchSprintEpics()` - Placeholder for epic fetching (expandable)
+- `fetchSprintEpics()` - Fetches child pages (epics) from a sprint
+- `fetchEpicTasks()` - Fetches to-do blocks (tasks) from an epic page
+- `calculateSprintStatus()` - Calculates sprint status from task completion
+- `mapNotionStatus()` - Maps Notion status strings to standard format
 
 **New Interfaces:**
 ```typescript
@@ -106,6 +108,8 @@ User visits page → Read from static files (instant, no API calls)
 
 ## Notion Database Requirements
 
+### Sprint Pages (Top-level)
+
 The script expects Notion pages with these properties:
 
 | Property | Type | Required | Description |
@@ -113,16 +117,48 @@ The script expects Notion pages with these properties:
 | `Project` | Select | Yes | Project slug (e.g., "scholarlens-ai") |
 | `Name` | Title | Yes | Sprint name |
 | `Sprint Number` | Number | No | Sprint sequence number |
-| `Status` | Status/Select | No | Sprint status |
 | `Start Date` | Date | No | Sprint start date |
 | `End Date` | Date | No | Sprint end date |
 
-## Next Steps (Optional Enhancements)
+**Note:** Sprint status is NOT read from Notion properties. It's calculated from task completion (see below).
 
-1. **Add Epic/Task Fetching** - Expand `fetchSprintEpics()` to fetch related tasks
-2. **Update Components** - Modify `useProjectRoadmap` hook to read from `roadmaps.ts` instead of API
-3. **Remove Client-Side Caching** - Clean up `src/lib/api/notion.ts` localStorage logic
-4. **Add Validation** - Add data validation/error handling for malformed Notion data
+### Epic Pages (Child pages of Sprints)
+
+- Each sprint can contain **child pages** representing epics
+- Epic name comes from the child page title
+- Epic status and progress are calculated from tasks
+
+### Tasks (To-do blocks within Epic pages)
+
+- Tasks are represented as **to-do blocks** within epic pages
+- Task status: checked = "completed", unchecked = "not-started"
+- Task title comes from the to-do block text
+
+### Status Calculation Logic
+
+Sprint status is automatically calculated based on task completion:
+
+1. **not-started**: No tasks exist, or all tasks are not started
+2. **in-progress**: Any tasks are in progress or completed (but not all)
+3. **completed**: ALL tasks are completed
+
+```typescript
+// Example:
+Sprint with 10 tasks:
+- 0 completed → "not-started"
+- 1-9 completed → "in-progress"
+- 10 completed → "completed"
+```
+
+## Completed Enhancements
+
+1. ✅ **Epic/Ticket Fetching** - Fetches child pages as epics and to-do blocks as tickets
+2. ✅ **Status Calculation** - Sprint status automatically calculated from ticket completion
+3. ✅ **Static Data Architecture** - All APIs now read from static files (no runtime API calls!)
+4. ✅ **Removed Client-Side Caching** - No more localStorage, data updates daily via GitHub Actions
+5. ✅ **Unified Data Pattern** - GitHub, LeetCode, and Notion all use the same architecture
+
+See `docs/STATIC_DATA_ARCHITECTURE.md` for complete details on the new architecture.
 
 ## Testing
 

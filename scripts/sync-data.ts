@@ -104,22 +104,23 @@ interface DevLogEntry {
   assigneeImg?: string;
 }
 
+// Match the interfaces from projects.ts for consistency
+interface Ticket {
+  id: string;
+  name: string;
+  status: 'not-started' | 'in-progress' | 'completed';
+  description: string;
+  assignees: string[];
+  storyPoints: number | null;
+}
+
 interface Epic {
   id: string;
   name: string;
-  description: string | null;
   status: 'not-started' | 'in-progress' | 'completed';
-  progress: number;
-  tasks: Task[];
-}
-
-interface Task {
-  id: string;
-  title: string;
-  status: 'not-started' | 'in-progress' | 'completed';
-  assignees: string[];
-  dueDate: string | null;
-  description: string | null;
+  description: string;
+  priority: string | null;
+  tickets: Ticket[];
 }
 
 interface Sprint {
@@ -287,18 +288,17 @@ async function fetchNotionRoadmaps(): Promise<Record<string, Sprint[]>> {
         const sprintNumberProp = page.properties?.['Sprint Number'];
         const sprintNumber = sprintNumberProp?.number || null;
 
-        const statusProp = page.properties?.Status;
-        const statusName = statusProp?.status?.name || statusProp?.select?.name || 'not-started';
-        const status = mapNotionStatus(statusName);
-
         const startDateProp = page.properties?.['Start Date'];
         const startDate = startDateProp?.date?.start || null;
 
         const endDateProp = page.properties?.['End Date'];
         const endDate = endDateProp?.date?.start || null;
 
-        // Fetch epics for this sprint (if you have a relation property)
+        // Fetch epics/tasks for this sprint
         const epics: Epic[] = await fetchSprintEpics(page.id);
+
+        // Calculate sprint status based on tasks
+        const status = calculateSprintStatus(epics);
 
         const sprint: Sprint = {
           id: page.id,
@@ -342,6 +342,33 @@ async function fetchNotionRoadmaps(): Promise<Record<string, Sprint[]>> {
   }
 }
 
+// Helper: Calculate sprint status based on ticket completion
+function calculateSprintStatus(epics: Epic[]): 'not-started' | 'in-progress' | 'completed' {
+  // Collect all tickets from all epics
+  const allTickets: Ticket[] = epics.flatMap((epic) => epic.tickets);
+
+  // If no tickets exist, sprint is not started
+  if (allTickets.length === 0) {
+    return 'not-started';
+  }
+
+  const completedTickets = allTickets.filter((ticket) => ticket.status === 'completed');
+  const inProgressTickets = allTickets.filter((ticket) => ticket.status === 'in-progress');
+
+  // If ALL tickets are completed, sprint is complete
+  if (completedTickets.length === allTickets.length) {
+    return 'completed';
+  }
+
+  // If ANY tickets are in progress or done, sprint is in progress
+  if (inProgressTickets.length > 0 || completedTickets.length > 0) {
+    return 'in-progress';
+  }
+
+  // Otherwise, sprint hasn't started
+  return 'not-started';
+}
+
 // Helper: Map Notion status to our status type
 function mapNotionStatus(notionStatus: string): 'not-started' | 'in-progress' | 'completed' {
   const lower = notionStatus.toLowerCase();
@@ -350,11 +377,129 @@ function mapNotionStatus(notionStatus: string): 'not-started' | 'in-progress' | 
   return 'not-started';
 }
 
-// Helper: Fetch epics for a sprint (modify based on your Notion structure)
+// Helper: Fetch epics and tasks for a sprint from Notion
 async function fetchSprintEpics(sprintId: string): Promise<Epic[]> {
-  // If you have a separate database for epics, query it here
-  // For now, return empty array - you can expand this based on your Notion setup
-  return [];
+  if (!NOTION_API_KEY) {
+    return [];
+  }
+
+  try {
+    // Fetch child blocks (pages) of the sprint page
+    const response = await fetch(`https://api.notion.com/v1/blocks/${sprintId}/children?page_size=100`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+      },
+    });
+
+    if (!response.ok) {
+      console.warn(`    ⚠️  Could not fetch children for sprint ${sprintId}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const blocks = data.results || [];
+
+    const epics: Epic[] = [];
+
+    // Process child pages (epics)
+    for (const block of blocks) {
+      if (block.type === 'child_page') {
+        const epicId = block.id;
+        const epicName = block.child_page?.title || 'Unnamed Epic';
+
+        // Fetch tickets for this epic
+        const tickets = await fetchEpicTickets(epicId);
+
+        // Calculate epic status
+        const completedTickets = tickets.filter((t) => t.status === 'completed').length;
+        
+        let epicStatus: 'not-started' | 'in-progress' | 'completed' = 'not-started';
+        if (completedTickets === tickets.length && tickets.length > 0) {
+          epicStatus = 'completed';
+        } else if (completedTickets > 0 || tickets.some((t) => t.status === 'in-progress')) {
+          epicStatus = 'in-progress';
+        }
+
+        epics.push({
+          id: epicId,
+          name: epicName,
+          description: '',
+          status: epicStatus,
+          priority: null,
+          tickets,
+        });
+      }
+    }
+
+    return epics;
+  } catch (error) {
+    console.error(`    ❌ Error fetching epics for sprint ${sprintId}:`, error);
+    return [];
+  }
+}
+
+// Helper: Fetch tickets for an epic from Notion
+async function fetchEpicTickets(epicId: string): Promise<Ticket[]> {
+  if (!NOTION_API_KEY) {
+    return [];
+  }
+
+  try {
+    // Fetch the epic page to get its properties and content
+    const pageResponse = await fetch(`https://api.notion.com/v1/pages/${epicId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+      },
+    });
+
+    if (!pageResponse.ok) {
+      return [];
+    }
+
+    // Fetch child blocks (to-do items, etc.)
+    const blocksResponse = await fetch(`https://api.notion.com/v1/blocks/${epicId}/children?page_size=100`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+      },
+    });
+
+    if (!blocksResponse.ok) {
+      return [];
+    }
+
+    const blocksData = await blocksResponse.json();
+    const blocks = blocksData.results || [];
+
+    const tickets: Ticket[] = [];
+
+    // Process to_do blocks as tickets
+    for (const block of blocks) {
+      if (block.type === 'to_do') {
+        const name = block.to_do?.rich_text?.[0]?.plain_text || 'Unnamed Ticket';
+        const isChecked = block.to_do?.checked || false;
+        
+        tickets.push({
+          id: block.id,
+          name,
+          status: isChecked ? 'completed' : 'not-started',
+          description: '',
+          assignees: [],
+          storyPoints: null,
+        });
+      }
+    }
+
+    return tickets;
+  } catch (error) {
+    console.error(`    ❌ Error fetching tickets for epic ${epicId}:`, error);
+    return [];
+  }
 }
 
 // Fetch LeetCode stats (using unofficial API)
@@ -621,34 +766,9 @@ export const teamStats: TeamMemberStats[] = ${JSON.stringify(teamStats, null, 2)
   const roadmapsPath = path.join(process.cwd(), 'src', 'data', 'roadmaps.ts');
   const roadmapsContent = `// Auto-generated by scripts/sync-data.ts
 // Last updated: ${new Date().toISOString()}
+// Note: Uses Sprint type from projects.ts for consistency
 
-export interface Task {
-  id: string;
-  title: string;
-  status: 'not-started' | 'in-progress' | 'completed';
-  assignees: string[];
-  dueDate: string | null;
-  description: string | null;
-}
-
-export interface Epic {
-  id: string;
-  name: string;
-  description: string | null;
-  status: 'not-started' | 'in-progress' | 'completed';
-  progress: number;
-  tasks: Task[];
-}
-
-export interface Sprint {
-  id: string;
-  name: string;
-  sprintNumber: number | null;
-  startDate: string | null;
-  endDate: string | null;
-  status: 'not-started' | 'in-progress' | 'completed';
-  epics: Epic[];
-}
+import type { Sprint } from './projects';
 
 export const roadmaps: Record<string, Sprint[]> = ${JSON.stringify(roadmaps, null, 2)};
 `;
