@@ -83,7 +83,6 @@ export interface Project {
   };
   features: string[];
   architecture: string;
-  leadEngineers?: string[]; // Lead engineer(s) for the project
   teamSize: string;
   duration: string;
   status: string;
@@ -125,7 +124,6 @@ export const projects: Project[] = [
       'Community "Pickup" matchmaking',
     ],
     architecture: 'Hybrid Edge-Cloud (On-Device Inference + Python Sync Engine)',
-    leadEngineers: ['Giuseppi Pelayo'],
     teamSize: '4 Engineers',
     duration: '5 months',
     status: 'In Development',
@@ -157,7 +155,6 @@ export const projects: Project[] = [
     ],
     architecture:
       "A local-first CLI implementing Retrieval-Augmented Generation (RAG) for codebases. It features a decoupled ingestion pipeline with persistent vector storage via ChromaDB and utilizes Cohere's Embed v3 for high-precision semantic search.",
-    leadEngineers: ['Giuseppi Pelayo', 'Johnny Fok'],
     teamSize: '2 Engineers',
     duration: '1 Week',
     status: 'MVP Complete',
@@ -189,7 +186,6 @@ export const projects: Project[] = [
       'Cost-reduction tracking for developer ramp-up efficiency',
     ],
     architecture: 'Hybrid system utilizing local AST parsing and cloud-based AI to map internal project dependencies into visual mental models.',
-    leadEngineers: ['Johnny Fok'],
     teamSize: '2 Engineers',
     duration: 'In Development',
     status: 'Beta/Research',
@@ -199,8 +195,8 @@ export const projects: Project[] = [
   },
   {
     id: 'scholarlens-ai',
-    name: 'ScholarLens',
-    initials: 'SL',
+    name: 'EduInsight',
+    initials: 'EI',
     tagline: 'AI-Powered Grading Assistant & Analytics',
     mediaUrl: '/favicon.ico',
     mediaType: 'image',
@@ -221,11 +217,10 @@ export const projects: Project[] = [
       'Secure REST API endpoints for frontend-backend communication',
     ],
     architecture: 'Modern Monolithic Architecture: Python Flask REST API serving a React Single Page Application (SPA)',
-    leadEngineers: ['Andrew Espinosa'],
     teamSize: '4 Engineers',
     duration: '4 Weeks',
-    status: 'MVP / In Development',
-    statusColor: 'green',
+    status: 'In Development',
+    statusColor: 'yellow',
     github: 'https://github.com/jagdteam/Education-Project',
     // devLog: Loaded dynamically from GitHub API
   },
