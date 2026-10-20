@@ -58,5 +58,5 @@ export const profile = {
   },
   projects: [{ slug: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." }, { slug: "beeseye" }, { local: "second-ear" }, { slug: "clicr" }, { local: "shipwatch" }] as ProjectRef[],
   // Set to an image path (e.g. "/photo.jpg") to replace the JF initials.
-  photo: undefined as string | undefined,
+  photo: "/assets/johnny-photo.jpg" as string | undefined,
 };

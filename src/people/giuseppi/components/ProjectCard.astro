@@ -156,3 +156,92 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
     )}
   </article>
 </div>
+
+<script>
+  // Animated open/close for project cards; also fade-in on scroll.
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const OPTS = { duration: 250, easing: "ease-out" } as const;
+
+  function frames(panel: HTMLElement, open: boolean) {
+    const cs = getComputedStyle(panel);
+    const full = {
+      height: cs.height,
+      marginTop: cs.marginTop,
+      paddingTop: cs.paddingTop,
+      borderTopWidth: cs.borderTopWidth,
+    };
+    const zero = {
+      height: "0px",
+      marginTop: "0px",
+      paddingTop: "0px",
+      borderTopWidth: "0px",
+    };
+    return open ? [zero, full] : [full, zero];
+  }
+
+  function run(details: HTMLDetailsElement, open: boolean, done?: () => void) {
+    const panel = details.querySelector<HTMLElement>(".panel");
+    if (!panel) {
+      details.open = open;
+      done?.();
+      return;
+    }
+    const running = (details as any)._anim as Animation | undefined;
+    if (running) running.finish();
+    panel.style.overflow = "hidden";
+    const anim = panel.animate(frames(panel, open), OPTS);
+    (details as any)._anim = anim;
+    anim.onfinish = anim.oncancel = () => {
+      panel.style.overflow = "";
+      (details as any)._anim = undefined;
+      if (!open) details.open = false;
+      done?.();
+    };
+  }
+
+  document.addEventListener("click", (e) => {
+    if (reduce.matches) return;
+    const summary = (e.target as Element).closest?.(
+      'details[name="projects"] > summary',
+    );
+    if (!summary) return;
+    if ((e.target as Element).closest("a")) return;
+    const details = summary.parentElement as HTMLDetailsElement;
+    e.preventDefault();
+    if (details.open) {
+      run(details, false);
+      return;
+    }
+    // Close any other open card with animation. Drop the shared name so the
+    // browser does not snap it shut when this one opens.
+    document
+      .querySelectorAll<HTMLDetailsElement>('details[name="projects"][open]')
+      .forEach((other) => {
+        if (other === details) return;
+        other.removeAttribute("name");
+        run(other, false, () => other.setAttribute("name", "projects"));
+      });
+    details.open = true;
+    run(details, true);
+  });
+
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          en.target.classList.add("in");
+          io.unobserve(en.target);
+        });
+      },
+      { threshold: 0.1 },
+    );
+    document
+      .querySelectorAll(".right .sec:not(:first-child) :is(.plate, .hd)")
+      .forEach((el) => io.observe(el));
+  } else {
+    document
+      .querySelectorAll(".right .sec:not(:first-child) :is(.plate, .hd)")
+      .forEach((el) => el.classList.add("in"));
+  }
+</script>

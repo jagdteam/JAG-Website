@@ -17,8 +17,8 @@
   --sh: #9ea3ad;
   --sx: 4px;
   --sy: 5px;
-  --sxh: 5px;
-  --syh: 8px;
+  --sxh: 7px;
+  --syh: 11px;
   --hd: #1f2a6b;
   --act: #b8262c;
   --hov: #1f2a6b;
@@ -199,16 +199,61 @@ summary:focus-visible {
   --gap: var(--gaph);
   --sx: var(--sxh);
   --sy: var(--syh);
-  transform: translateY(-3px);
+  transform: translate(-2px, -2px);
+}
+/* motion: smooth nav scroll, fade-in on scroll, page-load intro */
+html {
+  scroll-behavior: smooth;
+}
+.sec {
+  scroll-margin-top: 24px;
+}
+html.js .right .sec:not(:first-child) :is(.plate, .hd) {
+  opacity: 0;
+  translate: 0 14px;
+  transition:
+    opacity 0.45s ease-out,
+    translate 0.45s ease-out,
+    transform 0.18s ease,
+    filter 0.18s ease;
+}
+html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
+  opacity: 1;
+  translate: 0 0;
+}
+@keyframes intro {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+.left > .plate {
+  animation: intro 0.5s ease-out backwards;
+}
+.right > .sec:first-child {
+  animation: intro 0.5s ease-out 0.08s backwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .plate,
-  .pl::before {
-    transition: none !important;
-    transform: none !important;
+  html {
+    scroll-behavior: auto !important;
   }
   * {
     scroll-behavior: auto !important;
+  }
+  .plate,
+  .pl::before,
+  .hd,
+  .sec,
+  .left > .plate {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    translate: none !important;
+    opacity: 1 !important;
   }
 }
 
