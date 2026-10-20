@@ -1,3 +1,7 @@
+export type ProjectRef =
+  | { slug: string; myPart?: string }
+  | { local: string; myPart?: string };
+
 export const profile = {
   name: "Andrew Espinosa",
   title: "Software Engineer",
@@ -46,5 +50,9 @@ export const profile = {
     linkedin: "https://linkedin.com/in/andrew-espinosa2002",
     resume: undefined as string | undefined,
   },
+  projects: [
+    { slug: "clutch", myPart: "Led frontend architecture in React Native and TypeScript; integrated Google OAuth sign-in and Google Maps API." },
+    { local: "jit-expression-evaluator" },
+  ] as ProjectRef[],
   photo: undefined as string | undefined,
 };

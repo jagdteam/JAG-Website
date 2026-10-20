@@ -1,3 +1,7 @@
+export type ProjectRef =
+  | { slug: string; myPart?: string }
+  | { local: string; myPart?: string };
+
 export const profile = {
   name: "Giuseppi Pelayo",
   title: "AI/ML Engineer",
@@ -50,5 +54,8 @@ export const profile = {
     linkedin: "https://linkedin.com/in/giuseppipelayo",
     resume: undefined as string | undefined,
   },
+  projects: [
+    { slug: "clutch", myPart: "Basketball app with on-iPhone computer vision that tracks players and the ball." },
+  ] as ProjectRef[],
   photo: undefined as string | undefined,
 };

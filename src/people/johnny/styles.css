@@ -497,3 +497,77 @@ summary:focus-visible {
     font-size: 30px;
   }
 }
+
+/* expandable project cards */
+.more > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.more > summary::-webkit-details-marker {
+  display: none;
+}
+.mypart {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.open-tag {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+.open-tag::before {
+  content: "+ more";
+}
+.more[open] .open-tag::before {
+  content: "- less";
+}
+.panel {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--lo);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.panel .desc {
+  margin: 0;
+}
+.media {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.media img,
+.media video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+.explore {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+}
+.linkrow {
+  margin-top: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .media img.gif {
+    display: none;
+  }
+  .more * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* phones: hide left nav (must come after the base .nav rule) */
+@media (max-width: 899px) {
+  .left .nav {
+    display: none;
+  }
+}

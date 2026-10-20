@@ -2,6 +2,11 @@
 import Chip from "./Chip.astro";
 import Pill from "./Pill.astro";
 
+interface Media {
+  src: string;
+  alt: string;
+  kind: "image" | "gif" | "video";
+}
 interface Props {
   name: string;
   status: string;
@@ -10,39 +15,140 @@ interface Props {
   tags: string[];
   image?: string;
   links?: { label: string; href?: string }[];
+  myPart?: string;
+  description?: string;
+  media?: Media[];
+  explore?: { href: string; label: string };
 }
-const { name, status, summary, team, tags, image, links = [] } = Astro.props;
-const shown = links.filter((l) => l.href && l.href !== "#");
+const {
+  name,
+  status,
+  summary,
+  team,
+  tags,
+  image,
+  links = [],
+  myPart,
+  description,
+  media = [],
+  explore,
+} = Astro.props;
+const shown = links.filter(
+  (l) =>
+    l.href &&
+    l.href !== "#" &&
+    !(l.label === "Demo" && explore && l.href === explore.href),
+);
+const extraDesc = description && description !== summary ? description : undefined;
+const expandable = Boolean(extraDesc || media.length > 0 || explore);
+const external = explore ? /^https?:\/\//.test(explore.href) : false;
 ---
 
 <div class="plate">
   <article class="pl card">
     <span class="trim" aria-hidden="true"></span>
     {image && <img class="shot" src={image} alt={name} />}
-    <div class="row1">
-      <strong>{name}</strong>
-      <Pill label={status} />
-    </div>
-    <p class:list={["one", { ph: summary.includes("[") }]}>{summary}</p>
-    <div class="row2">
-      <span class:list={["team", { ph: team.includes("[") }]}>{team}</span>
-      {tags.length > 0 && (
-        <span class="chips">
-          {tags.map((t) => (
-            <Chip label={t} />
-          ))}
-        </span>
-      )}
+    {expandable ? (
+      <>
+      <details class="more">
+        <summary class="more-head">
+          <div class="row1">
+            <strong>{name}</strong>
+            <Pill label={status} />
+          </div>
+          <p class:list={["one", { ph: summary.includes("[") }]}>{summary}</p>
+          {myPart && <p class="mypart">my part · {myPart}</p>}
+          <div class="row2">
+            <span class:list={["team", { ph: team.includes("[") }]}>{team}</span>
+            {tags.length > 0 && (
+              <span class="chips">
+                {tags.map((t) => (
+                  <Chip label={t} />
+                ))}
+              </span>
+            )}
+          </div>
+          <span class="open-tag" aria-hidden="true"></span>
+        </summary>
+        <div class="panel">
+          {extraDesc && <p class="desc">{extraDesc}</p>}
+          {media.length > 0 && (
+            <div class="media">
+              {media.map((m) =>
+                m.kind === "video" ? (
+                  <video
+                    src={m.src}
+                    controls
+                    muted
+                    playsinline
+                    preload="metadata"
+                    aria-label={m.alt}
+                  />
+                ) : (
+                  <img
+                    class:list={{ gif: m.kind === "gif" }}
+                    src={m.src}
+                    alt={m.alt}
+                    loading="lazy"
+                  />
+                ),
+              )}
+            </div>
+          )}
+          {explore && (
+            <a
+              class="explore"
+              href={explore.href}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noopener" : undefined}
+            >
+              {explore.label} →
+            </a>
+          )}
+        </div>
+      </details>
       {shown.length > 0 && (
-        <span class="links">
-          {shown.map((l, i) => (
-            <>
-              {i > 0 && " · "}
-              <a href={l.href}>{l.label}</a>
-            </>
-          ))}
-        </span>
+        <div class="row2 linkrow">
+          <span class="links">
+            {shown.map((l, i) => (
+              <>
+                {i > 0 && " · "}
+                <a href={l.href}>{l.label}</a>
+              </>
+            ))}
+          </span>
+        </div>
       )}
-    </div>
+      </>
+    ) : (
+      <>
+        <div class="row1">
+          <strong>{name}</strong>
+          <Pill label={status} />
+        </div>
+        <p class:list={["one", { ph: summary.includes("[") }]}>{summary}</p>
+        {myPart && <p class="mypart">my part · {myPart}</p>}
+        <div class="row2">
+          <span class:list={["team", { ph: team.includes("[") }]}>{team}</span>
+          {tags.length > 0 && (
+            <span class="chips">
+              {tags.map((t) => (
+                <Chip label={t} />
+              ))}
+            </span>
+          )}
+          {shown.length > 0 && (
+            <span class="links">
+              {shown.map((l, i) => (
+                <>
+                  {i > 0 && " · "}
+                  <a href={l.href}>{l.label}</a>
+                </>
+              ))}
+            </span>
+          )}
+        </div>
+      </>
+    )}
   </article>
 </div>
