@@ -302,7 +302,6 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 }
 .about p {
   margin: 0;
-  max-width: 62ch;
 }
 
 /* project cards */
