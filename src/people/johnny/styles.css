@@ -468,8 +468,8 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   margin-bottom: 0;
 }
 .photo {
-  width: 96px;
-  height: 96px;
+  width: 176px;
+  height: 176px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -477,8 +477,8 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   background: var(--phb);
   color: var(--phf);
   font-family: var(--mono);
-  font-size: 24px;
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  font-size: 44px;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
 }
 .photo img {
   width: 100%;
@@ -537,9 +537,9 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 
 @media (max-width: 899px) {
   .photo {
-    width: 64px;
-    height: 64px;
-    font-size: 22px;
+    width: 112px;
+    height: 112px;
+    font-size: 30px;
   }
   .nm {
     font-size: 30px;
