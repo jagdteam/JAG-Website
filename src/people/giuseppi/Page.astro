@@ -3,6 +3,7 @@ import LeftColumn from "./components/LeftColumn.astro";
 import Section from "./components/Section.astro";
 import ProjectCard from "./components/ProjectCard.astro";
 import ExperienceRow from "./components/ExperienceRow.astro";
+import OrgLogo from "./components/OrgLogo.astro";
 import { getEntry } from "astro:content";
 import { profile } from "./data";
 
@@ -16,6 +17,7 @@ interface ProjectData {
   repo?: string;
   demo?: string;
   image?: string;
+  thumb?: string;
   description?: string;
   media?: { src: string; alt: string; kind: "image" | "gif" | "video" }[];
   explore?: { href: string; label: string };
@@ -23,6 +25,7 @@ interface ProjectData {
 }
 interface ExperienceData {
   company: string;
+  logo?: string;
   place: string;
   start: string;
   end: string;
@@ -90,6 +93,7 @@ const projects = (
           summary: d.oneLiner,
           team: teamText(d.team),
           tags: d.tags,
+          thumb: d.thumb,
           myPart: ref.myPart,
           description: d.description,
           media: d.media,
@@ -111,6 +115,7 @@ const projects = (
         summary: p.oneLiner,
         team: teamText(p.team),
         tags: p.tags,
+        thumb: p.thumb,
         image: p.image,
         myPart: ref.myPart,
         description: p.description,
@@ -131,6 +136,7 @@ const experience = Object.values(experienceFiles)
   .map((e) => ({
     dates: dates(e.start, e.end),
     org: e.company,
+    logo: e.logo,
     place: e.place,
     roles: e.roles.map((r) => ({ ...r, dates: dates(r.start, r.end) })),
   }));
@@ -175,7 +181,8 @@ const experience = Object.values(experienceFiles)
         <ul class="exp">
           {profile.education.map((e) => (
             <li class="plate">
-              <div class="pl exprow">
+              <div class="pl exprow withlogo">
+                <OrgLogo org={e.school} src={e.logo} />
                 <span class="d">{e.date}</span>
                 <span>
                   <strong>{e.school}</strong>

@@ -1,5 +1,6 @@
 ---
 company: "eSmart Tech Inc."
+logo: "/assets/logos/esmart.webp"
 place: "San Diego, CA"
 start: "June 2025"
 end: "Sept. 2025"

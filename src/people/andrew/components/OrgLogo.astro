@@ -1,0 +1,23 @@
+---
+interface Props {
+  org: string;
+  src?: string;
+}
+const { org, src } = Astro.props;
+const small = new Set(["of", "the", "and", "inc", "inc.", "llc", "at", "for"]);
+const initials = org
+  .replace(/\(.*?\)/g, "")
+  .split(/[\s,.-]+/)
+  .filter((w) => w && !small.has(w.toLowerCase()))
+  .map((w) => w[0].toUpperCase())
+  .join("")
+  .slice(0, 4);
+---
+
+<span class:list={["logo", { missing: !src }]}>
+  {src ? (
+    <img src={src} alt={`${org} logo`} loading="lazy" decoding="async" />
+  ) : (
+    <span aria-hidden="true">{initials}</span>
+  )}
+</span>

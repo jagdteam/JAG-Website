@@ -11,6 +11,7 @@ const projects = defineCollection({
     team: z.array(z.string()),
     tags: z.array(z.string()),
     description: z.string().optional(),
+    thumb: z.string().optional(),
     media: z
       .array(
         z.object({

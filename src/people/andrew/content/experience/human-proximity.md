@@ -1,5 +1,6 @@
 ---
 company: "Human Proximity Inc."
+logo: "/assets/logos/human-proximity.jpg"
 place: "Irvine, California"
 start: "May 2026"
 end: "Present"
