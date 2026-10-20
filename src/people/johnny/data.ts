@@ -1,3 +1,7 @@
+export type ProjectRef =
+  | { slug: string; myPart?: string }
+  | { local: string; myPart?: string };
+
 export const profile = {
   name: "Johnny Fok",
   title: "AI/ML Engineer",
@@ -52,6 +56,7 @@ export const profile = {
     linkedin: "https://linkedin.com/in/johnnyfok",
     resume: undefined as string | undefined,
   },
+  projects: [{ slug: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." }, { slug: "beeseye" }, { local: "second-ear" }, { slug: "clicr" }, { local: "shipwatch" }] as ProjectRef[],
   // Set to an image path (e.g. "/photo.jpg") to replace the JF initials.
   photo: undefined as string | undefined,
 };

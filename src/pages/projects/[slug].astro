@@ -1,25 +1,336 @@
 ---
+import "@fontsource/source-sans-3/400.css";
+import "@fontsource/source-sans-3/600.css";
+import "@fontsource/source-sans-3/700.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import { getCollection } from "astro:content";
-import Shell from "../../layouts/Shell.astro";
-import Placeholder from "../../components/Placeholder.astro";
 
 export async function getStaticPaths() {
   const projects = await getCollection("projects");
-  return projects.map((entry) => ({
-    params: { slug: entry.id },
-    props: { entry },
-  }));
+  return projects
+    .filter(
+      (entry) => !entry.data.draft && entry.data.explore?.href === "/projects/" + entry.id,
+    )
+    .map((entry) => ({
+      params: { slug: entry.id },
+      props: { entry },
+    }));
 }
 
 const { entry } = Astro.props;
+const d = entry.data;
+const description = d.description ?? d.oneLiner;
+const media = d.media ?? [];
+const isExternal = (href: string) => /^https?:\/\//.test(href);
+const links: { label: string; href: string }[] = [];
+if (d.repo) links.push({ label: "Repo", href: d.repo });
+if (d.demo) links.push({ label: "Demo", href: d.demo });
+if (d.explore && isExternal(d.explore.href) && d.explore.href !== d.demo) {
+  links.push({ label: d.explore.label, href: d.explore.href });
+}
 ---
 
-<Shell title={entry.data.name}>
-  <h1>{entry.data.name}</h1>
-  <p>Status: {entry.data.status}</p>
-  <Placeholder title="Summary" note="What it is, one paragraph." />
-  <Placeholder title="Who did what" note="One line per member: their part." />
-  <Placeholder title="Stack" note="Tags." />
-  <Placeholder title="Media" note="Screenshot or clip." />
-  <Placeholder title="Links" note="Repo if public, demo if real." />
-</Shell>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{d.name}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+  <body>
+    <main class="page">
+      <div class="plate">
+        <article class="pl card">
+          <span class="trim" aria-hidden="true"></span>
+          <a class="back" href="/johnny" id="back-link">← Back</a>
+          <div class="row1">
+            <h1>{d.name}</h1>
+            <span class="pill">{d.status}</span>
+          </div>
+          <p class="one">{description}</p>
+          {media.length > 0 && (
+            <section class="media" aria-label="Media">
+              {media.map((m) =>
+                m.kind === "video" ? (
+                  <video class="shot" controls muted playsinline preload="metadata" src={m.src} aria-label={m.alt}></video>
+                ) : (
+                  <img class:list={["shot", { gif: m.kind === "gif" }]} src={m.src} alt={m.alt} />
+                ),
+              )}
+            </section>
+          )}
+          <div class="row2">
+            <span class="team">{d.team.join(", ")}</span>
+            {d.tags.length > 0 && (
+              <span class="chips">
+                {d.tags.map((t) => <span class="chip">{t}</span>)}
+              </span>
+            )}
+            {links.length > 0 && (
+              <span class="links">
+                {links.map((l, i) => (
+                  <>
+                    {i > 0 && " · "}
+                    <a href={l.href} target="_blank" rel="noopener">{l.label}</a>
+                  </>
+                ))}
+              </span>
+            )}
+          </div>
+        </article>
+      </div>
+    </main>
+    <script>
+      document.getElementById("back-link")?.addEventListener("click", (event) => {
+        let sameOrigin = false;
+        try {
+          sameOrigin = !!document.referrer && new URL(document.referrer).origin === location.origin;
+        } catch {}
+        if (sameOrigin && history.length > 1) {
+          event.preventDefault();
+          history.back();
+        }
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --page: #eef1f2;
+    --ink: #1c151d;
+    --muted: #5b5a6b;
+    --accent: #1f2a6b;
+    --focus: #047857;
+    --sans: "Source Sans 3", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", monospace;
+    --c: 10px;
+    --frame: #424144;
+    --face: #f6f7f8;
+    --hl: #ffffff;
+    --lo: #d7dae0;
+    --gap: 3px;
+    --sh: #9ea3ad;
+    --sx: 4px;
+    --sy: 5px;
+    --t1: #1f2a6b;
+    --t2: #b8262c;
+    --t3: #c9a449;
+    --rv1: #ffffff;
+    --rv2: #68677c;
+    --pb: #fbf5e3;
+    --pf: #6e5617;
+    --pbd: #c9a449;
+    --c1b: #e6e9f6;
+    --c1f: #1f2a6b;
+    --c2b: #f6e3e3;
+    --c2f: #8f1d22;
+    --c3b: #fbf5e3;
+    --c3f: #6e5617;
+    --c4b: #dff4f2;
+    --c4f: #14615b;
+  }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  :where(.row1, .row2) > * {
+    min-width: 0;
+  }
+  :where(p, h1, .chip) {
+    overflow-wrap: anywhere;
+  }
+  html {
+    background: var(--page);
+  }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.55;
+    background: var(--page);
+    color: var(--ink);
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  a:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  @media (max-width: 760px) {
+    .page {
+      padding: 16px;
+    }
+  }
+  .plate {
+    display: block;
+    filter: drop-shadow(var(--sx) var(--sy) 0 var(--sh));
+  }
+  .pl {
+    position: relative;
+    isolation: isolate;
+    padding: 20px 22px 20px 24px;
+    background: var(--frame);
+    color: var(--ink);
+    clip-path: polygon(
+      var(--c) 0,
+      100% 0,
+      100% calc(100% - var(--c)),
+      calc(100% - var(--c)) 100%,
+      0 100%,
+      0 var(--c)
+    );
+  }
+  .pl::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: var(--gap);
+    background: var(--face);
+    box-shadow:
+      inset 1px 1px 0 var(--hl),
+      inset -1px -1px 0 var(--lo);
+    clip-path: polygon(
+      calc(var(--c) - var(--gap) * 0.6) 0,
+      100% 0,
+      100% calc(100% - var(--c) + var(--gap) * 0.6),
+      calc(100% - var(--c) + var(--gap) * 0.6) 100%,
+      0 100%,
+      0 calc(var(--c) - var(--gap) * 0.6)
+    );
+  }
+  .pl::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) right 9px top 9px / 7px 7px no-repeat,
+      radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) left 9px bottom 9px / 7px 7px no-repeat,
+      radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) left 15px top 15px / 7px 7px no-repeat,
+      radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) right 15px bottom 15px / 7px 7px no-repeat;
+  }
+  .trim {
+    display: block;
+    width: 30px;
+    height: 6px;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, var(--t1) 0 40%, var(--t2) 40% 70%, var(--t3) 70% 100%);
+  }
+  .card {
+    font-size: 15px;
+  }
+  .back {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .row1 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+  }
+  .row1 h1 {
+    margin: 0;
+    font-size: 26px;
+    line-height: 1.15;
+  }
+  .pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--pb);
+    color: var(--pf);
+    border: 1px solid var(--pbd);
+    padding: 1px 8px;
+    border-radius: 999px;
+  }
+  .one {
+    margin: 8px 0 10px;
+    max-width: 62ch;
+  }
+  .media {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .shot {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    background: var(--lo);
+  }
+  .row2 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .team {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 0 6px;
+    border-radius: 2px;
+  }
+  .chip:nth-child(4n + 1) {
+    background: var(--c1b);
+    color: var(--c1f);
+  }
+  .chip:nth-child(4n + 2) {
+    background: var(--c2b);
+    color: var(--c2f);
+  }
+  .chip:nth-child(4n + 3) {
+    background: var(--c3b);
+    color: var(--c3f);
+  }
+  .chip:nth-child(4n + 4) {
+    background: var(--c4b);
+    color: var(--c4f);
+  }
+  .links {
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .links a {
+    color: var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      scroll-behavior: auto !important;
+      transition: none !important;
+      animation: none !important;
+    }
+    /* animated gifs are hidden when the visitor asks for reduced motion */
+    .shot.gif {
+      display: none;
+    }
+  }
+</style>

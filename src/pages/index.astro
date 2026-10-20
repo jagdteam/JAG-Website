@@ -3,7 +3,9 @@ import { getCollection } from "astro:content";
 import Shell from "../layouts/Shell.astro";
 import Placeholder from "../components/Placeholder.astro";
 
-const projects = await getCollection("projects");
+const projects = (await getCollection("projects")).filter(
+  (p) => !p.data.draft && p.data.explore?.href === "/projects/" + p.id,
+);
 const people = await getCollection("people");
 ---
 

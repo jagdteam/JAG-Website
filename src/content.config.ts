@@ -6,9 +6,24 @@ const projects = defineCollection({
   schema: z.object({
     name: z.string(),
     status: z.string(),
-    members: z.array(z.enum(["johnny", "andrew", "giuseppi"])),
-    repo: z.string().optional(),
-    demo: z.string().optional(),
+    order: z.number(),
+    oneLiner: z.string(),
+    team: z.array(z.string()),
+    tags: z.array(z.string()),
+    description: z.string().optional(),
+    media: z
+      .array(
+        z.object({
+          src: z.string(),
+          alt: z.string(),
+          kind: z.enum(["image", "gif", "video"]),
+        }),
+      )
+      .optional(),
+    explore: z.object({ href: z.string(), label: z.string() }).optional(),
+    repo: z.string().url().optional(),
+    demo: z.string().url().optional(),
+    draft: z.boolean().optional(),
   }),
 });
 

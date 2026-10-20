@@ -3,6 +3,7 @@ import LeftColumn from "./components/LeftColumn.astro";
 import Section from "./components/Section.astro";
 import ProjectCard from "./components/ProjectCard.astro";
 import ExperienceRow from "./components/ExperienceRow.astro";
+import { getEntry } from "astro:content";
 import { profile } from "./data";
 
 interface ProjectData {
@@ -15,6 +16,9 @@ interface ProjectData {
   repo?: string;
   demo?: string;
   image?: string;
+  description?: string;
+  media?: { src: string; alt: string; kind: "image" | "gif" | "video" }[];
+  explore?: { href: string; label: string };
   draft?: boolean;
 }
 interface ExperienceData {
@@ -60,22 +64,66 @@ const experienceFiles = import.meta.glob<{ frontmatter: ExperienceData }>(
   { eager: true },
 );
 
-const projects = Object.values(projectFiles)
-  .map((m) => m.frontmatter)
-  .filter((p) => !p.draft)
-  .sort((a, b) => a.order - b.order)
-  .map((p) => ({
-    name: p.name,
-    status: p.status,
-    summary: p.oneLiner,
-    team: p.team === "solo" ? "solo project" : `team · ${p.team.join(", ")}`,
-    tags: p.tags,
-    image: p.image,
-    links: [
-      { label: "Repo", href: p.repo },
-      { label: "Demo", href: p.demo },
-    ],
-  }));
+const localProjects = new Map(
+  Object.entries(projectFiles).map(([path, m]) => [
+    path.replace("./content/projects/", "").replace(/.md$/, ""),
+    m.frontmatter,
+  ]),
+);
+const teamText = (team: string[] | "solo") =>
+  team === "solo" ? "solo project" : `team · ${team.join(", ")}`;
+
+const projects = (
+  await Promise.all(
+    profile.projects.map(async (ref) => {
+      if ("slug" in ref) {
+        const entry = await getEntry("projects", ref.slug);
+        if (!entry || entry.data.draft) {
+          throw new Error(
+            `profile.projects: shared project "${ref.slug}" is missing or draft`,
+          );
+        }
+        const d = entry.data;
+        return {
+          name: d.name,
+          status: d.status,
+          summary: d.oneLiner,
+          team: teamText(d.team),
+          tags: d.tags,
+          myPart: ref.myPart,
+          description: d.description,
+          media: d.media,
+          explore: d.explore,
+          links: [
+            { label: "Repo", href: d.repo },
+            { label: "Demo", href: d.demo },
+          ],
+        };
+      }
+      const p = localProjects.get(ref.local);
+      if (!p) {
+        throw new Error(`profile.projects: local project "${ref.local}" not found`);
+      }
+      if (p.draft) return null;
+      return {
+        name: p.name,
+        status: p.status,
+        summary: p.oneLiner,
+        team: teamText(p.team),
+        tags: p.tags,
+        image: p.image,
+        myPart: ref.myPart,
+        description: p.description,
+        media: p.media,
+        explore: p.explore,
+        links: [
+          { label: "Repo", href: p.repo },
+          { label: "Demo", href: p.demo },
+        ],
+      };
+    }),
+  )
+).filter((p) => p !== null);
 
 const experience = Object.values(experienceFiles)
   .map((m) => m.frontmatter)
