@@ -1,0 +1,38 @@
+---
+import { getCollection } from "astro:content";
+import Shell from "../layouts/Shell.astro";
+import Placeholder from "../components/Placeholder.astro";
+
+const projects = await getCollection("projects");
+const people = await getCollection("people");
+---
+
+<Shell title="Team">
+  <Placeholder
+    title="1. Hero"
+    note="JAGD, one honest line, three faces linking to /johnny /andrew /giuseppi. No effects."
+  />
+  <div id="projects">
+    <Placeholder
+      title="2. Projects"
+      note="Three cards: BeesEye, CliCR, IoT. Screenshot, one-line pitch, stack tags, who did what, links."
+    >
+      <ul>
+        {projects.map((p) => <li><a href={`/projects/${p.id}`}>{p.data.name}</a></li>)}
+      </ul>
+    </Placeholder>
+  </div>
+  <Placeholder
+    title="3. How we work"
+    note="Three to four lines: sprints, code review, security pass on every chunk."
+  />
+  <Placeholder
+    title="4. Team"
+    note="Three cards: photo, name, role, two lines, link to own page."
+  >
+    <ul>
+      {people.map((p) => <li><a href={`/${p.id}`}>{p.data.name}</a></li>)}
+    </ul>
+  </Placeholder>
+  <Placeholder title="5. Contact" note="Emails, LinkedIn, GitHub." />
+</Shell>

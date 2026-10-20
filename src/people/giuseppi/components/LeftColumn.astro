@@ -1,0 +1,102 @@
+---
+interface Link {
+  label: string;
+  href: string;
+}
+interface Props {
+  name: string;
+  title: string;
+  photo?: string;
+  blurb: string[];
+  nav: Link[];
+  social: Link[];
+}
+const { name, title, photo, blurb, nav, social } = Astro.props;
+const initials = name
+  .split(/\s+/)
+  .map((w) => w[0])
+  .join("")
+  .slice(0, 2)
+  .toUpperCase();
+---
+
+<aside class="left">
+  <div class="plate">
+    <div class="pl">
+      <span class="trim" aria-hidden="true"></span>
+      <div class="photo">
+        {photo ? <img src={photo} alt={name} /> : initials}
+      </div>
+      <h2 class="nm">{name}</h2>
+      <p class="title">{title}</p>
+      <p class="blurb">
+        {blurb.map((line, i) => (
+          <>
+            {i > 0 && <br />}
+            {line}
+          </>
+        ))}
+      </p>
+      <ul class="nav">
+        {nav.map((l, i) => (
+          <li>
+            <a class={i === 0 ? "active" : undefined} href={l.href}>
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="social">
+        {social.map((l) => (
+          <a href={l.href}>{l.label}</a>
+        ))}
+      </div>
+      <div class="vent" aria-hidden="true"></div>
+    </div>
+  </div>
+</aside>
+
+<script is:inline>
+  // Nav scroll-spy: mark the left-nav link of the section in view.
+  document.addEventListener("DOMContentLoaded", function () {
+    const links = document.querySelectorAll(".nav a");
+    const sections = [];
+    links.forEach(function (a) {
+      const s = document.querySelector(a.getAttribute("href"));
+      if (s) sections.push(s);
+    });
+    if (!("IntersectionObserver" in window) || !sections.length) return;
+    const io = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          links.forEach(function (a) {
+            a.classList.toggle(
+              "active",
+              a.getAttribute("href") === "#" + e.target.id,
+            );
+          });
+        });
+      },
+      { rootMargin: "-30% 0px -60% 0px" },
+    );
+    sections.forEach(function (s) {
+      io.observe(s);
+    });
+    // At the very bottom the last short sections cannot reach the band: pick the last link.
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (
+          window.innerHeight + window.scrollY <
+          document.body.scrollHeight - 2
+        )
+          return;
+        links.forEach(function (a, i) {
+          a.classList.toggle("active", i === links.length - 1);
+        });
+      },
+      { passive: true },
+    );
+  });
+</script>

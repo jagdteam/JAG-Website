@@ -1,0 +1,170 @@
+---
+import LeftColumn from "./components/LeftColumn.astro";
+import Section from "./components/Section.astro";
+import ProjectCard from "./components/ProjectCard.astro";
+import ExperienceRow from "./components/ExperienceRow.astro";
+import { profile } from "./data";
+
+interface ProjectData {
+  name: string;
+  status: string;
+  order: number;
+  oneLiner: string;
+  team: string[] | "solo";
+  tags: string[];
+  repo?: string;
+  demo?: string;
+  image?: string;
+  draft?: boolean;
+}
+interface ExperienceData {
+  company: string;
+  place: string;
+  start: string;
+  end: string;
+  order: number;
+  roles: {
+    title: string;
+    start: string;
+    end: string;
+    summary: string;
+    stack: string[];
+    bullets: string[];
+  }[];
+}
+
+const dates = (start: string, end: string) =>
+  end ? `${start} – ${end}` : start;
+
+const nav = [
+  { label: "About", href: "#about" },
+  { label: "Projects", href: "#projects" },
+  { label: "Experience", href: "#experience" },
+  { label: "Skills", href: "#skills" },
+  { label: "Contact", href: "#contact" },
+];
+const c = profile.contact;
+const social = [
+  { label: "GitHub", href: c.github },
+  ...(c.linkedin ? [{ label: "LinkedIn", href: c.linkedin }] : []),
+  ...(c.email ? [{ label: "Email", href: `mailto:${c.email}` }] : []),
+  ...(c.resume ? [{ label: "Resume (PDF)", href: c.resume }] : []),
+];
+
+const projectFiles = import.meta.glob<{ frontmatter: ProjectData }>(
+  "./content/projects/*.md",
+  { eager: true },
+);
+const experienceFiles = import.meta.glob<{ frontmatter: ExperienceData }>(
+  "./content/experience/*.md",
+  { eager: true },
+);
+
+const projects = Object.values(projectFiles)
+  .map((m) => m.frontmatter)
+  .filter((p) => !p.draft)
+  .sort((a, b) => a.order - b.order)
+  .map((p) => ({
+    name: p.name,
+    status: p.status,
+    summary: p.oneLiner,
+    team: p.team === "solo" ? "solo project" : `team · ${p.team.join(", ")}`,
+    tags: p.tags,
+    image: p.image,
+    links: [
+      { label: "Repo", href: p.repo },
+      { label: "Demo", href: p.demo },
+    ],
+  }));
+
+const experience = Object.values(experienceFiles)
+  .map((m) => m.frontmatter)
+  .sort((a, b) => a.order - b.order)
+  .map((e) => ({
+    dates: dates(e.start, e.end),
+    org: e.company,
+    place: e.place,
+    roles: e.roles.map((r) => ({ ...r, dates: dates(r.start, r.end) })),
+  }));
+---
+
+<!-- This folder belongs to andrew. Anything inside src/people/andrew/ is yours: keep this starter, change it, or delete it and start blank. -->
+
+<div class="page">
+  <div class="layout">
+    <LeftColumn
+      name={profile.name}
+      title={profile.title}
+      photo={profile.photo}
+      blurb={profile.blurb}
+      nav={nav}
+      social={social}
+    />
+    <main class="right" id="main">
+      <Section id="about" title="About">
+        <div class="plate">
+          <div class="pl about">
+            <p>{profile.about}</p>
+          </div>
+        </div>
+      </Section>
+
+      <Section id="projects" title="Projects">
+        <div class="grid2">
+          {projects.map((p) => (
+            <ProjectCard {...p} />
+          ))}
+        </div>
+      </Section>
+
+      <Section id="experience" title="Experience">
+        <ul class="exp">
+          {experience.map((e) => (
+            <ExperienceRow {...e} />
+          ))}
+        </ul>
+        <p class="variant">Education</p>
+        <ul class="exp">
+          {profile.education.map((e) => (
+            <li class="plate">
+              <div class="pl exprow">
+                <span class="d">{e.date}</span>
+                <span>
+                  <strong>{e.school}</strong>
+                  {e.degree ? ` · ${e.degree}` : ""}
+                  {e.gpa ? ` · GPA ${e.gpa}` : ""}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section id="skills" title="Skills">
+        <ul class="exp">
+          {profile.skills.map((sk) => (
+            <li class="plate">
+              <div class="pl exprow">
+                <span class="d">{sk.label}</span>
+                <span>{sk.list}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section id="contact" title="Contact">
+        <div class="plate">
+          <div class="pl about">
+            {profile.contactLine && <p>{profile.contactLine}</p>}
+            <div class="contact-links">
+              {social.map((l) => (
+                <a href={l.href}>{l.label}</a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,63 @@
+---
+import Chip from "./Chip.astro";
+
+interface Role {
+  title?: string;
+  dates?: string;
+  summary: string;
+  stack: string[];
+  bullets: string[];
+}
+interface Props {
+  dates: string;
+  org: string;
+  place: string;
+  roles: Role[];
+}
+const { dates, org, place, roles } = Astro.props;
+const single = roles.length === 1;
+---
+
+<li class="plate">
+  <div class="pl exprow">
+    <span class="d">{dates}</span>
+    <div>
+      {single ? (
+        <>
+          <strong>{org}</strong> · {roles[0].title} · {place}
+        </>
+      ) : (
+        <>
+          <strong>{org}</strong> · {place}
+        </>
+      )}
+      {roles.map((r) => (
+        <>
+          {!single && (
+            <p class="role">
+              <strong>{r.title}</strong>{r.dates ? ` · ${r.dates}` : ""}
+            </p>
+          )}
+          <p class="one">{r.summary}</p>
+          {r.stack.length > 0 && (
+            <span class="chips">
+              {r.stack.map((s) => (
+                <Chip label={s} />
+              ))}
+            </span>
+          )}
+          {r.bullets.length > 0 && (
+            <details>
+              <summary>details</summary>
+              <ul>
+                {r.bullets.map((b) => (
+                  <li>{b}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </>
+      ))}
+    </div>
+  </div>
+</li>

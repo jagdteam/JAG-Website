@@ -1,0 +1,25 @@
+---
+import { getCollection } from "astro:content";
+import Shell from "../../layouts/Shell.astro";
+import Placeholder from "../../components/Placeholder.astro";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  return projects.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+---
+
+<Shell title={entry.data.name}>
+  <h1>{entry.data.name}</h1>
+  <p>Status: {entry.data.status}</p>
+  <Placeholder title="Summary" note="What it is, one paragraph." />
+  <Placeholder title="Who did what" note="One line per member: their part." />
+  <Placeholder title="Stack" note="Tags." />
+  <Placeholder title="Media" note="Screenshot or clip." />
+  <Placeholder title="Links" note="Repo if public, demo if real." />
+</Shell>

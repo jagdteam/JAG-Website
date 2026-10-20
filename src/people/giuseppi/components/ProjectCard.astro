@@ -1,0 +1,48 @@
+---
+import Chip from "./Chip.astro";
+import Pill from "./Pill.astro";
+
+interface Props {
+  name: string;
+  status: string;
+  summary: string;
+  team: string;
+  tags: string[];
+  image?: string;
+  links?: { label: string; href?: string }[];
+}
+const { name, status, summary, team, tags, image, links = [] } = Astro.props;
+const shown = links.filter((l) => l.href && l.href !== "#");
+---
+
+<div class="plate">
+  <article class="pl card">
+    <span class="trim" aria-hidden="true"></span>
+    {image && <img class="shot" src={image} alt={name} />}
+    <div class="row1">
+      <strong>{name}</strong>
+      <Pill label={status} />
+    </div>
+    <p class:list={["one", { ph: summary.includes("[") }]}>{summary}</p>
+    <div class="row2">
+      <span class:list={["team", { ph: team.includes("[") }]}>{team}</span>
+      {tags.length > 0 && (
+        <span class="chips">
+          {tags.map((t) => (
+            <Chip label={t} />
+          ))}
+        </span>
+      )}
+      {shown.length > 0 && (
+        <span class="links">
+          {shown.map((l, i) => (
+            <>
+              {i > 0 && " · "}
+              <a href={l.href}>{l.label}</a>
+            </>
+          ))}
+        </span>
+      )}
+    </div>
+  </article>
+</div>

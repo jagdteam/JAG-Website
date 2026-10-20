@@ -1,0 +1,16 @@
+---
+interface Props {
+  title: string;
+  note: string;
+  minHeight?: string;
+}
+const { title, note, minHeight = "160px" } = Astro.props;
+---
+
+<section
+  style={`border: 1px dashed var(--line); border-radius: 12px; padding: 20px; margin: 16px 0; min-height: ${minHeight};`}
+>
+  <h2>{title}</h2>
+  <p style="color: var(--muted);">{note}</p>
+  <slot />
+</section>
