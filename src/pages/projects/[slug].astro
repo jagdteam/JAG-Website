@@ -9,7 +9,9 @@ import { getCollection } from "astro:content";
 export async function getStaticPaths() {
   const projects = await getCollection("projects");
   return projects
-    .filter((entry) => !entry.data.draft)
+    .filter(
+      (entry) => !entry.data.draft && entry.data.explore?.href === "/projects/" + entry.id,
+    )
     .map((entry) => ({
       params: { slug: entry.id },
       props: { entry },

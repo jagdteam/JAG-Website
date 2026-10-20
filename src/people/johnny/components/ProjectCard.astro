@@ -37,7 +37,11 @@ const shown = links.filter(
   (l) =>
     l.href &&
     l.href !== "#" &&
-    !(l.label === "Demo" && explore && l.href === explore.href),
+    !(
+      (l.label === "Demo" || l.label === "Repo") &&
+      explore &&
+      l.href === explore.href
+    ),
 );
 const extraDesc = description && description !== summary ? description : undefined;
 const expandable = Boolean(extraDesc || media.length > 0 || explore);
@@ -50,7 +54,7 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
     {image && <img class="shot" src={image} alt={name} />}
     {expandable ? (
       <>
-      <details class="more">
+      <details class="more" name="projects">
         <summary class="more-head">
           <div class="row1">
             <strong>{name}</strong>
@@ -68,7 +72,7 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
               </span>
             )}
           </div>
-          <span class="open-tag" aria-hidden="true"></span>
+          <span class="open-tag" aria-hidden="true"><span class="tri"></span> <span class="open-word"></span></span>
         </summary>
         <div class="panel">
           {extraDesc && <p class="desc">{extraDesc}</p>}
@@ -102,7 +106,7 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
               target={external ? "_blank" : undefined}
               rel={external ? "noopener" : undefined}
             >
-              {explore.label} →
+              {explore.label} {external ? "↗" : "→"}
             </a>
           )}
         </div>

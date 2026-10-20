@@ -518,11 +518,20 @@ summary:focus-visible {
   font-size: 12px;
   color: var(--accent);
 }
-.open-tag::before {
-  content: "+ more";
+.open-tag .tri {
+  font-family: system-ui, sans-serif;
 }
-.more[open] .open-tag::before {
-  content: "- less";
+.open-tag .tri::before {
+  content: "\25B8";
+}
+.open-tag .open-word::before {
+  content: "more";
+}
+.more[open] .open-tag .tri::before {
+  content: "\25BE";
+}
+.more[open] .open-tag .open-word::before {
+  content: "less";
 }
 .panel {
   margin-top: 10px;
@@ -548,9 +557,20 @@ summary:focus-visible {
   height: auto;
 }
 .explore {
+  display: inline-block;
+  align-self: flex-start;
+  border: 1px solid var(--accent);
+  background: #fff;
+  padding: 6px 14px;
   font-family: var(--mono);
   font-size: 13px;
+  font-weight: 500;
   color: var(--accent);
+  text-decoration: none;
+}
+.explore:hover {
+  background: var(--c1b);
+  text-decoration: none;
 }
 .linkrow {
   margin-top: 8px;

@@ -6,6 +6,6 @@ oneLiner: "Command-line tool for chatting with a local codebase using retrieval-
 team: ["Johnny", "Andrew", "Giuseppi"]
 tags: ["Cohere", "ChromaDB", "RAG"]
 description: "Command-line tool for chatting with a local codebase using retrieval-augmented generation: Cohere embeddings, ChromaDB storage, source citations, and a watch mode for incremental updates."
-explore: { href: "/projects/clicr", label: "Explore" }
+explore: { href: "https://github.com/jagdteam/clicr", label: "Repo" }
 repo: "https://github.com/jagdteam/clicr"
 ---
