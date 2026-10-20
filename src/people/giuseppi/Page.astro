@@ -156,7 +156,7 @@ const experience = Object.values(experienceFiles)
       <Section id="contact" title="Contact">
         <div class="plate">
           <div class="pl about">
-            <p>{profile.contactLine}</p>
+            {profile.contactLine && <p>{profile.contactLine}</p>}
             <div class="contact-links">
               {social.map((l) => (
                 <a href={l.href}>{l.label}</a>
