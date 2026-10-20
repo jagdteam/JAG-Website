@@ -45,7 +45,7 @@ if (d.explore && isExternal(d.explore.href) && d.explore.href !== d.demo) {
       <div class="plate">
         <article class="pl card">
           <span class="trim" aria-hidden="true"></span>
-          <a class="back" href="/">← Home</a>
+          <a class="back" href="/johnny" id="back-link">← Back</a>
           <div class="row1">
             <h1>{d.name}</h1>
             <span class="pill">{d.status}</span>
@@ -83,6 +83,18 @@ if (d.explore && isExternal(d.explore.href) && d.explore.href !== d.demo) {
         </article>
       </div>
     </main>
+    <script>
+      document.getElementById("back-link")?.addEventListener("click", (event) => {
+        let sameOrigin = false;
+        try {
+          sameOrigin = !!document.referrer && new URL(document.referrer).origin === location.origin;
+        } catch {}
+        if (sameOrigin && history.length > 1) {
+          event.preventDefault();
+          history.back();
+        }
+      });
+    </script>
   </body>
 </html>
 
