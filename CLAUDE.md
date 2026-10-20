@@ -1,8 +1,8 @@
 # jagd-website
 
-JAGD team portfolio. Remote `jagdteam/JAGD-Company-Website` (private, org repo). Branch `revamp/astro-scaffold` is the rebuild; `main` still holds the old 2026-01 Lovable/React site until the rebuild replaces it.
+JAGD team portfolio, live on Vercel (project `wood`). Remote `jagdteam/JAGD-Website` (public, org repo). `main` is the Astro rebuild with per-person pages (`/johnny`, `/andrew`, `/giuseppi`); the old 2026-01 Lovable/React site is archived on branch `archive/lovable-site` and tag `lovable-site-2026-01`.
 
-Stack: Astro (static output), npm, Node 22. No CMS, no live data: projects and people are content collections under `src/content/`.
+Stack: Astro (static output), npm, Node 22. No CMS, no live data: team projects and people are content collections under `src/content/`; each member page is self-contained in `src/people/<name>/` (own Layout, components, content, styles).
 
 Layout: `/` fixed team page, `/projects/<slug>` one per project, `/<name>` one per member. Each member owns `src/people/<name>/` and `src/pages/<name>.astro` (CODEOWNERS enforces it). Shared files need one other member's review.
 
