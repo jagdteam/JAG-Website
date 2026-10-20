@@ -1,5 +1,6 @@
 ---
 company: "Cal Poly Pomona Motor Development Clinic"
+logo: "/assets/logos/cpp.png"
 place: "Pomona, CA"
 start: "Aug 2024"
 end: "June 2025"

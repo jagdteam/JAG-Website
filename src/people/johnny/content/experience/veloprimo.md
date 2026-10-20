@@ -1,5 +1,6 @@
 ---
 company: "Veloprimo"
+logo: "/assets/logos/veloprimo.png"
 place: "Irvine, CA"
 start: "July 2026"
 end: "Oct. 2026"

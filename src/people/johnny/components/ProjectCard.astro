@@ -14,6 +14,7 @@ interface Props {
   team: string;
   tags: string[];
   image?: string;
+  thumb?: string;
   links?: { label: string; href?: string }[];
   myPart?: string;
   description?: string;
@@ -27,6 +28,7 @@ const {
   team,
   tags,
   image,
+  thumb,
   links = [],
   myPart,
   description,
@@ -49,8 +51,9 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
 ---
 
 <div class="plate">
-  <article class="pl card">
+  <article class:list={["pl", "card", { thumbed: Boolean(thumb) }]}>
     <span class="trim" aria-hidden="true"></span>
+    {thumb && <img class="thumb" src={thumb} alt={`${name} screenshot`} loading="lazy" />}
     {image && <img class="shot" src={image} alt={name} />}
     {expandable ? (
       <>

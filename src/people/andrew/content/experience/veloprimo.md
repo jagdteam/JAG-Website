@@ -1,5 +1,6 @@
 ---
 company: "VeloPrimo.AI"
+logo: "/assets/logos/veloprimo.png"
 place: "Irvine, California"
 start: "July 2026"
 end: "October 2026"

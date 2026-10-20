@@ -1,5 +1,6 @@
 ---
 import Chip from "./Chip.astro";
+import OrgLogo from "./OrgLogo.astro";
 
 interface Role {
   title?: string;
@@ -11,15 +12,17 @@ interface Role {
 interface Props {
   dates: string;
   org: string;
+  logo?: string;
   place: string;
   roles: Role[];
 }
-const { dates, org, place, roles } = Astro.props;
+const { dates, org, logo, place, roles } = Astro.props;
 const single = roles.length === 1;
 ---
 
 <li class="plate">
-  <div class="pl exprow">
+  <div class="pl exprow withlogo">
+    <OrgLogo org={org} src={logo} />
     <span class="d">{dates}</span>
     <div>
       {single ? (

@@ -15,6 +15,7 @@ export const profile = {
   education: [
     {
       school: "University of California, Irvine",
+      logo: "/assets/logos/uci.svg",
       degree: "Master of Computer Science",
       gpa: "3.8",
       date: "Expected Dec. 2026",
