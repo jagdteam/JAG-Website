@@ -1,24 +1,24 @@
-/* A1 white armor cards on a flat light page. Single fixed style, no theme switcher. */
+/* E2 anime cel-shaded cards on a flat light page. Single fixed style, no theme switcher. */
 :root {
   --page: #eef1f2;
-  --ink: #1c151d;
-  --muted: #5b5a6b;
+  --ink: #141a2b;
+  --muted: #4c5874;
   --accent: #1f2a6b;
   --focus: #047857;
   --sans: "Source Sans 3", system-ui, sans-serif;
   --mono: "IBM Plex Mono", monospace;
   --c: 10px;
-  --frame: #424144;
-  --face: #f6f7f8;
-  --hl: #ffffff;
-  --lo: #d7dae0;
-  --gap: 3px;
-  --gaph: 5px;
-  --sh: #9ea3ad;
-  --sx: 4px;
-  --sy: 5px;
-  --sxh: 5px;
-  --syh: 8px;
+  --frame: #060b18;
+  --face: #e6f0fa;
+  --hl: #8fb0d8;
+  --lo: #8fb0d8;
+  --gap: 2px;
+  --gaph: 4px;
+  --sh: #050a16;
+  --sx: 6px;
+  --sy: 7px;
+  --sxh: 7px;
+  --syh: 10px;
   --hd: #1f2a6b;
   --act: #b8262c;
   --hov: #1f2a6b;
@@ -28,9 +28,9 @@
   --rv1: #ffffff;
   --rv2: #68677c;
   --date: #1f2a6b;
-  --phb: #1f2a6b;
-  --phf: #ffffff;
-  --vent: #424144;
+  --phb: #15213d;
+  --phf: #e6f0fa;
+  --vent: #15213d;
   --pb: #fbf5e3;
   --pf: #6e5617;
   --pbd: #c9a449;
@@ -139,7 +139,7 @@ summary:focus-visible {
   position: relative;
   isolation: isolate;
   height: 100%;
-  padding: 20px 22px 20px 24px;
+  padding: 18px 26px 24px 20px;
   background: var(--frame);
   color: var(--ink);
   clip-path: polygon(
@@ -156,10 +156,8 @@ summary:focus-visible {
   position: absolute;
   z-index: -1;
   inset: var(--gap);
-  background: var(--face);
-  box-shadow:
-    inset 1px 1px 0 var(--hl),
-    inset -1px -1px 0 var(--lo);
+  background: linear-gradient(118deg, #e6f0fa 0 64%, #cfe0f1 64% 100%);
+  box-shadow: inset 0 0 0 1px var(--hl);
   clip-path: polygon(
     calc(var(--c) - var(--gap) * 0.6) 0,
     100% 0,
@@ -173,13 +171,17 @@ summary:focus-visible {
 .pl::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: var(--gap);
   pointer-events: none;
-  background:
-    radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) right 9px top 9px / 7px 7px no-repeat,
-    radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) left 9px bottom 9px / 7px 7px no-repeat,
-    radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) left 15px top 15px / 7px 7px no-repeat,
-    radial-gradient(circle, var(--rv1) 0 1px, var(--rv2) 1.5px 3px, transparent 3.3px) right 15px bottom 15px / 7px 7px no-repeat;
+  background: #15213d;
+  clip-path: polygon(
+    calc(100% - 9px) 20px,
+    100% 6px,
+    100% 100%,
+    0 100%,
+    12px calc(100% - 8px),
+    calc(100% - 9px) calc(100% - 8px)
+  );
 }
 .plate:hover {
   --gap: var(--gaph);
@@ -216,7 +218,11 @@ summary:focus-visible {
   margin: 4px 0 14px;
   padding: 2px 8px;
   color: var(--hd);
-  background: var(--face);
+  background: #e6f0fa;
+  box-shadow:
+    inset 0 0 0 1px #8fb0d8,
+    0 0 0 2px #060b18,
+    4px 4px 0 2px #050a16;
 }
 .mk,
 .trim {
