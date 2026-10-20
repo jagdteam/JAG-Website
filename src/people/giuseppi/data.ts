@@ -30,23 +30,23 @@ export const profile = {
     },
   ],
   skills: [
-    { label: "Languages", list: "Python, TypeScript, JavaScript, C, C++, SQL" },
+    { label: "Languages", list: ["Python", "TypeScript", "JavaScript", "C", "C++", "SQL"] },
     {
       label: "LLM & Agents",
-      list: "Claude Code, MCP Servers, Multi-Agent Orchestration, RAG, LLM-as-Judge Evals, OpenAI API",
+      list: ["Claude Code", "MCP Servers", "Multi-Agent Orchestration", "RAG", "LLM-as-Judge Evals", "OpenAI API"],
     },
     {
       label: "CV & ML",
-      list: "PyTorch, YOLOv8, ByteTrack, Kalman Filtering, TensorFlow Lite, Roboflow, NumPy, Hugging Face Transformers",
+      list: ["PyTorch", "YOLOv8", "ByteTrack", "Kalman Filtering", "TensorFlow Lite", "Roboflow", "NumPy", "Hugging Face Transformers"],
     },
-    { label: "Databases", list: "PostgreSQL, Firestore, Pinecone, ChromaDB, FAISS" },
+    { label: "Databases", list: ["PostgreSQL", "Firestore", "Pinecone", "ChromaDB", "FAISS"] },
     {
       label: "Cloud & DevOps",
-      list: "AWS (EC2, S3, SageMaker, Bedrock), GCP (Cloud Run), Firebase, Docker, GitHub Actions, Linux, Git",
+      list: ["AWS (EC2, S3, SageMaker, Bedrock)", "GCP (Cloud Run)", "Firebase", "Docker", "GitHub Actions", "Linux", "Git"],
     },
     {
       label: "Frameworks & Testing",
-      list: "FastAPI, Next.js, React, React Native, Node.js, Express, pytest, Playwright, Vitest, Jest",
+      list: ["FastAPI", "Next.js", "React", "React Native", "Node.js", "Express", "pytest", "Playwright", "Vitest", "Jest"],
     },
   ],
   contact: {

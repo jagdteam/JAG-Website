@@ -4,6 +4,7 @@ import Section from "./components/Section.astro";
 import ProjectCard from "./components/ProjectCard.astro";
 import ExperienceRow from "./components/ExperienceRow.astro";
 import OrgLogo from "./components/OrgLogo.astro";
+import Chip from "./components/Chip.astro";
 import { getEntry } from "astro:content";
 import { profile } from "./data";
 
@@ -201,7 +202,7 @@ const experience = Object.values(experienceFiles)
             <li class="plate">
               <div class="pl exprow">
                 <span class="d">{sk.label}</span>
-                <span>{sk.list}</span>
+                <span class="chips">{sk.list.map((s) => <Chip label={s} />)}</span>
               </div>
             </li>
           ))}
