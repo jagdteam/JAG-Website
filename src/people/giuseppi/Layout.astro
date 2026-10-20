@@ -18,6 +18,9 @@ const description = `${profile.name}, ${profile.title}. ${profile.blurb.join(" "
     <title>{profile.name}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.ico" />
+    <script is:inline>
+      document.documentElement.classList.add("js");
+    </script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
