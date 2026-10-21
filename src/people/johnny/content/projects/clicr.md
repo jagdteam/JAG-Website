@@ -3,9 +3,8 @@ name: "CliCR"
 status: "MVP complete"
 order: 4
 oneLiner: "Command-line tool for chatting with a local codebase using retrieval-augmented generation: Cohere embeddings, ChromaDB storage, source citations, and a watch mode for incremental updates."
-team: ["Johnny", "Andrew", "Giuseppi"]
+team: "solo"
 tags: ["Cohere", "ChromaDB", "RAG"]
 description: "Command-line tool for chatting with a local codebase using retrieval-augmented generation: Cohere embeddings, ChromaDB storage, source citations, and a watch mode for incremental updates."
-explore: { href: "https://github.com/jagdteam/clicr", label: "Repo" }
 repo: "https://github.com/jagdteam/clicr"
 ---
