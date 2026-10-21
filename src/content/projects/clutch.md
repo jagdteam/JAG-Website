@@ -9,6 +9,6 @@ description: "Clutch watches a pickup game through the phone's camera and keeps 
 thumb: "/projects/clutch/logo.webp"
 thumbFit: "contain"
 media: [{ src: "/projects/clutch/demo.mp4", poster: "/projects/clutch/demo-poster.jpg", alt: "Clutch tracking two players, the ball and the hoop on an outdoor court.", kind: "video" }]
-explore: { href: "https://v0-clutch-web.vercel.app", label: "Demo" }
+explore: { href: "https://v0-clutch-web.vercel.app", label: "Website" }
 demo: "https://v0-clutch-web.vercel.app"
 ---
