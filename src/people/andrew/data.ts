@@ -54,6 +54,7 @@ export const profile = {
   },
   projects: [
     { slug: "clutch", myPart: "Led frontend architecture in React Native and TypeScript; integrated Google OAuth sign-in and Google Maps API." },
+    { slug: "beeseye" },
     { local: "jit-expression-evaluator" },
   ] as ProjectRef[],
   photo: undefined as string | undefined,
