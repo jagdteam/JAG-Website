@@ -87,6 +87,7 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
           {extraDesc && <p class="desc">{extraDesc}</p>}
           {media.length > 0 && (
             <div class="gal">
+              <div class="gal-view">
               <div class="gal-main">
                 {media.map((m, i) =>
                   m.kind === "video" ? (
@@ -111,7 +112,18 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
                   ),
                 )}
               </div>
-              {media.length > 1 && (
+              {media.length >= 2 && (
+                <>
+                  <button type="button" class="gal-arrow prev" aria-label="Previous">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
+                  </button>
+                  <button type="button" class="gal-arrow next" aria-label="Next">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
+                  </button>
+                </>
+              )}
+              </div>
+              {media.length >= 1 && (
                 <div class="gal-strip">
                   {media.map((m, i) => (
                     <button type="button" aria-label={m.alt} aria-pressed={i === 0 ? "true" : "false"}>
@@ -256,20 +268,44 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
     true,
   );
 
+  function selectItem(gal: HTMLElement, idx: number) {
+    const buttons = Array.from(gal.querySelectorAll<HTMLButtonElement>(".gal-strip button"));
+    const items = Array.from(gal.querySelectorAll<HTMLElement>(".gal-main > *"));
+    if (items.length === 0) return;
+    const n = (idx + items.length) % items.length;
+    items.forEach((it, i) => {
+      it.hidden = i !== n;
+      if (i !== n && it instanceof HTMLVideoElement) it.pause();
+    });
+    buttons.forEach((b, i) => b.setAttribute("aria-pressed", String(i === n)));
+    const details = gal.closest("details") as HTMLDetailsElement | null;
+    if (details?.open) playShown(details);
+  }
+  const currentIndex = (gal: HTMLElement) =>
+    Array.from(gal.querySelectorAll<HTMLElement>(".gal-main > *")).findIndex((it) => !it.hidden);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const gal = (e.target as Element).closest?.<HTMLElement>(".gal");
+    if (!gal || gal.querySelectorAll(".gal-main > *").length < 2) return;
+    e.preventDefault();
+    selectItem(gal, currentIndex(gal) + (e.key === "ArrowRight" ? 1 : -1));
+  });
+
   document.addEventListener("click", (e) => {
-    const thumbBtn = (e.target as Element).closest?.<HTMLButtonElement>(".gal-strip button");
+    const target = e.target as Element;
+    const thumbBtn = target.closest?.<HTMLButtonElement>(".gal-strip button");
     if (thumbBtn) {
       const gal = thumbBtn.closest(".gal") as HTMLElement;
       const buttons = Array.from(gal.querySelectorAll<HTMLButtonElement>(".gal-strip button"));
-      const items = Array.from(gal.querySelectorAll<HTMLElement>(".gal-main > *"));
-      const idx = buttons.indexOf(thumbBtn);
-      items.forEach((it, i) => {
-        it.hidden = i !== idx;
-        if (i !== idx && it instanceof HTMLVideoElement) it.pause();
-      });
-      buttons.forEach((b, i) => b.setAttribute("aria-pressed", String(i === idx)));
-      const details = gal.closest("details") as HTMLDetailsElement | null;
-      if (details?.open) playShown(details);
+      selectItem(gal, buttons.indexOf(thumbBtn));
+      return;
+    }
+    const arrow = target.closest?.<HTMLButtonElement>(".gal-arrow");
+    if (arrow) {
+      const gal = arrow.closest(".gal") as HTMLElement;
+      selectItem(gal, currentIndex(gal) + (arrow.classList.contains("next") ? 1 : -1));
       return;
     }
     if (reduce.matches) return;
