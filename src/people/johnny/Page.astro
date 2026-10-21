@@ -162,7 +162,19 @@ const experience = Object.values(experienceFiles)
       <Section id="about" title="About">
         <div class="plate">
           <div class="pl about">
-            <p>{profile.about}</p>
+            {profile.about.map((para) => (
+              <p>
+                {para.map((part) =>
+                  typeof part === "string" ? (
+                    part
+                  ) : (
+                    <strong>
+                      <a href={part.href} target="_blank" rel="noopener noreferrer">{part.text}</a>
+                    </strong>
+                  ),
+                )}
+              </p>
+            ))}
           </div>
         </div>
       </Section>

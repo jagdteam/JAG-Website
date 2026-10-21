@@ -382,6 +382,14 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 .about p {
   margin: 0;
 }
+.about p a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.about p + p {
+  margin-top: 0.75em;
+}
 
 /* project cards */
 .grid2 {
