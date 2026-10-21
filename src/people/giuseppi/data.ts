@@ -23,6 +23,7 @@ export const profile = {
     },
     {
       school: "University of California, Riverside",
+      logo: "/assets/logos/ucr.png",
       degree: "Bachelor of Science, Computer Science",
       gpa: "",
       date: "June 2021",

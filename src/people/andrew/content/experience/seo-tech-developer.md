@@ -1,5 +1,6 @@
 ---
 company: "SEO Tech Developer (SEO USA)"
+logo: "/assets/logos/seo-usa.png"
 place: "New York, NY (Hybrid)"
 start: "June 2023"
 end: "July 2023"

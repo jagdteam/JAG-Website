@@ -1,0 +1,5 @@
+mymelodic.png - https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/99/43/5a/99435a18-7b30-4804-27c4-17fe337eadc4/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.png (App Store icon, MyMelodic by Andrew Espinosa, https://apps.apple.com/us/app/mymelodic/id6770647936)
+seo-usa.png - https://www.seo-usa.org/wp-content/uploads/2018/05/cropped-SEO-favicon-01-192x192.png (site icon of seo-usa.org)
+redlands.png - https://www.redlands.edu/apple-touch-icon.png (site icon of redlands.edu)
+ucr.png - monogram cropped from https://brand.ucr.edu/sites/default/files/Logotype%20and%20monogram%20img-2x.png (official UCR brand page)
+ca-dir.png - "DIR" emblem cropped from https://www.dir.ca.gov/images/template-logo.png (site header logo of dir.ca.gov)

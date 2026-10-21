@@ -23,6 +23,7 @@ export const profile = {
     },
     {
       school: "University of Redlands",
+      logo: "/assets/logos/redlands.png",
       degree: "BA in Computer Science | BM in Clarinet Performance",
       gpa: "",
       date: "April 2025",
