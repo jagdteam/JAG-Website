@@ -112,18 +112,14 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
                   ),
                 )}
               </div>
-              {media.length >= 2 && (
-                <>
-                  <button type="button" class="gal-arrow prev" aria-label="Previous">
-                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
-                  </button>
-                  <button type="button" class="gal-arrow next" aria-label="Next">
-                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
-                  </button>
-                </>
-              )}
               </div>
               {media.length >= 1 && (
+                <div class="gal-bar">
+                  {media.length >= 2 && (
+                    <button type="button" class="gal-arrow prev" aria-label="Previous">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
+                  </button>
+                  )}
                 <div class="gal-strip">
                   {media.map((m, i) => (
                     <button type="button" aria-label={m.alt} aria-pressed={i === 0 ? "true" : "false"}>
@@ -134,6 +130,12 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
                       )}
                     </button>
                   ))}
+                </div>
+                  {media.length >= 2 && (
+                    <button type="button" class="gal-arrow next" aria-label="Next">
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
+                  </button>
+                  )}
                 </div>
               )}
             </div>
