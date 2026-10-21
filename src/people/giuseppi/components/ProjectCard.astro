@@ -6,6 +6,7 @@ interface Media {
   src: string;
   alt: string;
   kind: "image" | "gif" | "video";
+  poster?: string;
 }
 interface Props {
   name: string;
@@ -15,6 +16,7 @@ interface Props {
   tags: string[];
   image?: string;
   thumb?: string;
+  thumbFit?: "cover" | "contain";
   links?: { label: string; href?: string }[];
   myPart?: string;
   description?: string;
@@ -29,6 +31,7 @@ const {
   tags,
   image,
   thumb,
+  thumbFit,
   links = [],
   myPart,
   description,
@@ -47,18 +50,19 @@ const shown = links.filter(
 );
 const extraDesc = description && description !== summary ? description : undefined;
 const expandable = Boolean(extraDesc || media.length > 0 || explore);
+const thumbAlt = thumbFit === "contain" ? `${name} logo` : `${name} screenshot`;
 const external = explore ? /^https?:\/\//.test(explore.href) : false;
 ---
 
 <div class="plate">
   <article class:list={["pl", "card", { thumbed: Boolean(thumb) }]}>
     <span class="trim" aria-hidden="true"></span>
-    {thumb && <img class="thumb" src={thumb} alt={`${name} screenshot`} loading="lazy" />}
     {image && <img class="shot" src={image} alt={name} />}
     {expandable ? (
       <>
       <details class="more" name="projects">
         <summary class="more-head">
+          <div class="head-text">
           <div class="row1">
             <strong>{name}</strong>
             <Pill label={status} />
@@ -76,29 +80,49 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
             )}
           </div>
           <span class="open-tag" aria-hidden="true"><span class="tri"></span> <span class="open-word"></span></span>
+          </div>
+          {thumb && <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />}
         </summary>
         <div class="panel">
           {extraDesc && <p class="desc">{extraDesc}</p>}
           {media.length > 0 && (
-            <div class="media">
-              {media.map((m) =>
-                m.kind === "video" ? (
-                  <video
-                    src={m.src}
-                    controls
-                    muted
-                    playsinline
-                    preload="metadata"
-                    aria-label={m.alt}
-                  />
-                ) : (
-                  <img
-                    class:list={{ gif: m.kind === "gif" }}
-                    src={m.src}
-                    alt={m.alt}
-                    loading="lazy"
-                  />
-                ),
+            <div class="gal">
+              <div class="gal-main">
+                {media.map((m, i) =>
+                  m.kind === "video" ? (
+                    <video
+                      src={m.src}
+                      poster={m.poster}
+                      loop
+                      muted
+                      playsinline
+                      preload="none"
+                      aria-label={m.alt}
+                      hidden={i !== 0}
+                    />
+                  ) : (
+                    <img
+                      class:list={{ gif: m.kind === "gif" }}
+                      src={m.src}
+                      alt={m.alt}
+                      loading="lazy"
+                      hidden={i !== 0}
+                    />
+                  ),
+                )}
+              </div>
+              {media.length > 1 && (
+                <div class="gal-strip">
+                  {media.map((m, i) => (
+                    <button type="button" aria-label={m.alt} aria-pressed={i === 0 ? "true" : "false"}>
+                      {m.kind === "video" ? (
+                        m.poster ? <img src={m.poster} alt="" loading="lazy" /> : <span class="clip">▶ clip</span>
+                      ) : (
+                        <img src={m.src} alt="" loading="lazy" />
+                      )}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -128,7 +152,8 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
       )}
       </>
     ) : (
-      <>
+      <div class="headrow">
+        <div class="head-text">
         <div class="row1">
           <strong>{name}</strong>
           <Pill label={status} />
@@ -155,7 +180,9 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
             </span>
           )}
         </div>
-      </>
+        </div>
+        {thumb && <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />}
+      </div>
     )}
   </article>
 </div>
@@ -204,7 +231,47 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
     };
   }
 
+  // Gallery: videos play like a GIF (silent, looping) only while the card is open.
+  const videosIn = (root: ParentNode) =>
+    Array.from(root.querySelectorAll<HTMLVideoElement>(".gal-main video"));
+  function playShown(details: HTMLDetailsElement) {
+    if (reduce.matches) return;
+    videosIn(details).forEach((v) => {
+      if (v.hidden) return;
+      v.muted = true;
+      v.play()?.catch(() => {});
+    });
+  }
+  if (reduce.matches) {
+    videosIn(document).forEach((v) => v.setAttribute("controls", ""));
+  }
+  document.addEventListener(
+    "toggle",
+    (e) => {
+      const d = e.target as HTMLElement;
+      if (!(d instanceof HTMLDetailsElement) || !d.classList.contains("more")) return;
+      if (d.open) playShown(d);
+      else videosIn(d).forEach((v) => v.pause());
+    },
+    true,
+  );
+
   document.addEventListener("click", (e) => {
+    const thumbBtn = (e.target as Element).closest?.<HTMLButtonElement>(".gal-strip button");
+    if (thumbBtn) {
+      const gal = thumbBtn.closest(".gal") as HTMLElement;
+      const buttons = Array.from(gal.querySelectorAll<HTMLButtonElement>(".gal-strip button"));
+      const items = Array.from(gal.querySelectorAll<HTMLElement>(".gal-main > *"));
+      const idx = buttons.indexOf(thumbBtn);
+      items.forEach((it, i) => {
+        it.hidden = i !== idx;
+        if (i !== idx && it instanceof HTMLVideoElement) it.pause();
+      });
+      buttons.forEach((b, i) => b.setAttribute("aria-pressed", String(i === idx)));
+      const details = gal.closest("details") as HTMLDetailsElement | null;
+      if (details?.open) playShown(details);
+      return;
+    }
     if (reduce.matches) return;
     const summary = (e.target as Element).closest?.(
       'details[name="projects"] > summary',

@@ -600,23 +600,69 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 .panel .desc {
   margin: 0;
 }
-.media {
-  display: flex;
-  flex-direction: column;
+.gal {
+  display: grid;
   gap: 8px;
 }
-.media img,
-.media video {
+.gal-main {
+  aspect-ratio: 16 / 9;
+  border: 2px solid var(--frame);
+  background: var(--hl);
+  overflow: hidden;
+}
+.gal-main > [hidden] {
+  display: none;
+}
+.gal-main img {
   display: block;
   width: 100%;
-  max-width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
+}
+.gal-main video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+.gal-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gal-strip button {
+  width: 92px;
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  border: 2px solid var(--lo);
+  background: var(--hl);
+  cursor: pointer;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+.gal-strip button[aria-pressed="true"] {
+  border-color: var(--frame);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.gal-strip button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gal-strip .clip {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
 }
 .explore {
   display: inline-block;
   align-self: flex-start;
   border: 1px solid var(--accent);
-  background: #fff;
+  background: var(--hl);
   padding: 6px 14px;
   font-family: var(--mono);
   font-size: 13px;
@@ -632,9 +678,6 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   margin-top: 8px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .media img.gif {
-    display: none;
-  }
   .more * {
     transition: none !important;
     animation: none !important;
@@ -695,31 +738,40 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   }
 }
 
-/* project thumbnail slot (renders only when a project sets `thumb`) */
+/* project picture: on top on narrow cards, on the right on wide ones */
 .thumb {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  background: #fff;
+  background: var(--hl);
   border: 2px solid var(--frame);
-  margin-bottom: 14px;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
 }
+.thumb.contain {
+  object-fit: contain;
+  padding: 8%;
+}
+.card.thumbed :is(.more-head, .headrow) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.card.thumbed :is(.more-head, .headrow) > .thumb {
+  order: -1;
+  margin-bottom: 14px;
+}
+.head-text {
+  min-width: 0;
+}
 @container (min-width: 640px) {
-  .card.thumbed {
-    display: grid;
-    grid-template-columns: 148px minmax(0, 1fr);
+  .card.thumbed :is(.more-head, .headrow) {
+    grid-template-columns: minmax(0, 1fr) 236px;
     column-gap: 20px;
-    align-items: start;
   }
-  .card.thumbed > :not(.thumb):not(.trim) {
-    grid-column: 2;
-  }
-  .card.thumbed > .thumb {
-    grid-column: 1;
-    grid-row: 1 / span 99;
-    aspect-ratio: 1 / 1;
+  .card.thumbed :is(.more-head, .headrow) > .thumb {
+    order: 0;
+    aspect-ratio: 4 / 3;
+    align-self: start;
     margin-bottom: 0;
   }
 }
