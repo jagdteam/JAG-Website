@@ -158,7 +158,7 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
             {shown.map((l, i) => (
               <>
                 {i > 0 && " · "}
-                <a href={l.href}>{l.label}</a>
+                {/^https?:\/\//.test(l.href) ? <a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a> : <a href={l.href}>{l.label}</a>}
               </>
             ))}
           </span>
@@ -188,7 +188,7 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
               {shown.map((l, i) => (
                 <>
                   {i > 0 && " · "}
-                  <a href={l.href}>{l.label}</a>
+                  {/^https?:\/\//.test(l.href) ? <a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a> : <a href={l.href}>{l.label}</a>}
                 </>
               ))}
             </span>

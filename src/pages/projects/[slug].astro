@@ -86,7 +86,7 @@ if (d.explore && isExternal(d.explore.href) && d.explore.href !== d.demo) {
                 {links.map((l, i) => (
                   <>
                     {i > 0 && " · "}
-                    <a href={l.href} target="_blank" rel="noopener">{l.label}</a>
+                    {/^https?:\/\//.test(l.href) ? <a href={l.href} target="_blank" rel="noopener">{l.label} ↗</a> : <a href={l.href}>{l.label}</a>}
                   </>
                 ))}
               </span>
