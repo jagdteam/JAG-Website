@@ -57,5 +57,5 @@ export const profile = {
     { slug: "beeseye" },
     { local: "jit-expression-evaluator" },
   ] as ProjectRef[],
-  photo: undefined as string | undefined,
+  photo: "/assets/andrew-photo.jpg" as string | undefined,
 };
