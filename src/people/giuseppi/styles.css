@@ -1,6 +1,6 @@
-/* A1 white armor cards on a flat light page. Single fixed style, no theme switcher. */
+/* A1 armor cards on a flat page. Mist (soft gray) by default, Night via the theme toggle or the device setting. */
 :root {
-  --page: #eef1f2;
+  --page: #d6dade;
   --ink: #1c151d;
   --muted: #5b5a6b;
   --accent: #1f2a6b;
@@ -9,12 +9,12 @@
   --mono: "IBM Plex Mono", monospace;
   --c: 10px;
   --frame: #424144;
-  --face: #f6f7f8;
-  --hl: #ffffff;
-  --lo: #d7dae0;
+  --face: #e5e8eb;
+  --hl: #eef0f2;
+  --lo: #c4c9cf;
   --gap: 3px;
   --gaph: 5px;
-  --sh: #9ea3ad;
+  --sh: #8e949e;
   --sx: 4px;
   --sy: 5px;
   --sxh: 7px;
@@ -42,6 +42,85 @@
   --c3f: #6e5617;
   --c4b: #dff4f2;
   --c4f: #14615b;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --page: #15171c;
+  --face: #23262d;
+  --hl: #2d3139;
+  --lo: #353a44;
+  --sh: #050608;
+  --frame: #0b0c0f;
+  --ink: #e7e7ec;
+  --muted: #a2a5b2;
+  --accent: #aab7ff;
+  --hd: #aab7ff;
+  --date: #aab7ff;
+  --hov: #aab7ff;
+  --act: #ff8a8f;
+  --rv1: #2d3139;
+  --rv2: #8a8c99;
+  --phb: #aab7ff;
+  --phf: #15171c;
+  --vent: #0b0c0f;
+  --pb: #3d3518;
+  --pf: #efd99a;
+  --pbd: #8a7330;
+  --c1b: #262c4f;
+  --c1f: #c7cff8;
+  --c2b: #472326;
+  --c2f: #f3c2c4;
+  --c3b: #3d3518;
+  --c3f: #efd99a;
+  --c4b: #173b38;
+  --c4f: #a6e3dc;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #15171c;
+    --face: #23262d;
+    --hl: #2d3139;
+    --lo: #353a44;
+    --sh: #050608;
+    --frame: #0b0c0f;
+    --ink: #e7e7ec;
+    --muted: #a2a5b2;
+    --accent: #aab7ff;
+    --hd: #aab7ff;
+    --date: #aab7ff;
+    --hov: #aab7ff;
+    --act: #ff8a8f;
+    --rv1: #2d3139;
+    --rv2: #8a8c99;
+    --phb: #aab7ff;
+    --phf: #15171c;
+    --vent: #0b0c0f;
+    --pb: #3d3518;
+    --pf: #efd99a;
+    --pbd: #8a7330;
+    --c1b: #262c4f;
+    --c1f: #c7cff8;
+    --c2b: #472326;
+    --c2f: #f3c2c4;
+    --c3b: #3d3518;
+    --c3f: #efd99a;
+    --c4b: #173b38;
+    --c4f: #a6e3dc;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] .chip img {
+  background: #f3f4f6;
+  border-radius: 3px;
+  padding: 1px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip img {
+    background: #f3f4f6;
+    border-radius: 3px;
+    padding: 1px;
+  }
 }
 *,
 *::before,
