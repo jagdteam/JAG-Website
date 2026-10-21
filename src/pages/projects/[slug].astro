@@ -25,7 +25,7 @@ const media = d.media ?? [];
 const isExternal = (href: string) => /^https?:\/\//.test(href);
 const links: { label: string; href: string }[] = [];
 if (d.repo) links.push({ label: "Repo", href: d.repo });
-if (d.demo) links.push({ label: "Demo", href: d.demo });
+if (d.demo) links.push({ label: "Website", href: d.demo });
 if (d.explore && isExternal(d.explore.href) && d.explore.href !== d.demo) {
   links.push({ label: d.explore.label, href: d.explore.href });
 }
