@@ -6,7 +6,6 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
 import { profile } from "./data";
-import ThemeToggle from "./components/ThemeToggle.astro";
 
 const description = `${profile.name}, ${profile.title}. ${profile.blurb.join(" ")}`;
 ---
@@ -31,7 +30,6 @@ const description = `${profile.name}, ${profile.title}. ${profile.blurb.join(" "
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <ThemeToggle />
     <slot />
   </body>
 </html>

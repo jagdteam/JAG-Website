@@ -1,4 +1,5 @@
 ---
+import ThemeToggle from "./ThemeToggle.astro";
 interface Link {
   label: string;
   href: string;
@@ -24,6 +25,7 @@ const initials = name
   <div class="plate">
     <div class="pl">
       <span class="trim" aria-hidden="true"></span>
+      <ThemeToggle />
       <div class="photo">
         {photo ? <img src={photo} alt={name} /> : initials}
       </div>
