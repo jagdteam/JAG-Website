@@ -12,11 +12,13 @@ const projects = defineCollection({
     tags: z.array(z.string()),
     description: z.string().optional(),
     thumb: z.string().optional(),
+    thumbFit: z.enum(["cover", "contain"]).optional(),
     media: z
       .array(
         z.object({
           src: z.string(),
           alt: z.string(),
+          poster: z.string().optional(),
           kind: z.enum(["image", "gif", "video"]),
         }),
       )

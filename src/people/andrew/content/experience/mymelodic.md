@@ -1,5 +1,6 @@
 ---
 company: "MyMelodic"
+logo: "/assets/logos/mymelodic.png"
 place: "Irvine, California"
 start: "August 2025"
 end: "Present"

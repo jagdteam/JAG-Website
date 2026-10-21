@@ -1,5 +1,6 @@
 ---
 company: "California Department of Industrial Relations"
+logo: "/assets/logos/ca-dir.png"
 place: "San Bernardino, CA"
 start: "Dec 2024"
 end: "Sept 2025"

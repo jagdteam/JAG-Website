@@ -23,6 +23,7 @@ export const profile = {
     },
     {
       school: "University of Redlands",
+      logo: "/assets/logos/redlands.png",
       degree: "BA in Computer Science | BM in Clarinet Performance",
       gpa: "",
       date: "April 2025",
@@ -30,19 +31,19 @@ export const profile = {
     },
   ],
   skills: [
-    { label: "Languages", list: "Python, TypeScript, Swift, C, Java, SQL, HTML/CSS" },
-    { label: "Frameworks", list: "React, React Native, Expo, FastAPI, Flask, Node.js, .NET" },
+    { label: "Languages", list: ["Python", "TypeScript", "Swift", "C", "Java", "SQL", "HTML/CSS"] },
+    { label: "Frameworks", list: ["React", "React Native", "Expo", "FastAPI", "Flask", "Node.js", ".NET"] },
     {
       label: "Architecture & Cloud",
-      list: "System Design, AWS (ECS Fargate, S3, Cognito), Firebase, Supabase, PostgreSQL, REST API Integration, Microservices",
+      list: ["System Design", "AWS (ECS Fargate, S3, Cognito)", "Firebase", "Supabase", "PostgreSQL", "REST API Integration", "Microservices"],
     },
     {
       label: "DevOps & Testing",
-      list: "Agile/Scrum, Git, CI/CD, GitHub Actions, Xcode Cloud, Jest, Vitest, pytest, Pact, Locust, Linux",
+      list: ["Agile/Scrum", "Git", "CI/CD", "GitHub Actions", "Xcode Cloud", "Jest", "Vitest", "pytest", "Pact", "Locust", "Linux"],
     },
     {
       label: "AI & Computer Science",
-      list: "Data Structures & Algorithms, OpenAI API, Pinecone Vector Search, Signal Processing (FFT), Claude Code, Codex",
+      list: ["Data Structures & Algorithms", "OpenAI API", "Pinecone Vector Search", "Signal Processing (FFT)", "Claude Code", "Codex"],
     },
   ],
   contact: {

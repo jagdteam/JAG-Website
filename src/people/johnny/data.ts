@@ -33,23 +33,23 @@ export const profile = {
   skills: [
     {
       label: "Languages",
-      list: "Python, TypeScript, JavaScript, Swift, SQL, C#, C++, C, Java",
+      list: ["Python", "TypeScript", "JavaScript", "Swift", "SQL", "C#", "C++", "C", "Java"],
     },
     {
       label: "ML & Computer Vision",
-      list: "PyTorch, TensorFlow Lite, YOLO, ByteTrack, DINOv2, SigLIP2, Image Retrieval",
+      list: ["PyTorch", "TensorFlow Lite", "YOLO", "ByteTrack", "DINOv2", "SigLIP2", "Image Retrieval"],
     },
     {
       label: "LLMs & Retrieval",
-      list: "OpenAI API, Gemini API, Pinecone, Embeddings, LLM Reranking, LLM Evaluation, MCP",
+      list: ["OpenAI API", "Gemini API", "Pinecone", "Embeddings", "LLM Reranking", "LLM Evaluation", "MCP"],
     },
     {
       label: "App & Backend",
-      list: "React Native, FastAPI, Flask, Node.js, Express, Firestore, Supabase Postgres",
+      list: ["React Native", "FastAPI", "Flask", "Node.js", "Express", "Firestore", "Supabase Postgres"],
     },
     {
       label: "Cloud & DevOps",
-      list: "AWS (SageMaker, ECS Fargate, S3, EC2), GCP Cloud Run, Docker, GitHub Actions, Git",
+      list: ["AWS (SageMaker, ECS Fargate, S3, EC2)", "GCP Cloud Run", "Docker", "GitHub Actions", "Git"],
     },
   ],
   contact: {

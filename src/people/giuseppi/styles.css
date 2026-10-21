@@ -1,6 +1,6 @@
-/* A1 white armor cards on a flat light page. Single fixed style, no theme switcher. */
+/* A1 armor cards on a flat page. Mist (soft gray) by default, Night via the theme toggle or the device setting. */
 :root {
-  --page: #eef1f2;
+  --page: #d6dade;
   --ink: #1c151d;
   --muted: #5b5a6b;
   --accent: #1f2a6b;
@@ -9,12 +9,12 @@
   --mono: "IBM Plex Mono", monospace;
   --c: 10px;
   --frame: #424144;
-  --face: #f6f7f8;
-  --hl: #ffffff;
-  --lo: #d7dae0;
+  --face: #e5e8eb;
+  --hl: #eef0f2;
+  --lo: #c4c9cf;
   --gap: 3px;
   --gaph: 5px;
-  --sh: #9ea3ad;
+  --sh: #8e949e;
   --sx: 4px;
   --sy: 5px;
   --sxh: 7px;
@@ -42,6 +42,85 @@
   --c3f: #6e5617;
   --c4b: #dff4f2;
   --c4f: #14615b;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --page: #15171c;
+  --face: #23262d;
+  --hl: #2d3139;
+  --lo: #353a44;
+  --sh: #050608;
+  --frame: #0b0c0f;
+  --ink: #e7e7ec;
+  --muted: #a2a5b2;
+  --accent: #aab7ff;
+  --hd: #aab7ff;
+  --date: #aab7ff;
+  --hov: #aab7ff;
+  --act: #ff8a8f;
+  --rv1: #2d3139;
+  --rv2: #8a8c99;
+  --phb: #aab7ff;
+  --phf: #15171c;
+  --vent: #0b0c0f;
+  --pb: #3d3518;
+  --pf: #efd99a;
+  --pbd: #8a7330;
+  --c1b: #262c4f;
+  --c1f: #c7cff8;
+  --c2b: #472326;
+  --c2f: #f3c2c4;
+  --c3b: #3d3518;
+  --c3f: #efd99a;
+  --c4b: #173b38;
+  --c4f: #a6e3dc;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #15171c;
+    --face: #23262d;
+    --hl: #2d3139;
+    --lo: #353a44;
+    --sh: #050608;
+    --frame: #0b0c0f;
+    --ink: #e7e7ec;
+    --muted: #a2a5b2;
+    --accent: #aab7ff;
+    --hd: #aab7ff;
+    --date: #aab7ff;
+    --hov: #aab7ff;
+    --act: #ff8a8f;
+    --rv1: #2d3139;
+    --rv2: #8a8c99;
+    --phb: #aab7ff;
+    --phf: #15171c;
+    --vent: #0b0c0f;
+    --pb: #3d3518;
+    --pf: #efd99a;
+    --pbd: #8a7330;
+    --c1b: #262c4f;
+    --c1f: #c7cff8;
+    --c2b: #472326;
+    --c2f: #f3c2c4;
+    --c3b: #3d3518;
+    --c3f: #efd99a;
+    --c4b: #173b38;
+    --c4f: #a6e3dc;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] .chip img {
+  background: #f3f4f6;
+  border-radius: 3px;
+  padding: 1px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip img {
+    background: #f3f4f6;
+    border-radius: 3px;
+    padding: 1px;
+  }
 }
 *,
 *::before,
@@ -600,23 +679,101 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 .panel .desc {
   margin: 0;
 }
-.media {
-  display: flex;
-  flex-direction: column;
+.gal {
+  display: grid;
   gap: 8px;
 }
-.media img,
-.media video {
+.gal-view {
+  position: relative;
+}
+.gal-main {
+  aspect-ratio: 16 / 9;
+  border: 2px solid var(--frame);
+  background: var(--hl);
+  overflow: hidden;
+}
+.gal-main > [hidden] {
+  display: none;
+}
+.gal-main img {
   display: block;
   width: 100%;
-  max-width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
+}
+.gal-main video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+.gal-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--frame);
+  background: color-mix(in srgb, var(--face) 90%, transparent);
+  color: var(--ink);
+  cursor: pointer;
+}
+.gal-arrow.prev {
+  left: 8px;
+}
+.gal-arrow.next {
+  right: 8px;
+}
+.gal-arrow:hover {
+  background: var(--face);
+  border-color: var(--accent);
+}
+.gal-arrow:focus-visible,
+.gal-strip button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.gal-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gal-strip button {
+  width: 92px;
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  border: 2px solid var(--lo);
+  background: var(--hl);
+  cursor: pointer;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+.gal-strip button[aria-pressed="true"] {
+  border-color: var(--frame);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.gal-strip button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.gal-strip .clip {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
 }
 .explore {
   display: inline-block;
   align-self: flex-start;
   border: 1px solid var(--accent);
-  background: #fff;
+  background: var(--hl);
   padding: 6px 14px;
   font-family: var(--mono);
   font-size: 13px;
@@ -632,9 +789,6 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   margin-top: 8px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .media img.gif {
-    display: none;
-  }
   .more * {
     transition: none !important;
     animation: none !important;
@@ -695,31 +849,40 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   }
 }
 
-/* project thumbnail slot (renders only when a project sets `thumb`) */
+/* project picture: on top on narrow cards, on the right on wide ones */
 .thumb {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  background: #fff;
+  background: var(--hl);
   border: 2px solid var(--frame);
-  margin-bottom: 14px;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
 }
+.thumb.contain {
+  object-fit: contain;
+  padding: 8%;
+}
+.card.thumbed :is(.more-head, .headrow) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.card.thumbed :is(.more-head, .headrow) > .thumb {
+  order: -1;
+  margin-bottom: 14px;
+}
+.head-text {
+  min-width: 0;
+}
 @container (min-width: 640px) {
-  .card.thumbed {
-    display: grid;
-    grid-template-columns: 148px minmax(0, 1fr);
+  .card.thumbed :is(.more-head, .headrow) {
+    grid-template-columns: minmax(0, 1fr) 236px;
     column-gap: 20px;
-    align-items: start;
   }
-  .card.thumbed > :not(.thumb):not(.trim) {
-    grid-column: 2;
-  }
-  .card.thumbed > .thumb {
-    grid-column: 1;
-    grid-row: 1 / span 99;
-    aspect-ratio: 1 / 1;
+  .card.thumbed :is(.more-head, .headrow) > .thumb {
+    order: 0;
+    aspect-ratio: 4 / 3;
+    align-self: start;
     margin-bottom: 0;
   }
 }

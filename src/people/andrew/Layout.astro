@@ -20,6 +20,12 @@ const description = `${profile.name}, ${profile.title}. ${profile.blurb.join(" "
     <link rel="icon" href="/favicon.ico" />
     <script is:inline>
       document.documentElement.classList.add("js");
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") t = null;
+      } catch (e) { var t = null; }
+      if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = t;
     </script>
   </head>
   <body>

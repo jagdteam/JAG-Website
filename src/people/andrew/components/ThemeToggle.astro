@@ -1,0 +1,65 @@
+---
+---
+
+<button type="button" class="theme-toggle" aria-pressed="false" aria-label="Switch to dark mode">
+  <svg class="ic-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+  </svg>
+  <svg class="ic-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+    <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path>
+  </svg>
+</button>
+
+<style>
+  .theme-toggle {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    z-index: 50;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 2px solid var(--frame);
+    background: var(--face);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .theme-toggle:hover {
+    background: var(--hl);
+  }
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .ic-moon {
+    display: none;
+  }
+  :global(:root[data-theme="dark"]) .ic-sun {
+    display: none;
+  }
+  :global(:root[data-theme="dark"]) .ic-moon {
+    display: block;
+  }
+</style>
+
+<script>
+  const root = document.documentElement;
+  const btn = document.querySelector<HTMLButtonElement>(".theme-toggle");
+  function sync() {
+    const dark = root.dataset.theme === "dark";
+    btn?.setAttribute("aria-pressed", String(dark));
+    btn?.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+  }
+  sync();
+  btn?.addEventListener("click", () => {
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem("theme", next);
+    } catch {}
+    sync();
+  });
+</script>
