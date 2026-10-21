@@ -17,7 +17,7 @@ const people = await getCollection("people");
   <div id="projects">
     <Placeholder
       title="2. Projects"
-      note="Three cards: BeesEye, CliCR, IoT. Screenshot, one-line pitch, stack tags, who did what, links."
+      note="Two cards: BeesEye, IoT. Screenshot, one-line pitch, stack tags, who did what, links."
     >
       <ul>
         {projects.map((p) => <li><a href={`/projects/${p.id}`}>{p.data.name}</a></li>)}
