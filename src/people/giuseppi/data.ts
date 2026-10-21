@@ -58,6 +58,7 @@ export const profile = {
   },
   projects: [
     { slug: "clutch", myPart: "Basketball app with on-iPhone computer vision that tracks players and the ball." },
+    { local: "jit-expression-evaluator" },
   ] as ProjectRef[],
   photo: undefined as string | undefined,
 };
