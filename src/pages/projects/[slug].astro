@@ -435,6 +435,13 @@ if (d.explore && isExternal(d.explore.href) && d.explore.href !== d.demo) {
     color: var(--ink);
     cursor: pointer;
   }
+  /* narrow screens: no side margin to float over, so sit above the card */
+  @media (max-width: 899px) {
+    .theme-toggle {
+      position: static;
+      margin: 12px 16px -4px auto;
+    }
+  }
   .theme-toggle:hover {
     background: var(--hl);
   }
