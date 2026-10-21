@@ -708,10 +708,13 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   object-fit: cover;
   background: #000;
 }
+.gal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .gal-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  flex: none;
   width: 40px;
   height: 40px;
   padding: 0;
@@ -721,12 +724,6 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   background: color-mix(in srgb, var(--face) 90%, transparent);
   color: var(--ink);
   cursor: pointer;
-}
-.gal-arrow.prev {
-  left: 8px;
-}
-.gal-arrow.next {
-  right: 8px;
 }
 .gal-arrow:hover {
   background: var(--face);
@@ -738,8 +735,11 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   outline-offset: 2px;
 }
 .gal-strip {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
 }
 .gal-strip button {
