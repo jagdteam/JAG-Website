@@ -20,7 +20,7 @@ const people = await getCollection("people");
       note="Two cards: BeesEye, IoT. Screenshot, one-line pitch, stack tags, who did what, links."
     >
       <ul>
-        {projects.map((p) => <li><a href={`/projects/${p.id}`}>{p.data.name}</a></li>)}
+        {projects.map((p) => <li><a href={`/projects/${p.id}`} target="_blank" rel="noopener noreferrer">{p.data.name}</a></li>)}
       </ul>
     </Placeholder>
   </div>
@@ -33,7 +33,7 @@ const people = await getCollection("people");
     note="Three cards: photo, name, role, two lines, link to own page."
   >
     <ul>
-      {people.map((p) => <li><a href={`/${p.id}`}>{p.data.name}</a></li>)}
+      {people.map((p) => <li><a href={`/${p.id}`} target="_blank" rel="noopener noreferrer">{p.data.name}</a></li>)}
     </ul>
   </Placeholder>
   <Placeholder title="5. Contact" note="Emails, LinkedIn, GitHub." />
