@@ -218,7 +218,7 @@ const experience = Object.values(experienceFiles)
             {profile.contactLine && <p>{profile.contactLine}</p>}
             <div class="contact-links">
               {social.map((l) => (
-                <a href={l.href}>{l.label}</a>
+                <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
               ))}
             </div>
           </div>
