@@ -777,22 +777,6 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   font-family: system-ui, sans-serif;
   font-size: 12px;
 }
-.explore {
-  display: inline-block;
-  align-self: flex-start;
-  border: 1px solid var(--accent);
-  background: var(--hl);
-  padding: 6px 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent);
-  text-decoration: none;
-}
-.explore:hover {
-  background: var(--c1b);
-  text-decoration: none;
-}
 .linkrow {
   margin-top: 8px;
 }
