@@ -48,7 +48,9 @@ export function bm25Scores(query, bm25, k1 = 1.2, b = 0.75) {
   const avgLen = total / nDocs;
   const scores = new Map();
   for (const term of unique(searchTerms(query).split(" ").filter(Boolean))) {
-    const hits = bm25.postings[ftsTokens(term).join(" ")];
+    const key = ftsTokens(term).join(" ");
+    // own keys only: a query word like "constructor" must not hit Object.prototype
+    const hits = Object.hasOwn(bm25.postings, key) ? bm25.postings[key] : null;
     if (!hits || hits.length === 0) continue;
     let idf = Math.log((nDocs - hits.length + 0.5) / (hits.length + 0.5));
     if (idf <= 0) idf = IDF_FLOOR;
@@ -119,7 +121,7 @@ export function graphExpand(selected, graph, fusedRows, budget = GRAPH_BUDGET) {
       if (added.length >= budget) return added;
       if (seen.has(name)) continue;
       seen.add(name);
-      const ids = graph.defs[name] ?? [];
+      const ids = Object.hasOwn(graph.defs, name) ? graph.defs[name] : [];
       if (ids.length > MAX_DEFINITIONS) continue;
       for (const i of ids) {
         if (chosen.has(i) || added.length >= budget) continue;

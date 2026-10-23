@@ -140,7 +140,7 @@ function getExtractor() {
 }
 async function embedQuery(text) {
   if (!embedderReady) {
-    setStatus(`Loading the embedding model (about ${port.mb} MB the first time)…`);
+    setStatus(`Loading the embedding model from huggingface.co (about ${port.mb} MB the first time)…`);
     setProgress(0);
   }
   const extractor = await getExtractor();
@@ -349,11 +349,19 @@ function renderAnswerArea() {
   const hasGpu = typeof navigator !== "undefined" && "gpu" in navigator && navigator.gpu;
   if (hasGpu) {
     el.answerBody.innerHTML = `<p class="note">Writes an answer on your device with <code>Qwen2.5-0.5B-Instruct</code>
-      through WebLLM. First use downloads about <strong>${LLM.mb} MB</strong> (once; your browser keeps it).</p>
+      through WebLLM. First use downloads WebLLM from <strong>cdn.jsdelivr.net</strong>, the model weights (about
+      <strong>${LLM.mb} MB</strong>) from <strong>huggingface.co</strong> (large files come from its CDN, cdn.hf.co) and
+      the model's WebGPU library (about 6 MB) from <strong>raw.githubusercontent.com</strong>. Once only; your browser
+      keeps them. Your question never leaves the page.</p>
       <button id="gen" type="button">Generate answer in your browser</button>`;
     $("gen").addEventListener("click", generate);
     return;
   }
+  renderFallback(false);
+}
+
+/** Recorded answer if there is one, else the sources-only note (no WebGPU, or generation failed). */
+function renderFallback(failed) {
   const rec = last.recorded;
   if (rec && rec.answer) {
     const date = rec.recorded_at ? rec.recorded_at.slice(0, 10) : "unknown date";
@@ -362,6 +370,9 @@ function renderAnswerArea() {
       `<p class="label">Recorded from the CLI (${esc(rec.model ?? "unknown model")}, ${esc(date)})</p>` +
       answerHtml(rec.answer, null) +
       (cited ? `<p class="label">Sources it cited:</p><ul class="answer-src">${cited}</ul>` : "");
+  } else if (failed) {
+    el.answerBody.innerHTML =
+      '<p class="note">The answer could not be written in this browser, so the page shows the sources only.</p>';
   } else if (rec) {
     el.answerBody.innerHTML =
       '<p class="note">No recorded answer for this question yet, and this browser has no WebGPU to write one here, so the page shows the sources only.</p>';
@@ -381,7 +392,9 @@ async function generate() {
     if (!adapter) throw new Error("WebGPU is present but no GPU adapter is available.");
     const id = adapter.features.has("shader-f16") ? LLM.f16 : LLM.f32;
     if (!engine || engineId !== id) {
-      setStatus(`Loading WebLLM and ${id} (about ${LLM.mb} MB the first time)…`);
+      setStatus(
+        `Loading WebLLM (cdn.jsdelivr.net) and ${id} (huggingface.co, raw.githubusercontent.com; about ${LLM.mb} MB the first time)…`,
+      );
       setProgress(0);
       const webllm = await import(WEBLLM_URL);
       engine = await webllm.CreateMLCEngine(id, {
@@ -415,7 +428,7 @@ async function generate() {
   } catch (err) {
     setProgress(null);
     setStatus(`Could not generate an answer: ${err.message ?? err}`, true);
-    if (btn) btn.disabled = false;
+    renderFallback(true);
   } finally {
     setBusy(false);
   }
@@ -543,6 +556,19 @@ async function main() {
     if (last) el.explain.hidden = !el.explainOpt.checked;
   });
   el.graphOpt.addEventListener("change", rerun);
+  // citation [n] -> open that source card and scroll to it; a card that is not shown
+  // (e.g. a graph source after unticking the graph option) leaves the click a no-op
+  el.answer.addEventListener("click", (e) => {
+    const a = e.target.closest("a.cite");
+    if (!a) return;
+    e.preventDefault();
+    const card = document.getElementById(a.getAttribute("href").slice(1));
+    if (!card) return;
+    card.open = true;
+    for (const c of el.results.querySelectorAll(".src.hit")) c.classList.remove("hit");
+    card.classList.add("hit");
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
 
   if (new URLSearchParams(location.search).get("selftest") === "1") {
