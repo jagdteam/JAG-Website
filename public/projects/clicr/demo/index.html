@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CliCR in your browser: search Flask's source</title>
+    <meta
+      name="description"
+      content="Ask a question about Flask's source code. CliCR's hybrid search (embeddings + BM25 + reciprocal-rank fusion) runs entirely in your browser."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.3.1/400.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.3.1/600.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.3.0/400.css" />
+    <link rel="stylesheet" href="demo.css" />
+    <script type="module" src="demo.js"></script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <a class="back" href="/johnny">&larr; Johnny Fok</a>
+        <h1>CliCR, in your browser</h1>
+        <p class="lede">
+          Ask a question about <strong>Flask's source code</strong>. The page finds the code that answers it with the same
+          hybrid search as the <a href="https://github.com/jagdteam/clicr">CliCR</a> command-line tool: a meaning search
+          (embeddings), a keyword search (BM25) and a merge of the two (reciprocal-rank fusion). Everything runs on your
+          device; nothing you type is sent anywhere.
+        </p>
+      </header>
+
+      <section class="plate" aria-labelledby="ask-h">
+        <div class="pl">
+        <h2 id="ask-h" class="sr">Ask</h2>
+        <form id="ask" autocomplete="off">
+          <label for="q" class="lbl">Your question</label>
+          <div class="askrow">
+            <input id="q" name="q" type="search" placeholder="e.g. Where is url_for implemented?" required />
+            <button id="go" type="submit">Search</button>
+          </div>
+        </form>
+        <p id="model-note" class="note">
+          The first search downloads the embedding model <code>Xenova/bge-small-en-v1.5</code> (about
+          <strong id="embed-size">67 MB</strong>, plus the Transformers.js runtime; once, your browser keeps them).
+        </p>
+        <div class="opts">
+          <label><input id="opt-explain" type="checkbox" /> Explain the ranking</label>
+          <label><input id="opt-graph" type="checkbox" /> Follow calls (code-graph, 1 hop)</label>
+        </div>
+        <div id="suggest" class="suggest" aria-label="Suggested questions"></div>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+        <progress id="progress" max="1" value="0" hidden></progress>
+        </div>
+      </section>
+
+      <section id="answer" class="plate" hidden aria-labelledby="answer-h">
+        <div class="pl">
+        <h2 id="answer-h">Answer</h2>
+        <div id="answer-body"></div>
+        </div>
+      </section>
+
+      <section id="explain" class="plate" hidden aria-labelledby="explain-h">
+        <div class="pl">
+        <h2 id="explain-h">How the ranking was built</h2>
+        <p class="note">
+          Every candidate from either search. Fused score = sum of 1 / (60 + rank) over the lists that hold the chunk.
+          The top 6 by fused score are shown; the code-graph step may add definitions of functions they call.
+        </p>
+        <div class="tablewrap"><table id="explain-table"></table></div>
+        </div>
+      </section>
+
+      <section id="results" aria-label="Sources" aria-live="polite"></section>
+
+      <section id="selftest" class="plate" hidden aria-labelledby="selftest-h">
+        <div class="pl">
+        <h2 id="selftest-h">Self-test against the Python CLI</h2>
+        <p id="selftest-result" class="mono">running…</p>
+        <div class="tablewrap"><table id="selftest-table"></table></div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p>
+          Code shown: <a id="src-link" href="https://github.com/pallets/flask">Flask</a> (<span id="src-include"
+            >src/flask</span
+          >) at commit <code id="src-commit">…</code>, licensed <span id="src-license">BSD-3-Clause</span>, copyright 2010 Pallets.
+        </p>
+        <p>
+          Search: <a href="https://github.com/jagdteam/clicr">github.com/jagdteam/clicr</a> &middot; models run with
+          Transformers.js and WebLLM.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
