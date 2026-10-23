@@ -10,5 +10,5 @@ repo: "https://github.com/jagdteam/clicr"
 explore: { href: "/projects/clicr/demo/", label: "Try it in your browser" }
 media: [{ src: "/projects/clicr/demo.mp4", poster: "/projects/clicr/demo-poster.jpg", alt: "Terminal recording: clicr indexes its own repository, answers a question with cited code panels, then shows the ranking table from --explain.", kind: "video" }, { src: "/projects/clicr/diagram.png", alt: "Architecture diagram: an indexing lane (walk files, tree-sitter chunks, embed, SQLite store with FTS5 keyword index, vectors and call graph) and an asking lane (vector and BM25 search, reciprocal rank fusion, optional rerank, graph expansion, context packing, cited answer).", kind: "image" }]
 thumb: "/projects/clicr/thumb.webp"
-thumbFit: "cover"
+thumbFit: "contain"
 ---
