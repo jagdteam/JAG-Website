@@ -5,10 +5,10 @@ order: 4
 oneLiner: "Terminal tool that answers questions about a codebase with citations to file and line, running on local models through Ollama."
 team: "solo"
 tags: ["Python", "RAG", "Ollama", "tree-sitter", "Evaluation"]
-description: "Terminal tool that answers questions about a codebase with citations to file and line. tree-sitter splits code into functions and classes; vector search and BM25 keyword search (SQLite FTS5) are merged with reciprocal rank fusion; an optional cross-encoder reranker and one-hop call-graph expansion add precision. Chat and embeddings run locally through Ollama, and an ablation eval on pinned questions measures what each retrieval stage adds. The browser demo runs the same hybrid search over Flask's source on your device."
+description: "Terminal tool that answers questions about a codebase with citations to file and line. tree-sitter splits code into functions and classes; vector search and BM25 keyword search (SQLite FTS5) are merged with reciprocal rank fusion; one-hop call-graph expansion, on by default, adds the definitions of functions the matches call. A cross-encoder reranker was measured and left off because it lowered accuracy on code. Chat and embeddings run locally through Ollama, and an ablation eval on pinned questions measures what each retrieval stage adds. The browser demo runs the same hybrid search over Flask's source on your device."
 repo: "https://github.com/jagdteam/clicr"
 explore: { href: "/projects/clicr/demo/", label: "Try it in your browser" }
-media: [{ src: "/projects/clicr/diagram.png", alt: "Diagram: CliCR indexes code into 500-character chunks embedded with Cohere into ChromaDB, then answers questions by retrieving the top 5 chunks for Command R+ with cited source files.", kind: "image" }]
+media: [{ src: "/projects/clicr/demo.mp4", poster: "/projects/clicr/demo-poster.jpg", alt: "Terminal recording: clicr indexes its own repository, answers a question with cited code panels, then shows the ranking table from --explain.", kind: "video" }, { src: "/projects/clicr/diagram.png", alt: "Architecture diagram: an indexing lane (walk files, tree-sitter chunks, embed, SQLite store with FTS5 keyword index, vectors and call graph) and an asking lane (vector and BM25 search, reciprocal rank fusion, optional rerank, graph expansion, context packing, cited answer).", kind: "image" }]
 thumb: "/projects/clicr/thumb.webp"
 thumbFit: "contain"
 ---
