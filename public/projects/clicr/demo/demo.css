@@ -294,7 +294,7 @@ progress {
   color: var(--c4f);
   border-color: var(--c4f);
 }
-.src:target::before {
+.src.hit::before {
   background: var(--c4b);
 }
 

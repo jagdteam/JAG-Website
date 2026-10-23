@@ -39,16 +39,18 @@
           </div>
         </form>
         <p id="model-note" class="note">
-          The first search downloads the embedding model <code>Xenova/bge-small-en-v1.5</code> (about
-          <strong id="embed-size">67 MB</strong>, plus the Transformers.js runtime; once, your browser keeps them).
+          The first search downloads the embedding model <code>Xenova/bge-small-en-v1.5</code> from
+          <strong>huggingface.co</strong> (about <strong id="embed-size">67 MB</strong>; Hugging Face serves the large file
+          from its CDN, cdn.hf.co), and the Transformers.js library with its ONNX runtime from
+          <strong>cdn.jsdelivr.net</strong>. Once only; your browser keeps them. Your question never leaves the page.
         </p>
         <div class="opts">
           <label><input id="opt-explain" type="checkbox" /> Explain the ranking</label>
           <label><input id="opt-graph" type="checkbox" /> Follow calls (code-graph, 1 hop)</label>
         </div>
-        <div id="suggest" class="suggest" aria-label="Suggested questions"></div>
+        <div id="suggest" class="suggest" role="group" aria-label="Suggested questions"></div>
         <div id="status" class="status" role="status" aria-live="polite"></div>
-        <progress id="progress" max="1" value="0" hidden></progress>
+        <progress id="progress" max="1" value="0" hidden aria-label="Download progress"></progress>
         </div>
       </section>
 
@@ -70,7 +72,7 @@
         </div>
       </section>
 
-      <section id="results" aria-label="Sources" aria-live="polite"></section>
+      <section id="results" aria-label="Sources"></section>
 
       <section id="selftest" class="plate" hidden aria-labelledby="selftest-h">
         <div class="pl">
