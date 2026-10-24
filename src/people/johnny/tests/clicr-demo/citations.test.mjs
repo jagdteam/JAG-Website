@@ -52,3 +52,22 @@ test("html helpers", () => {
   assert.equal(esc(`<a&"'>`), "&lt;a&amp;&quot;&#39;&gt;");
   assert.equal(codeSpans("call `url_for` <b>"), "call <code>url_for</code> &lt;b&gt;");
 });
+
+test("answerHtml links every number in [3, 4] and [5-7] groups", () => {
+  const a = (n) => `<a class="cite" href="#pin-${n}" data-pin="${n}">${n}</a>`;
+  const idHtml = answerHtml("See [3, 4] [5-7].", identityCite(7));
+  assert.equal(idHtml, `<p>See [${a(3)}, ${a(4)}] [${a(5)}, ${a(6)}, ${a(7)}].</p>`);
+  const re = answerHtml("See [3, 4] [5-7] [9, 3].", new Map([[3, 1], [4, 2], [5, 3], [7, 4]]));
+  assert.ok(re.includes(`[${a(1)}, ${a(2)}]`));
+  assert.ok(re.includes(`[${a(3)}, 6, ${a(4)}]`));
+  assert.ok(re.includes(`[9, ${a(1)}]`));
+});
+
+test("answerHtml and citedNumbers agree when a backtick pair spans a link", () => {
+  const text = "`a [x](c) b` [1] `q [2](c) r` [3]";
+  const cited = citedNumbers(text);
+  const html = answerHtml(text, identityCite(5));
+  const linked = [...html.matchAll(/data-pin="(\d+)"/g)].map((m) => Number(m[1]));
+  assert.deepEqual(linked, cited);
+  assert.deepEqual(cited, [1, 3]);
+});
