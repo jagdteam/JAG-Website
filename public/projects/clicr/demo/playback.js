@@ -63,7 +63,7 @@ export function buildSteps(run, pins, { chunks, nChunks, useGraph, extraPins = [
       : "Looked for your words (BM25); none of them appear in the code.", keyword),
     step("merge", "Combined both lists: a chunk ranked high in either list rises; found by both rises most.", merge),
     step("graph", graphText, graph, useGraph ? {} : { skipped: true }),
-    step("pack", `Kept the ${run.top.length} best + graph additions, merged neighbours, fit the budget: ${plural(pins.length, "source")} for the model to read.`, pack),
+    step("pack", `Kept the ${run.top.length} best${run.added.length ? " + graph additions" : ""}, merged neighbours, fit the budget: ${plural(pins.length, "source")} for the model to read.`, pack),
     step("answer", "", answer),
   ];
 }

@@ -58,7 +58,8 @@ export function breadcrumb(path, symbol) {
 
 const MARK_TEXT = { M: "M", K: "K", MK: "MK", G: "G", cut: "×" };
 /** The first node whose glow covers the line; nodes without a glow (transient flashes) are skipped. */
-export function coveringGlow(nodes, line) {
+export function coveringGlow(nodes, line, exact = null) {
+  if (exact) return nodes.find((d) => d._glow && d._glow.start === exact.start && d._glow.end === exact.end);
   return nodes.find((d) => d._glow && d._glow.start <= line && line <= d._glow.end);
 }
 const where = (g) => `${g.path}:${g.start}-${g.end}`;
@@ -295,7 +296,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     const sym = chunks.find((c) => c.path === range.path && c.start <= range.start && range.start <= c.end)?.symbol ?? null;
     drawCrumb(sym);
     if (!flash) return;
-    let target = coveringGlow([...els.view.querySelectorAll(".glow")], range.start);
+    let target = coveringGlow([...els.view.querySelectorAll(".glow")], range.start, range);
     if (!target) {
       target = document.createElement("div");
       target.className = "glow";

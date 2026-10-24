@@ -175,3 +175,12 @@ test("default timers work with node mock timers", (t) => {
   assert.deepEqual(shows, [0, 1, 2, 3, 4, 5]);
   assert.equal(n, 1);
 });
+
+test("step 5 copy mentions graph additions only when the run has some", () => {
+  const withAdds = buildSteps(run, pins, o)[4].text;
+  assert.match(withAdds, /Kept the 3 best \+ graph additions,/);
+  const off = { ...run, added: [], results: run.top };
+  const text = buildSteps(off, pins, { ...o, useGraph: false })[4].text;
+  assert.ok(!text.includes("graph additions"), text);
+  assert.match(text, /^Kept the 3 best, merged neighbours/);
+});

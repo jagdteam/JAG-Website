@@ -51,6 +51,7 @@ const el = {
   graphOpt: $("opt-graph"),
   suggest: $("suggest"),
   status: $("status"),
+  filesNote: $("files-note"),
   progress: $("progress"),
   answer: $("answer"),
   answerBody: $("answer-body"),
@@ -84,6 +85,10 @@ let run = null; // the current play-by-play: {id, steps, player, done, answerRen
 function setStatus(text, err = false) {
   el.status.textContent = text;
   el.status.classList.toggle("err", err);
+}
+function scrollToEditor() {
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  $("editor").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
 }
 function setProgress(frac) {
   if (frac === null) {
@@ -378,6 +383,9 @@ async function generate() {
     answerGenerated = true;
     el.answerBody.innerHTML = `<p class="label">Generated in your browser (${esc(id)})</p>`;
     el.answerBody.append(out);
+    const head = $("answer-h");
+    head.tabIndex = -1;
+    head.focus(); // the Generate button was just replaced
     const stream = await engine.chat.completions.create({
       messages,
       stream: true,
@@ -434,6 +442,8 @@ function stopRun() {
 
 /** Empty the chat steps, the answer, the Explorer badges and the editor glows. */
 function clearRun() {
+  last = null; // a failed ask must not leave the previous question to re-run
+  el.explainTable.replaceChildren();
   el.steps.replaceChildren();
   el.skip.hidden = true;
   el.answerBody.replaceChildren();
@@ -539,10 +549,12 @@ function search(qvec, question, recorded) {
 function rerun() {
   if (!last || busy) return;
   const cleared = answerGenerated;
+  const prev = last;
   stopRun();
-  clearRun();
+  clearRun(); // forgets `last`; a re-run keeps the same question
+  last = prev;
   const { found, sources, pins, steps, ms } = search(last.qvec, last.question, last.recorded);
-  last = { ...last, run: found, sources, pins, steps };
+  last = { ...prev, run: found, sources, pins, steps };
   renderAll();
   beginRun(false);
   setStatus(`Search re-run with Follow calls ${el.graphOpt.checked ? "on" : "off"}${cleared ? "; answer cleared" : ""}. ${statusFor(found, ms)}`);
@@ -676,11 +688,21 @@ async function main() {
     .then((r) => r.json())
     .catch(() => null);
   filesPromise.then((files) => {
-    if (!files) setStatus(`${el.status.textContent} Full files did not load; showing the matched chunks only.`, el.status.classList.contains("err"));
+    if (!files) {
+      el.filesNote.textContent = "Full files did not load; the editor shows the matched chunks only.";
+      el.filesNote.hidden = false;
+    }
   });
   const include = src.include;
   explorer = createExplorer($("tree"), buildTree([...new Set(bundle.chunks.map((c) => c.path))], include), {
-    onOpen: (path) => editor.open(path),
+    onOpen: (path) => {
+      editor.open(path);
+      // below 1024 px the Explorer is an overlay: close it so the opened file is visible
+      if (!matchMedia("(min-width: 1024px)").matches) {
+        setExplorer(false);
+        if (matchMedia("(max-width: 719px)").matches) scrollToEditor();
+      }
+    },
   });
   editor = createEditor(
     { tabs: $("tabs"), crumb: $("crumb"), view: $("editor"), card: $("explain-card") },
@@ -724,10 +746,7 @@ async function main() {
     const pin = [...last.pins, ...last.extra].find((p) => p.n === Number(a.dataset.pin));
     if (!pin) return;
     editor.reveal(pin, { flash: true }).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
-    if (matchMedia("(max-width: 719px)").matches) {
-      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      $("editor").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-    }
+    if (matchMedia("(max-width: 719px)").matches) scrollToEditor();
   });
   setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
 

@@ -29,3 +29,13 @@ test("coveringGlow skips transient flash nodes that have no glow (two reveals in
   assert.equal(coveringGlow(nodes, 2), nodes[2]);
   assert.equal(coveringGlow(nodes, 4), undefined);
 });
+
+test("coveringGlow prefers a glow whose range matches the pin exactly", () => {
+  const nodes = [
+    { _glow: { start: 1, end: 10 } },
+    { _glow: { start: 5, end: 30 } },
+  ];
+  assert.equal(coveringGlow(nodes, 5, { start: 5, end: 30 }), nodes[1]);
+  assert.equal(coveringGlow(nodes, 5, { start: 5, end: 99 }), undefined);
+  assert.equal(coveringGlow(nodes, 5), nodes[0]);
+});
