@@ -344,7 +344,7 @@ button[disabled] {
   position: relative;
   isolation: isolate;
   min-width: max-content;
-  padding: 0;
+  padding: 0 0 0 76px; /* marker column; the glow fills run underneath it */
   font-family: var(--mono);
   font-size: 13px;
   line-height: var(--lh);
@@ -378,20 +378,19 @@ button[disabled] {
   background: none;
   box-shadow: none;
 }
-.glow .mark {
+.marks .mark {
   position: absolute;
-  top: 0;
   left: 6px;
   z-index: 2;
   height: var(--lh);
   line-height: var(--lh);
-  pointer-events: auto;
+  white-space: nowrap;
 }
-.glow[data-kind="cut"] .mark {
+.marks .mark[data-kind="cut"] {
   background: var(--bar);
   color: var(--fg);
 }
-.glow .mark:hover {
+.marks .mark:hover {
   filter: brightness(1.1);
 }
 #explain-card strong {

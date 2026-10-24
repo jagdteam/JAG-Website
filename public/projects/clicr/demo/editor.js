@@ -57,6 +57,10 @@ export function breadcrumb(path, symbol) {
 }
 
 const MARK_TEXT = { M: "M", K: "K", MK: "MK", G: "G", cut: "×" };
+/** The first node whose glow covers the line; nodes without a glow (transient flashes) are skipped. */
+export function coveringGlow(nodes, line) {
+  return nodes.find((d) => d._glow && d._glow.start <= line && line <= d._glow.end);
+}
 const where = (g) => `${g.path}:${g.start}-${g.end}`;
 const tabId = (path) => "tab-" + path.replace(/[^\w-]/g, "_");
 
@@ -134,18 +138,23 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   }
 
   function drawGlows(host, glows) {
+    // markers live in their own layer above the code so they stay visible and clickable
+    const marks = document.createElement("div");
+    marks.className = "marks";
     for (const g of glows) {
       const d = document.createElement("div");
       d.className = "glow";
       d.dataset.kind = g.kind;
       d.style.top = `calc(${g.start - 1} * var(--lh))`;
       d.style.height = `calc(${g.end - g.start + 1} * var(--lh))`;
-      const b = markFor(g);
       d._glow = g;
-      b._glow = g;
-      d.append(b);
       host.append(d);
+      const b = markFor(g);
+      b.style.top = d.style.top;
+      b._glow = g;
+      marks.append(b);
     }
+    host.append(marks);
   }
 
   async function render(scrollTo) {
@@ -174,6 +183,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   // ------------------------------------------------------------ explain card
   function openCard(g, anchor) {
     if (!step) return;
+    cancelClose();
     const { title, text } = explain(step, g);
     els.card.innerHTML = `<strong>${esc(title)}</strong><p>${codeSpans(text)}</p>`;
     els.card.hidden = false;
@@ -186,7 +196,20 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     cardFor = anchor.closest?.(".mark") ?? null;
     cardFor?.setAttribute("aria-describedby", els.card.id || "explain-card");
   }
+  let closeTimer = null;
+  function cancelClose() {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
+  // a short delay lets the pointer cross the gap between the row and the card
+  function scheduleClose() {
+    cancelClose();
+    closeTimer = setTimeout(() => {
+      if (!cardFor || cardFor !== document.activeElement) closeCard();
+    }, 150);
+  }
   function closeCard() {
+    cancelClose();
     els.card.hidden = true;
     cardFor?.removeAttribute("aria-describedby");
     cardFor = null;
@@ -208,10 +231,11 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     const row = e.target.closest(".row");
     const g = row && glowAt(Number(row.dataset.line));
     if (g) openCard(g, row);
+    else if (!cardFor || cardFor !== document.activeElement) closeCard();
   });
-  els.view.addEventListener("pointerleave", () => {
-    if (!cardFor || cardFor !== document.activeElement) closeCard();
-  });
+  els.view.addEventListener("pointerleave", scheduleClose);
+  els.card.addEventListener("pointerenter", cancelClose);
+  els.card.addEventListener("pointerleave", scheduleClose);
   els.view.addEventListener("focusout", () => closeCard());
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !els.card.hidden) closeCard();
@@ -271,11 +295,12 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     const sym = chunks.find((c) => c.path === range.path && c.start <= range.start && range.start <= c.end)?.symbol ?? null;
     drawCrumb(sym);
     if (!flash) return;
-    let target = [...els.view.querySelectorAll(".glow")].find((d) => d._glow.start <= range.start && range.start <= d._glow.end);
+    let target = coveringGlow([...els.view.querySelectorAll(".glow")], range.start);
     if (!target) {
       target = document.createElement("div");
       target.className = "glow";
       target.dataset.kind = "reveal";
+      target._glow = range;
       target.style.top = `calc(${range.start - 1} * var(--lh))`;
       target.style.height = `calc(${range.end - range.start + 1} * var(--lh))`;
       els.view.querySelector(".code")?.append(target);

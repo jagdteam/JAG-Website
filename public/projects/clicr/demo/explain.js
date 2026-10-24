@@ -64,7 +64,8 @@ export function explainGlow(step, glow, ctx) {
       break;
     case "pack":
     case "answer":
-      text = finalLine(ctx.pinOf(glow.i), ctx.nPacked);
+      // a pin glow has no chunk index (i is null); it carries its own number
+      text = finalLine(glow.kind === "P" ? glow.pin : ctx.pinOf(glow.i), ctx.nPacked);
       break;
   }
   return { title, text: text ?? "" };

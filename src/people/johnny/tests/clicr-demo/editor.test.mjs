@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { breadcrumb, fileLines, highlight } from "../../../../../public/projects/clicr/demo/editor.js";
+import { breadcrumb, coveringGlow, fileLines, highlight } from "../../../../../public/projects/clicr/demo/editor.js";
 
 test("highlight: python tokens per line, markdown as escaped plain text", () => {
   assert.deepEqual(highlight("def f():\n  return 1", "python"),
@@ -21,4 +21,11 @@ test("fileLines without files.json", () => {
 test("breadcrumb", () => {
   assert.deepEqual(breadcrumb("src/flask/app.py", "Flask.route"), ["src", "flask", "app.py", "Flask.route"]);
   assert.deepEqual(breadcrumb("src/flask/app.py", null), ["src", "flask", "app.py"]);
+});
+
+test("coveringGlow skips transient flash nodes that have no glow (two reveals in a row)", () => {
+  const nodes = [{ _glow: { start: 5, end: 9 } }, {}, { _glow: { start: 1, end: 3 } }];
+  assert.doesNotThrow(() => coveringGlow(nodes, 2));
+  assert.equal(coveringGlow(nodes, 2), nodes[2]);
+  assert.equal(coveringGlow(nodes, 4), undefined);
 });
