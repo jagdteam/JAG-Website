@@ -203,3 +203,18 @@ test("play-by-play styling and announcements", () => {
   assert.match(demoJs, /answer cleared/, "graph toggle says the answer was cleared");
   assert.match(demoJs, /added !== 1\) setStatus\(`Step /, "replay and bulk fills update the status");
 });
+
+test("citations jump to pins: one prepareAnswer sets pins, cite and extra; links are handled by data-pin", () => {
+  assert.match(demoJs, /recordedPins\(/, "recordedPins used");
+  assert.match(demoJs, /function prepareAnswer\(\)[\s\S]*?last\.cite =[\s\S]*?last\.extra =[\s\S]*?renderAnswerArea\(\)/, "hook sets cite and extra first");
+  assert.ok(!/answerHtml\([^)]*undefined\)/.test(demoJs) && !/answerHtml\(rec\.answer, null\)/.test(demoJs), "recorded answer always has a cite map");
+  assert.match(demoJs, /answerHtml\(rec\.answer, last\.cite\)/, "fallback renders with last.cite");
+  assert.match(demoJs, /extraPins/, "extra pins reach buildSteps");
+  assert.ok(demoJs.includes('href="#pin-${k + 1}" data-pin="${k + 1}"'), "sourceList links pins");
+  assert.ok(!demoJs.includes("#src-"), "old #src- targets gone");
+  assert.match(demoJs, /dataset\.pin/, "click handler reads data-pin");
+  assert.match(demoJs, /\[\.\.\.last\.pins, \.\.\.last\.extra\]/, "looks in packed and extra pins");
+  assert.match(demoJs, /editor\.reveal\(pin, \{ flash: true \}\)/, "reveal with flash");
+  assert.ok(demoJs.includes('matchMedia("(max-width: 719px)")'), "phone query");
+  assert.match(demoJs, /\$\("editor"\)\.scrollIntoView\(/, "phone scrolls to the editor");
+});

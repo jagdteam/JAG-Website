@@ -3,7 +3,7 @@
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
 import { codeSpans, esc } from "./html.js";
-import { answerHtml, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
+import { answerHtml, citedNumbers, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "./citations.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
@@ -271,7 +271,7 @@ function sourceList(sources) {
   return (
     '<ol class="answer-src">' +
     sources
-      .map((s, k) => `<li><a class="cite" href="#src-${s.i}">[${k + 1}]</a> ${esc(S.chunkLabel(s.chunk))}</li>`)
+      .map((s, k) => `<li><a class="cite" href="#pin-${k + 1}" data-pin="${k + 1}">[${k + 1}]</a> ${esc(S.chunkLabel(s.chunk))}</li>`)
       .join("") +
     "</ol>"
   );
@@ -301,10 +301,17 @@ function renderFallback(failed) {
   const rec = last.recorded;
   if (rec && rec.answer) {
     const date = rec.recorded_at ? rec.recorded_at.slice(0, 10) : "unknown date";
-    const cited = (rec.sources ?? []).map((s) => `<li>${esc(`${s.path}:${s.start}-${s.end}`)}</li>`).join("");
+    const nums = citedNumbers(rec.answer);
+    const cited = (rec.sources ?? [])
+      .map((s, k) => {
+        const p = last.cite?.get(nums[k]);
+        const label = esc(`${s.path}:${s.start}-${s.end}`);
+        return p ? `<li><a class="cite" href="#pin-${p}" data-pin="${p}">[${p}]</a> ${label}</li>` : `<li>${label}</li>`;
+      })
+      .join("");
     el.answerBody.innerHTML =
       `<p class="label">Recorded from the CLI (${esc(rec.model ?? "unknown model")}, ${esc(date)})</p>` +
-      answerHtml(rec.answer, null) +
+      answerHtml(rec.answer, last.cite) +
       (cited ? `<p class="label">Sources it cited:</p><ul class="answer-src">${cited}</ul>` : "");
   } else if (failed) {
     el.answerBody.innerHTML =
@@ -417,8 +424,16 @@ function clearRun() {
   });
 }
 
-/** The one place the answer area is set up for a run; Task 10 adds the recorded-answer pins and cite here. */
+/** Recorded answer -> its cite map and extra pins (cited ranges no packed source overlaps). */
+function recordedCite(rec, pins) {
+  return rec && rec.answer ? recordedPins(rec.answer, rec.sources ?? [], pins) : { cite: null, extra: [] };
+}
+
+/** The one place the answer area is set up for a run: sets last.cite and last.extra, with or without WebGPU. */
 function prepareAnswer() {
+  const { cite, extra } = recordedCite(last.recorded, last.pins);
+  last.cite = cite;
+  last.extra = extra;
   renderAnswerArea();
 }
 
@@ -486,14 +501,15 @@ function beginRun(play) {
 function recordedFor(question) {
   return bundle.questions.find((q) => q.question === question) ?? null;
 }
-function search(qvec, question) {
+function search(qvec, question, recorded) {
   const useGraph = el.graphOpt.checked;
   const t0 = performance.now();
   const found = S.hybridSearch(bundle, qvec, question, { useGraph });
   const ms = performance.now() - t0;
   const sources = pack(found.results, CONTEXT_TOKENS);
   const pins = pinsFromSources(sources);
-  const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph });
+  const { extra } = recordedCite(recorded, pins);
+  const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: extra });
   return { found, sources, pins, steps, ms };
 }
 /** Graph toggle: search again with the same question and land on the final state, no auto-play. */
@@ -502,7 +518,7 @@ function rerun() {
   const cleared = answerGenerated;
   stopRun();
   clearRun();
-  const { found, sources, pins, steps, ms } = search(last.qvec, last.question);
+  const { found, sources, pins, steps, ms } = search(last.qvec, last.question, last.recorded);
   last = { ...last, run: found, sources, pins, steps };
   renderAll();
   beginRun(false);
@@ -520,8 +536,9 @@ async function ask(question) {
     const qvec = await embedQuery(question);
     if (mine !== runId) return;
     setStatus("Searching…");
-    const { found, sources, pins, steps, ms } = search(qvec, question);
-    last = { question, qvec, run: found, recorded: recordedFor(question), sources, pins, steps };
+    const recorded = recordedFor(question);
+    const { found, sources, pins, steps, ms } = search(qvec, question, recorded);
+    last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [] };
     renderAll();
     beginRun(true);
     setStatus(statusFor(found, ms));
@@ -676,14 +693,18 @@ async function main() {
     const b = e.target.closest("button.step");
     if (b && !b.disabled && run) run.player.replay(Number(b.dataset.step));
   });
-  // citation [n] -> scroll to its target when there is one (Task 10 rewires this to the pins)
+  // citation [n] -> reveal and flash its pin's lines; on a phone also scroll down to the editor
   el.answer.addEventListener("click", (e) => {
     const a = e.target.closest("a.cite");
-    if (!a) return;
+    if (!a || !last) return;
     e.preventDefault();
-    const card = document.getElementById(a.getAttribute("href").slice(1));
-    if (!card) return;
-    card.scrollIntoView({ behavior: "smooth", block: "start" });
+    const pin = [...last.pins, ...last.extra].find((p) => p.n === Number(a.dataset.pin));
+    if (!pin) return;
+    editor.reveal(pin, { flash: true }).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
+    if (matchMedia("(max-width: 719px)").matches) {
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      $("editor").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    }
   });
   setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
 
