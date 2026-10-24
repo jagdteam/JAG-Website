@@ -77,6 +77,7 @@ let editor = null;
 let explorer = null;
 let busy = false;
 let runId = 0; // bumped whenever a run starts or is stopped; work from an older run checks it
+let answerGenerated = false; // a WebLLM answer is on screen (a graph toggle clears it)
 let run = null; // the current play-by-play: {id, steps, player, done, answerRendered}
 
 // ---------------------------------------------------------------- small helpers
@@ -345,6 +346,7 @@ async function generate() {
     const messages = buildMessages(last.question, sources);
     setStatus("Writing the answer…");
     const out = document.createElement("div");
+    answerGenerated = true;
     el.answerBody.innerHTML = `<p class="label">Generated in your browser (${esc(id)})</p>`;
     el.answerBody.append(out);
     const stream = await engine.chat.completions.create({
@@ -407,6 +409,7 @@ function clearRun() {
   el.skip.hidden = true;
   el.answerBody.replaceChildren();
   el.answer.hidden = true;
+  answerGenerated = false;
   explorer.setBadges(new Map());
   const id = runId;
   editor.showStep(NO_STEP).catch((err) => {
@@ -422,6 +425,9 @@ function prepareAnswer() {
 /** Steps 0..k are listed; steps already listed stay (replay only moves the current mark). */
 function renderSteps(r, k) {
   const list = el.steps;
+  const added = k + 1 - list.children.length;
+  // Skip, reduced motion and a graph toggle add several at once: keep the live list quiet, status says where we are
+  if (added > 1) list.setAttribute("aria-live", "off");
   for (let n = list.children.length; n <= k; n++) {
     const s = r.steps[n];
     const li = document.createElement("li");
@@ -433,12 +439,16 @@ function renderSteps(r, k) {
     else b.removeAttribute("aria-current");
     b.disabled = !r.done;
   });
+  if (added > 1) list.setAttribute("aria-live", "polite");
+  return added;
 }
 
 function showStepOf(r, k) {
   if (r.id !== runId) return;
   const step = r.steps[k];
-  renderSteps(r, k);
+  const added = renderSteps(r, k);
+  // one new step is announced by the live list; bulk fills and replays are announced here
+  if (added !== 1) setStatus(`Step ${k + 1} of ${r.steps.length}: ${step.title}.`);
   explorer.setBadges(badgesFor(step));
   editor.showStep(step).catch((err) => {
     if (r.id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
@@ -489,13 +499,14 @@ function search(qvec, question) {
 /** Graph toggle: search again with the same question and land on the final state, no auto-play. */
 function rerun() {
   if (!last || busy) return;
+  const cleared = answerGenerated;
   stopRun();
   clearRun();
   const { found, sources, pins, steps, ms } = search(last.qvec, last.question);
   last = { ...last, run: found, sources, pins, steps };
   renderAll();
   beginRun(false);
-  setStatus(statusFor(found, ms));
+  setStatus(`Search re-run with Follow calls ${el.graphOpt.checked ? "on" : "off"}${cleared ? "; answer cleared" : ""}. ${statusFor(found, ms)}`);
 }
 async function ask(question) {
   question = question.trim();

@@ -192,3 +192,14 @@ test("play-by-play wiring in demo.js", () => {
   const selftestBranch = demoJs.slice(demoJs.indexOf('get("selftest") === "1"'));
   assert.ok(!selftestBranch.includes("createPlayer") && !selftestBranch.includes("beginRun"), "selftest never plays");
 });
+
+test("play-by-play styling and announcements", () => {
+  assert.match(css, /button\.step \{/, "step buttons styled");
+  assert.match(css, /button\.step\[aria-current="step"\] \{[^}]*border-left-color[^}]*font-weight: 600/, "current step: bar and bold, not colour alone");
+  assert.match(css, /button\.step:disabled \{[^}]*var\(--muted\)/, "disabled steps muted");
+  assert.match(css, /button\.step:hover:not\(:disabled\)/, "hover");
+  assert.match(css, /#skip \{[^}]*border: 1px solid var\(--ln\)/, "Skip is the secondary button");
+  assert.match(demoJs, /setAttribute\("aria-live", "off"\)/, "bulk fills keep the live list quiet");
+  assert.match(demoJs, /answer cleared/, "graph toggle says the answer was cleared");
+  assert.match(demoJs, /added !== 1\) setStatus\(`Step /, "replay and bulk fills update the status");
+});
