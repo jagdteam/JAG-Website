@@ -107,24 +107,60 @@ test("head: the site's theme loader runs as a classic inline script before the s
   assert.ok(head.indexOf(script[0]) < head.indexOf('href="demo.css"'), "before the stylesheet");
 });
 
-test("Explorer toggle: aria-expanded is the single open state", () => {
-  // markup: no hidden attribute, so only the button's aria-expanded decides (via demo.css)
+/** Run the page's inline classic scripts (head loader, then the one after #act-explorer) against fakes. */
+function bootInline(wide) {
+  const root = { dataset: {} };
+  const button = { attrs: { "aria-expanded": "true" }, setAttribute(k, v) { this.attrs[k] = String(v); } };
+  const document = { documentElement: root, getElementById: (id) => (id === "act-explorer" ? button : null) };
+  const matchMedia = (q) => ({ matches: q === "(min-width: 1024px)" ? wide : false });
+  const localStorage = { getItem: () => null };
+  const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  assert.equal(scripts.length, 2, "head loader + Explorer state script");
+  for (const code of scripts) new Function("document", "matchMedia", "localStorage", code)(document, matchMedia, localStorage);
+  return { explorer: root.dataset.explorer, expanded: button.attrs["aria-expanded"] };
+}
+
+test("Explorer toggle: closed below 1024 px before first paint, aria-expanded mirrors it, no :has()", () => {
+  assert.deepEqual(bootInline(true), { explorer: "open", expanded: "true" });
+  assert.deepEqual(bootInline(false), { explorer: "closed", expanded: "false" });
+  const ide = ideMarkup();
+  const fix = ide.indexOf("<script>");
+  assert.ok(fix > ide.indexOf('id="act-explorer"') && fix < ide.indexOf('<aside id="explorer"'), "state script runs before the Explorer is parsed");
+  // markup: no hidden attribute; demo.css hides #explorer only from <html data-explorer>
   assert.match(html, /<aside id="explorer"(?![^>]*\shidden)[^>]*>/, "#explorer has no hidden attribute");
-  assert.match(
-    css,
-    /\.ide:has\(#act-explorer\[aria-expanded="false"\]\) #explorer \{\s*display: none;\s*\}/,
-    "demo.css hides #explorer exactly when the toggle says collapsed",
-  );
-  // demo.js: initial state from the 1024 px breakpoint, reset on breakpoint change, click flips
+  assert.match(css, /:root\[data-explorer="closed"\] #explorer \{\s*display: none;\s*\}/, "hide rule without :has()");
+  assert.ok(!css.includes(":has("), "no :has() dependency");
+  // demo.js: initial state from the 1024 px breakpoint, reset on breakpoint change, click flips; both states move together
   assert.ok(demoJs.includes('matchMedia("(min-width: 1024px)")'), "breakpoint query");
   assert.ok(demoJs.includes('$("act-explorer")'), "button looked up");
-  assert.match(demoJs, /function setExplorer\(open\) \{\s*el\.actExplorer\.setAttribute\("aria-expanded", String\(open\)\);\s*\}/);
+  assert.match(
+    demoJs,
+    /function setExplorer\(open\) \{\s*document\.documentElement\.dataset\.explorer = open \? "open" : "closed";\s*el\.actExplorer\.setAttribute\("aria-expanded", String\(open\)\);\s*\}/,
+  );
   assert.match(demoJs, /setExplorer\(wide\.matches\);/, "initial: true at >= 1024 px, false below");
   assert.match(demoJs, /wide\.addEventListener\("change", \(\) => setExplorer\(wide\.matches\)\);/);
   assert.match(
     demoJs,
     /el\.actExplorer\.addEventListener\("click", \(\) => setExplorer\(el\.actExplorer\.getAttribute\("aria-expanded"\) !== "true"\)\);/,
   );
+});
+
+test("chat panel welcome text: the old intro, above the suggested questions", () => {
+  const start = html.indexOf('<aside class="chat"');
+  assert.ok(start >= 0, "CliCR panel");
+  const chat = html.slice(start, html.indexOf("</aside>", start));
+  const w = chat.indexOf('<p id="welcome"');
+  assert.ok(w >= 0, "#welcome inside the CliCR panel");
+  assert.ok(w < chat.indexOf('id="suggest"'), "above the suggested questions");
+  const text = chat.slice(w, chat.indexOf("</p>", w)).replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+  for (const s of [
+    "Ask a question about Flask's source code.",
+    "the same hybrid search as the CliCR command-line tool",
+    "a meaning search (embeddings), a keyword search (BM25) and a merge of the two (reciprocal-rank fusion).",
+    "Everything runs on your device; nothing you type is sent anywhere.",
+  ])
+    assert.ok(text.includes(s), s);
+  assert.match(demoJs, /el\.welcome\.hidden = true;/, "hidden once a question is asked");
 });
 
 test("layout and motion rules", () => {

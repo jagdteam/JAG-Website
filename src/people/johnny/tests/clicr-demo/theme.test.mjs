@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { initTheme, resolveTheme } from "../../../../../public/projects/clicr/demo/theme.js";
 
-const CSS = readFileSync(new URL("../../../../../public/projects/clicr/demo/demo.css", import.meta.url), "utf8");
+const CSS = readFileSync(new URL("../../../../../public/projects/clicr/demo/demo.css", import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
 /** Fake document + window. `store.value` is what localStorage.getItem returns; `store.throws` makes it throw. */
 function fakes({ dark = true, value = null, throws = false, setThrows = false } = {}) {
@@ -139,8 +139,25 @@ test("contrast AA in both themes", () => {
       const fill = mix(c(`glow-${x}`), c("bg"), pct);
       for (const k of ["fg", ...TK]) at(c(k), fill, 4.5, `${k} on glow-${x} ${pct}%`);
     }
-    for (const k of ["focus", "glow-m", "glow-k", "glow-g"]) {
+    for (const k of ["glow-m", "glow-k", "glow-g"]) {
       for (const b of ["bg", "side"]) at(c(k), c(b), 3, `${k} on ${b}`);
     }
+    // focus rings: every surface a ring is drawn over or next to, including the filled buttons (#go, #skip)
+    for (const b of ["bg", "side", "bar", "status-bg"]) at(c("focus"), c(b), 3.3, `focus on ${b}`);
   }
+});
+
+test("focus rings sit outside controls, inside scroll areas only", () => {
+  const rule = (sel) => {
+    const at = CSS.indexOf(sel);
+    assert.ok(at >= 0, sel);
+    return CSS.slice(at, CSS.indexOf("}", at));
+  };
+  const controls = rule("a:focus-visible,\nbutton:focus-visible,\ninput:focus-visible,\nsummary:focus-visible {");
+  assert.match(controls, /outline: 2px solid var\(--focus\);/);
+  assert.match(controls, /outline-offset: 2px;/, "a filled button's ring must not be drawn over its own fill");
+  const areas = rule("[tabindex]:not(button):focus-visible {");
+  assert.match(areas, /outline: 2px solid var\(--focus\);/);
+  assert.match(areas, /outline-offset: -2px;/);
+  assert.equal((CSS.match(/outline-offset: -/g) ?? []).length, 2, "inset rings only for scroll areas and the flash");
 });
