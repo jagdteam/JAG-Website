@@ -41,3 +41,10 @@ test("explainGlow dispatch", () => {
   assert.equal(explainGlow({ id: "pack", title: "p" }, { kind: "P", i: 1, pin: 2 }, ctx).text, "Source [2] of 3 sent to the model");
   assert.equal(explainGlow({ id: "pack", title: "p" }, { kind: "cut", i: 9 }, ctx).text, "Found, but cut when packing");
 });
+
+test("explainGlow: a pin glow (i null) reports its own pin number, not 'cut'", () => {
+  const ctx = { nPacked: 3, pinOf: (i) => (i == null ? null : 1) };
+  for (const id of ["pack", "answer"]) {
+    assert.equal(explainGlow({ id, title: "T" }, { kind: "P", pin: 2, i: null }, ctx).text, "Source [2] of 3 sent to the model");
+  }
+});

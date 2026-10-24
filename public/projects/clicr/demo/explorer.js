@@ -165,7 +165,15 @@ export function createExplorer(treeEl, tree, { onOpen }) {
         if (on) li.setAttribute("aria-selected", "true");
         else li.removeAttribute("aria-selected");
       }
-      items.get(path)?.scrollIntoView?.({ block: "nearest" });
+      // scroll only the Explorer pane, never the page
+      const li = items.get(path);
+      const pane = treeEl.closest("#explorer") ?? treeEl;
+      if (li && pane.getBoundingClientRect) {
+        const a = li.getBoundingClientRect();
+        const b = pane.getBoundingClientRect();
+        if (a.top < b.top) pane.scrollTop -= b.top - a.top;
+        else if (a.bottom > b.bottom) pane.scrollTop += a.bottom - b.bottom;
+      }
     },
   };
 }

@@ -411,7 +411,8 @@ async function ask(question) {
     last = { question, qvec, run, recorded: recordedFor(question), sources, pins, steps };
     renderAll();
     explorer.setBadges(badgesFor(steps.at(-1)));
-    await editor.showStep(steps.at(-1));
+    // the editor fills in when files.json arrives; the answer area never waits for it
+    editor.showStep(steps.at(-1)).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
     renderAnswerArea();
     const extra = run.added.length ? ` + ${run.added.length} from the code graph` : "";
     setStatus(`Top ${run.top.length} sources${extra} from ${bundle.manifest.n_chunks} chunks, ranked in ${ms.toFixed(0)} ms on your device.`);
@@ -526,7 +527,7 @@ async function main() {
     .then((r) => r.json())
     .catch(() => null);
   filesPromise.then((files) => {
-    if (!files) setStatus(`${el.status.textContent} Full files did not load; showing the matched chunks only.`);
+    if (!files) setStatus(`${el.status.textContent} Full files did not load; showing the matched chunks only.`, el.status.classList.contains("err"));
   });
   const include = src.include;
   explorer = createExplorer($("tree"), buildTree([...new Set(bundle.chunks.map((c) => c.path))], include), {
