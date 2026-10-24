@@ -73,13 +73,13 @@ export function tabLabels(paths) {
   });
 }
 
-/** Glows that get a gutter marker: a cut "×" is dropped when a pin marker sits on the same first line. */
 /** The glow a line opens the explain card for: a pin wins over any other glow covering the line. */
 export function pickGlow(glows, line) {
   const here = glows.filter((g) => g.start <= line && line <= g.end);
   return here.find((g) => g.kind === "P") ?? here[0];
 }
 
+/** Glows that get a gutter marker: a cut "×" is dropped when a pin marker sits on the same first line. */
 export function markedGlows(glows) {
   return glows.filter((g) => g.kind !== "cut" || !glows.some((o) => o.kind === "P" && o.path === g.path && o.start === g.start));
 }
@@ -94,6 +94,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   let step = null;
   let token = 0;
   let cardFor = null;
+  let navigated = false; // the user opened a file or revealed a range since the last step was shown
 
   function symbolOf(g) {
     if (!g) return null;
@@ -288,6 +289,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
 
   // ------------------------------------------------------------ public API
   async function open(path) {
+    navigated = true;
     if (!tabs.includes(path)) tabs.push(path);
     active = path;
     drawTabs();
@@ -298,6 +300,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
 
   async function showStep(next) {
     step = next;
+    navigated = false;
     const want = tabsFor(next);
     const top = strongest(next);
     if (want.length) {
@@ -314,6 +317,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   }
 
   async function reveal(range, { flash = false } = {}) {
+    navigated = true;
     if (active !== range.path || !els.view.querySelector(".code")) {
       if (!tabs.includes(range.path)) tabs.push(range.path);
       active = range.path;
@@ -343,5 +347,5 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     setTimeout(() => (t.dataset.kind === "reveal" ? t.remove() : t.classList.remove("flash")), 1000);
   }
 
-  return { showStep, open, reveal };
+  return { showStep, open, reveal, navigated: () => navigated };
 }

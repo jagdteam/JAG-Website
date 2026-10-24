@@ -7,7 +7,7 @@ import { answerHtml, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pins
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
-import { badgesFor, buildSteps, createPlayer, pinGlow } from "./playback.js";
+import { badgesFor, buildSteps, createPlayer, pinGlow, refocus } from "./playback.js";
 import { initTheme } from "./theme.js";
 import { ModelLoadError, answerModeText, askBlock, searchErrorText, waitingText } from "./messages.js";
 
@@ -77,7 +77,8 @@ let last = null; // {question, qvec, run, recorded, sources, pins, steps}
 let filesPromise = null; // files.json, loaded lazily; resolves to null when it cannot be had
 let editor = null;
 let explorer = null;
-let busy = false;
+let busy = null; // the running phase: null, "search", "generate" or "selftest"
+let load = "loading"; // the demo data: "loading", "failed" or "ready"
 let runId = 0; // bumped whenever a run starts or is stopped; work from an older run checks it
 let answerGenerated = false; // a WebLLM answer is on screen (a graph toggle clears it)
 let run = null; // the current play-by-play: {id, steps, player, done, answerRendered}
@@ -101,8 +102,9 @@ function setProgress(frac) {
   el.progress.hidden = false;
   el.progress.value = Math.max(0, Math.min(1, frac));
 }
-function setBusy(on) {
-  busy = on;
+function setBusy(phase) {
+  busy = phase;
+  const on = phase !== null;
   el.go.setAttribute("aria-disabled", String(on)); // not `disabled`: Enter and Ask must still reach ask(), which says why nothing starts
   el.graphOpt.disabled = on; // a toggle mid-search or mid-generation would race the run
   for (const b of el.suggest.querySelectorAll("button")) b.disabled = on;
@@ -306,22 +308,19 @@ function renderAnswerArea() {
   renderFallback(false);
 }
 
-/** Redraw the editor for the answer step when that is the step on screen. */
+/** Redraw the editor for the answer step when that is the step on screen and the user has not moved the editor since. */
 function redrawAnswerStep() {
   const k = last.steps.findIndex((s) => s.id === "answer");
-  if (el.steps.querySelector("[aria-current]")?.dataset.step !== String(k)) return;
+  if (el.steps.querySelector("[aria-current]")?.dataset.step !== String(k) || editor.navigated()) return;
   const id = runId;
   editor.showStep(last.steps[k]).catch((err) => {
     if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
   });
 }
 
-/** The answer step opens on the pin of the answer's first citation (no citations: it keeps pin 1). */
+/** The answer step opens on the pin of the answer's first citation (no citations: it keeps pin 1); true when that changes its view. */
 function focusAnswerPin(pin) {
-  const step = last.steps.find((s) => s.id === "answer");
-  if (!pin || step.focus === pin) return false;
-  step.focus = pin;
-  return true;
+  return refocus(last.steps.find((s) => s.id === "answer"), pin);
 }
 
 /** The recorded answer is on screen: give the answer step its extra pins and first-cited focus (idempotent) and redraw if it is showing. */
@@ -385,7 +384,7 @@ function stopWaiting() {
 async function generate() {
   if (busy || !last) return;
   const btn = $("gen");
-  setBusy(true);
+  setBusy("generate");
   if (btn) btn.disabled = true;
   try {
     const adapter = await navigator.gpu.requestAdapter();
@@ -440,7 +439,7 @@ async function generate() {
     renderFallback(true);
   } finally {
     stopWaiting();
-    setBusy(false);
+    setBusy(null);
   }
 }
 
@@ -591,11 +590,11 @@ function search(qvec, question, recorded) {
   const ms = performance.now() - t0;
   const sources = pack(found.results, CONTEXT_TOKENS);
   const pins = pinsFromSources(sources);
-  // recorded extra pins show only while the recorded answer is what the page shows (no WebGPU)
-  const extra = hasWebGpu() ? [] : recordedCite(recorded, pins).extra;
-  const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: extra });
-  // the answer step opens on the first pin the recorded answer cites (only while the recorded answer is what the page shows)
-  const first = hasWebGpu() || !recorded?.answer ? null : firstCitedPin(recorded.answer, recordedCite(recorded, pins).cite);
+  // recorded extra pins and the first-cited focus apply only while the recorded answer is what the page shows (no WebGPU)
+  const rc = hasWebGpu() ? null : recordedCite(recorded, pins);
+  const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: rc?.extra ?? [] });
+  // the answer step opens on the first pin the recorded answer cites
+  const first = rc?.cite ? firstCitedPin(recorded.answer, rc.cite) : null;
   if (first) steps[steps.length - 1].focus = first;
   return { found, sources, pins, steps, ms };
 }
@@ -614,14 +613,17 @@ function rerun() {
   setStatus(`Search re-run with Follow calls ${el.graphOpt.checked ? "on" : "off"}${cleared ? "; answer cleared" : ""}. ${statusFor(found, ms)}`);
 }
 async function ask(question) {
-  const block = askBlock({ question, busy, ready: bundle !== null && port !== null });
+  const block = askBlock({ question, busy, load });
   if (block) {
+    if (block.text === null) return;
+    const waiting = el.status.dataset.wait === "1";
     setStatus(block.text, block.err);
+    if (waiting) el.status.dataset.wait = "1";
     if (block.focus) el.q.focus();
     return;
   }
   question = question.trim();
-  setBusy(true);
+  setBusy("search");
   el.welcome.hidden = true;
   stopRun();
   clearRun();
@@ -641,7 +643,7 @@ async function ask(question) {
     setProgress(null);
     setStatus(searchErrorText(err), true);
   } finally {
-    setBusy(false);
+    setBusy(null);
   }
 }
 
@@ -813,22 +815,24 @@ async function main() {
     editor.reveal(pin, { flash: true }).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
     if (isPhone()) scrollToEditor();
   });
+  load = "ready";
   setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
 
   if (new URLSearchParams(location.search).get("selftest") === "1") {
-    setBusy(true);
+    setBusy("selftest");
     try {
       await selftest();
     } catch (err) {
       $("selftest-result").textContent = `PARITY failed to run: ${err.message ?? err}`;
       setStatus(`Self-test failed: ${err.message ?? err}`, true);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 }
 
 main().catch((err) => {
+  load = "failed";
   setProgress(null);
   setStatus(`Could not start the demo: ${err.message ?? err}`, true);
 });

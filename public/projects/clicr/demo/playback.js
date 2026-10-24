@@ -101,6 +101,14 @@ export function strongest(step) {
   return list[0] ?? null;
 }
 
+/** Give the step a focus pin; true only when that changes the glow the editor opens on. */
+export function refocus(step, pin) {
+  if (!pin) return false;
+  const before = strongest(step);
+  step.focus = pin;
+  return strongest(step) !== before;
+}
+
 /**
  * Timer-driven player. onDone fires exactly once per run on every path to done (natural end,
  * skip, reducedMotion); stop() never fires it.

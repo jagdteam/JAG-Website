@@ -29,10 +29,17 @@ export function answerModeText(webgpu, hasRecorded) {
   return hasRecorded ? "recorded answer" : "sources only";
 }
 
-/** Why Ask must not start a run now (null when it may). */
-export function askBlock({ question, busy, ready }) {
-  if (!ready) return { text: "The demo data did not load; reload the page to try again.", err: true, focus: false };
+/**
+ * Why Ask must not start a run now (null when it may). `busy` is the running phase (null, "search",
+ * "generate" or "selftest"), `load` the data state ("loading", "failed" or "ready"). A null `text`
+ * means ignore the submit without a message (the self-test keeps the page to itself).
+ */
+export function askBlock({ question, busy, load }) {
+  if (busy === "selftest") return { text: null, err: false, focus: false };
+  if (load === "failed") return { text: "The demo data did not load; reload the page to try again.", err: true, focus: false };
+  if (load !== "ready") return { text: "Still loading the demo data; ask again in a moment.", err: false, focus: false };
   if (!String(question ?? "").trim()) return { text: "Type a question first.", err: false, focus: true };
-  if (busy) return { text: "Still writing the previous answer; ask again when it finishes.", err: false, focus: false };
+  if (busy === "generate") return { text: "Still writing the previous answer; ask again when it finishes.", err: false, focus: false };
+  if (busy) return { text: "Still searching; ask again when it finishes.", err: false, focus: false };
   return null;
 }

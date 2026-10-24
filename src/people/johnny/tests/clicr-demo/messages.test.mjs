@@ -37,18 +37,32 @@ test("answerModeText: recorded answer only when one is shown", () => {
   assert.equal(answerModeText(true, false), "WebGPU: answer on-device");
 });
 
-test("askBlock: unloaded data, blank question and a busy run each say why; a normal ask passes", () => {
-  assert.deepEqual(askBlock({ question: "hi", busy: false, ready: false }), {
+test("askBlock: load state, blank question and each busy phase say why; the self-test ignores it silently", () => {
+  const ok = { question: "hi", busy: null, load: "ready" };
+  assert.deepEqual(askBlock({ ...ok, load: "failed" }), {
     text: "The demo data did not load; reload the page to try again.",
     err: true,
     focus: false,
   });
-  assert.deepEqual(askBlock({ question: "   ", busy: false, ready: true }), { text: "Type a question first.", err: false, focus: true });
-  assert.equal(
-    askBlock({ question: "hi", busy: true, ready: true }).text,
-    "Still writing the previous answer; ask again when it finishes.",
-  );
-  assert.equal(askBlock({ question: " hi ", busy: false, ready: true }), null);
+  assert.deepEqual(askBlock({ ...ok, load: "loading" }), {
+    text: "Still loading the demo data; ask again in a moment.",
+    err: false,
+    focus: false,
+  });
+  assert.deepEqual(askBlock({ ...ok, question: "   " }), { text: "Type a question first.", err: false, focus: true });
+  assert.deepEqual(askBlock({ ...ok, busy: "search" }), {
+    text: "Still searching; ask again when it finishes.",
+    err: false,
+    focus: false,
+  });
+  assert.deepEqual(askBlock({ ...ok, busy: "generate" }), {
+    text: "Still writing the previous answer; ask again when it finishes.",
+    err: false,
+    focus: false,
+  });
+  assert.deepEqual(askBlock({ ...ok, busy: "selftest" }), { text: null, err: false, focus: false });
+  assert.deepEqual(askBlock({ ...ok, question: "", busy: "selftest" }), { text: null, err: false, focus: false });
+  assert.equal(askBlock({ ...ok, question: " hi " }), null);
 });
 
 test("matchedTerms drops stopwords but keeps content words (STOPWORDS is the ruled list)", () => {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { STEP_MS, badgesFor, buildSteps, createPlayer, strongest, tabsFor } from "../../../../../public/projects/clicr/demo/playback.js";
+import { STEP_MS, badgesFor, buildSteps, createPlayer, refocus, strongest, tabsFor } from "../../../../../public/projects/clicr/demo/playback.js";
 
 const chunks = [
   { path: "a.py", start: 1, end: 10 },
@@ -77,6 +77,23 @@ test("strongest honours the step's focus pin, else the first non-cut glow", () =
   assert.equal(strongest({ glows, focus: 3 }).path, "b.py");
   assert.equal(strongest({ glows, focus: 9 }).pin, 1, "an unknown focus falls back");
   assert.equal(strongest({ glows: [glows[0]], focus: 1 }), null);
+});
+
+test("refocus reports a change only when the glow the editor opens on moves", () => {
+  const glows = [
+    { kind: "cut", path: "a.py", start: 1, end: 2 },
+    { kind: "P", pin: 1, path: "a.py", start: 5, end: 9 },
+    { kind: "P", pin: 3, path: "b.py", start: 40, end: 50 },
+  ];
+  const step = { glows };
+  assert.equal(refocus(step, 1), false, "pin 1 is already what an unfocused step shows");
+  assert.equal(step.focus, 1);
+  assert.equal(refocus(step, 3), true);
+  assert.equal(strongest(step).pin, 3);
+  assert.equal(refocus(step, 3), false);
+  assert.equal(refocus(step, null), false);
+  assert.equal(step.focus, 3, "no citation keeps the focus");
+  assert.equal(refocus(step, 9), true, "an unknown pin falls back to pin 1");
 });
 
 test("tabsFor, badgesFor, strongest", () => {
