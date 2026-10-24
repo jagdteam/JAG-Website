@@ -3,7 +3,11 @@
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
 import { esc } from "./html.js";
-import { answerHtml, identityCite } from "./citations.js";
+import { answerHtml, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
+import { createEditor } from "./editor.js";
+import { createExplorer, buildTree } from "./explorer.js";
+import { explainGlow, shortLabel } from "./explain.js";
+import { badgesFor, buildSteps } from "./playback.js";
 import { initTheme } from "./theme.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
@@ -52,7 +56,6 @@ const el = {
   answerBody: $("answer-body"),
   explain: $("explain"),
   explainTable: $("explain-table"),
-  results: $("results"),
   themeToggle: $("theme-toggle"),
   actExplorer: $("act-explorer"),
   panelToggle: $("panel-toggle"),
@@ -66,7 +69,10 @@ let extractorPromise = null;
 let embedderReady = false;
 let engine = null;
 let engineId = null;
-let last = null; // {question, qvec, run, recorded}
+let last = null; // {question, qvec, run, recorded, sources, pins, steps}
+let filesPromise = null; // files.json, loaded lazily; resolves to null when it cannot be had
+let editor = null;
+let explorer = null;
 let busy = false;
 
 // ---------------------------------------------------------------- small helpers
@@ -157,73 +163,7 @@ async function embedQuery(text) {
   return Float32Array.from(out.data);
 }
 
-// ---------------------------------------------------------------- Python highlighter
-const KEYWORDS = new Set(
-  ("False None True and as assert async await break class continue def del elif else except finally for from " +
-    "global if import in is lambda nonlocal not or pass raise return try while with yield match case type").split(" "),
-);
-const BUILTINS = new Set("self cls super print len isinstance dict list tuple set str int bool object".split(" "));
-const PY_TOKEN =
-  /(#[^\n]*)|((?:[rRbBuUfF]{1,2})?(?:"""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(@[\w.]+)|(\b\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?j?\b)|([A-Za-z_]\w*)/g;
-
-function highlight(text, lang) {
-  const segs = [];
-  let at = 0;
-  let prev = "";
-  if (lang === "python") {
-    for (const m of text.matchAll(PY_TOKEN)) {
-      if (m.index > at) segs.push(["", text.slice(at, m.index)]);
-      let cls = "";
-      if (m[1]) cls = "c";
-      else if (m[2]) cls = "s";
-      else if (m[3]) cls = "d";
-      else if (m[4]) cls = "n";
-      else if (KEYWORDS.has(m[5])) cls = "k";
-      else if (prev === "def" || prev === "class") cls = "f";
-      else if (BUILTINS.has(m[5])) cls = "b";
-      segs.push([cls, m[0]]);
-      prev = m[5] ?? "";
-      at = m.index + m[0].length;
-    }
-  }
-  if (at < text.length) segs.push(["", text.slice(at)]);
-  // split into lines, closing and reopening spans at line breaks
-  const lines = [""];
-  for (const [cls, t] of segs) {
-    t.split("\n").forEach((part, j) => {
-      if (j > 0) lines.push("");
-      if (part) lines[lines.length - 1] += cls ? `<span class="tk-${cls}">${esc(part)}</span>` : esc(part);
-    });
-  }
-  return lines;
-}
-function codeBlock(chunk) {
-  const lines = highlight(chunk.text, chunk.lang);
-  return (
-    '<pre class="code" tabindex="0"><code>' +
-    lines.map((l, j) => `<span class="row"><span class="ln">${chunk.start + j}</span>${l}</span>`).join("") +
-    "</code></pre>"
-  );
-}
-
 // ---------------------------------------------------------------- rendering
-function renderResults(run) {
-  const { chunks } = bundle;
-  el.results.innerHTML = run.results
-    .map((row, k) => {
-      const c = chunks[row.i];
-      const pills = [];
-      if (row.graph) pills.push(`<span class="pill g">graph: calls ${esc(row.graph.via)}</span>`);
-      if (row.vrank) pills.push(`<span class="pill">vector #${row.vrank}</span>`);
-      if (row.krank) pills.push(`<span class="pill">keyword #${row.krank}</span>`);
-      return `<div class="plate"><details class="pl src" id="src-${row.i}"${k < 3 ? " open" : ""}>
-        <summary><span class="rank">${row.graph ? "+" : k + 1}</span>
-        <span class="loc">${esc(S.chunkLabel(c))}</span>${c.symbol ? `<span class="sym">${esc(c.symbol)}</span>` : ""}
-        ${pills.join(" ")}</summary>${codeBlock(c)}</details></div>`;
-    })
-    .join("");
-}
-
 function renderExplain(run) {
   const { chunks } = bundle;
   const top = new Set(run.top.map((r) => r.i));
@@ -237,7 +177,7 @@ function renderExplain(run) {
         const c = chunks[r.i];
         const g = added.get(r.i);
         const shown = top.has(r.i) ? "top" : g ? `graph via ${esc(g.graph.via)}` : "";
-        return `<tr class="${shown ? "shown" : ""}"><td>${r.frank ? "#" + r.frank : "–"}</td><td>${esc(S.chunkLabel(c))}</td><td>${esc(c.symbol ?? "")}</td><td>${cell(r.vrank, r.vscore, 3)}</td><td>${cell(r.krank, r.kscore, 2)}</td><td>${r.fused ? r.fused.toFixed(4) : "–"}</td><td>${shown || "–"}</td></tr>`;
+        return `<tr class="${shown ? "shown" : ""}"><td>${r.frank ? "#" + r.frank : "–"}</td><td><button class="row-open" type="button" data-i="${r.i}">${esc(S.chunkLabel(c))}</button></td><td>${esc(c.symbol ?? "")}</td><td>${cell(r.vrank, r.vscore, 3)}</td><td>${cell(r.krank, r.kscore, 2)}</td><td>${r.fused ? r.fused.toFixed(4) : "–"}</td><td>${shown || "–"}</td></tr>`;
       })
       .join("") +
     "</tbody>";
@@ -245,7 +185,6 @@ function renderExplain(run) {
 
 function renderAll() {
   if (!last) return;
-  renderResults(last.run);
   renderExplain(last.run);
 }
 
@@ -425,6 +364,23 @@ async function generate() {
   }
 }
 
+// ---------------------------------------------------------------- explain card
+function explainFor(step, glow) {
+  const { run, question, pins } = last;
+  const rowsById = new Map([...run.fused, ...run.added].map((r) => [r.i, r]));
+  const ctx = {
+    nVector: run.vector.length,
+    nKeyword: run.keyword.length,
+    rrfK: bundle.manifest.rrf_k,
+    nPacked: pins.length,
+    rowsById,
+    termsFor: (i) => S.matchedTerms(question, bundle.bm25, i),
+    labelFor: (i) => shortLabel(bundle.chunks[i], bundle.manifest.source.include),
+    pinOf: (i) => pinOfChunk(pins, i),
+  };
+  return explainGlow(step, glow, ctx);
+}
+
 // ---------------------------------------------------------------- search flow
 function recordedFor(question) {
   return bundle.questions.find((q) => q.question === question) ?? null;
@@ -445,8 +401,17 @@ async function ask(question) {
     const t0 = performance.now();
     const run = S.hybridSearch(bundle, qvec, question, { useGraph: el.graphOpt.checked });
     const ms = performance.now() - t0;
-    last = { question, qvec, run, recorded: recordedFor(question) };
+    const sources = pack(run.results, CONTEXT_TOKENS);
+    const pins = pinsFromSources(sources);
+    const steps = buildSteps(run, pins, {
+      chunks: bundle.chunks,
+      nChunks: bundle.manifest.n_chunks,
+      useGraph: el.graphOpt.checked,
+    });
+    last = { question, qvec, run, recorded: recordedFor(question), sources, pins, steps };
     renderAll();
+    explorer.setBadges(badgesFor(steps.at(-1)));
+    await editor.showStep(steps.at(-1));
     renderAnswerArea();
     const extra = run.added.length ? ` + ${run.added.length} from the code graph` : "";
     setStatus(`Top ${run.top.length} sources${extra} from ${bundle.manifest.n_chunks} chunks, ranked in ${ms.toFixed(0)} ms on your device.`);
@@ -556,6 +521,27 @@ async function main() {
   $("src-include").textContent = src.include;
   $("src-license").textContent = src.license ?? "see repository";
 
+  // full files load lazily and are never awaited by the search path or the self-test
+  filesPromise = fetchOk("files.json")
+    .then((r) => r.json())
+    .catch(() => null);
+  filesPromise.then((files) => {
+    if (!files) setStatus(`${el.status.textContent} Full files did not load; showing the matched chunks only.`);
+  });
+  const include = src.include;
+  explorer = createExplorer($("tree"), buildTree([...new Set(bundle.chunks.map((c) => c.path))], include), {
+    onOpen: (path) => editor.open(path),
+  });
+  editor = createEditor(
+    { tabs: $("tabs"), crumb: $("crumb"), view: $("editor"), card: $("explain-card") },
+    { chunks: bundle.chunks, getFiles: () => filesPromise, explain: explainFor },
+  );
+  $("tabs").addEventListener("tabchange", (e) => explorer.setActive(e.detail.path));
+  el.explainTable.addEventListener("click", (e) => {
+    const b = e.target.closest(".row-open");
+    if (b) editor.reveal(bundle.chunks[Number(b.dataset.i)], { flash: true });
+  });
+
   for (const q of bundle.questions) {
     const b = document.createElement("button");
     b.type = "button";
@@ -572,17 +558,13 @@ async function main() {
     ask(el.q.value);
   });
   el.graphOpt.addEventListener("change", rerun);
-  // citation [n] -> open that source card and scroll to it; a card that is not shown
-  // (e.g. a graph source after unticking the graph option) leaves the click a no-op
+  // citation [n] -> scroll to its target when there is one (Task 10 rewires this to the pins)
   el.answer.addEventListener("click", (e) => {
     const a = e.target.closest("a.cite");
     if (!a) return;
     e.preventDefault();
     const card = document.getElementById(a.getAttribute("href").slice(1));
     if (!card) return;
-    card.open = true;
-    for (const c of el.results.querySelectorAll(".src.hit")) c.classList.remove("hit");
-    card.classList.add("hit");
     card.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
