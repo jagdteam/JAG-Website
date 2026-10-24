@@ -74,6 +74,12 @@ export function tabLabels(paths) {
 }
 
 /** Glows that get a gutter marker: a cut "×" is dropped when a pin marker sits on the same first line. */
+/** The glow a line opens the explain card for: a pin wins over any other glow covering the line. */
+export function pickGlow(glows, line) {
+  const here = glows.filter((g) => g.start <= line && line <= g.end);
+  return here.find((g) => g.kind === "P") ?? here[0];
+}
+
 export function markedGlows(glows) {
   return glows.filter((g) => g.kind !== "cut" || !glows.some((o) => o.kind === "P" && o.path === g.path && o.start === g.start));
 }
@@ -239,7 +245,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     cardFor?.removeAttribute("aria-describedby");
     cardFor = null;
   }
-  const glowAt = (line) => glowsHere().find((g) => g.start <= line && line <= g.end);
+  const glowAt = (line) => pickGlow(glowsHere(), line);
 
   els.view.addEventListener("click", (e) => {
     const mark = e.target.closest(".mark");

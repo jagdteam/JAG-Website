@@ -154,6 +154,12 @@ export function chunkLabel(chunk) {
   return `${chunk.path}:${chunk.start}-${chunk.end}`;
 }
 
+/** Filler words matchedTerms never shows (the explain card); ranking is unaffected. */
+export const STOPWORDS = new Set([
+  "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "does", "for", "from", "how", "i", "in", "is", "it",
+  "its", "of", "on", "or", "that", "the", "this", "to", "was", "what", "when", "where", "which", "who", "why", "will", "with",
+]);
+
 /** Query words that matched chunk i in keyword search, highest idf x tf first. */
 export function matchedTerms(query, bm25, i) {
   const nDocs = bm25.doc_len.length;
@@ -185,5 +191,8 @@ export function matchedTerms(query, bm25, i) {
       }
     }
   }
-  return [...found.entries()].sort((a, b) => b[1] - a[1]).map(([term]) => term);
+  return [...found.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([term]) => term)
+    .filter((term) => !STOPWORDS.has(term));
 }

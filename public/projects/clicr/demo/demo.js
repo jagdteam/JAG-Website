@@ -9,6 +9,7 @@ import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
 import { badgesFor, buildSteps, createPlayer, pinGlow } from "./playback.js";
 import { initTheme } from "./theme.js";
+import { ModelLoadError, answerModeText, askBlock, searchErrorText, waitingText } from "./messages.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
 const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js";
@@ -83,6 +84,7 @@ let run = null; // the current play-by-play: {id, steps, player, done, answerRen
 
 // ---------------------------------------------------------------- small helpers
 function setStatus(text, err = false) {
+  delete el.status.dataset.wait; // any other message ends the waiting counter's right to overwrite the status
   el.status.textContent = text;
   el.status.classList.toggle("err", err);
 }
@@ -101,7 +103,7 @@ function setProgress(frac) {
 }
 function setBusy(on) {
   busy = on;
-  el.go.disabled = on;
+  el.go.setAttribute("aria-disabled", String(on)); // not `disabled`: Enter and Ask must still reach ask(), which says why nothing starts
   el.graphOpt.disabled = on; // a toggle mid-search or mid-generation would race the run
   for (const b of el.suggest.querySelectorAll("button")) b.disabled = on;
 }
@@ -154,6 +156,8 @@ function getExtractor() {
             setProgress(loaded / total);
           }
         },
+      }).catch((err) => {
+        throw new ModelLoadError(err); // the model host is blocked or offline
       });
     })();
     extractorPromise.catch(() => (extractorPromise = null));
@@ -366,6 +370,18 @@ function renderFallback(failed) {
   }
 }
 
+let waitTimer = null;
+function setWaiting(secs) {
+  if (waitTimer !== null && el.status.dataset.wait !== "1") return; // another message took the status
+  el.status.textContent = waitingText(secs);
+  el.status.classList.remove("err");
+  el.status.dataset.wait = "1";
+}
+function stopWaiting() {
+  clearInterval(waitTimer);
+  waitTimer = null;
+}
+
 async function generate() {
   if (busy || !last) return;
   const btn = $("gen");
@@ -392,7 +408,9 @@ async function generate() {
     setProgress(null);
     const sources = pack(last.run.results, CONTEXT_TOKENS);
     const messages = buildMessages(last.question, sources);
-    setStatus("Writing the answer…");
+    setWaiting(0);
+    const t0 = performance.now();
+    waitTimer = setInterval(() => setWaiting((performance.now() - t0) / 1000), 1000);
     const out = document.createElement("div");
     answerGenerated = true;
     el.answerBody.innerHTML = `<p class="label">Generated in your browser (${esc(id)})</p>`;
@@ -408,6 +426,7 @@ async function generate() {
     });
     let text = "";
     for await (const chunk of stream) {
+      stopWaiting(); // the first token ends the wait
       text += chunk.choices[0]?.delta?.content ?? "";
       out.innerHTML = answerHtml(text, identityCite(sources.length));
     }
@@ -415,10 +434,12 @@ async function generate() {
     if (focusAnswerPin(firstCitedPin(text, identityCite(sources.length)))) redrawAnswerStep();
     setStatus("Answer written on your device.");
   } catch (err) {
+    stopWaiting();
     setProgress(null);
     setStatus(`Could not generate an answer: ${err.message ?? err}`, true);
     renderFallback(true);
   } finally {
+    stopWaiting();
     setBusy(false);
   }
 }
@@ -505,6 +526,16 @@ function renderSteps(r, k) {
   return added;
 }
 
+function scrollAnswerToTop() {
+  const chat = el.answer.closest(".chat");
+  if (chat && chat.scrollHeight > chat.clientHeight + 1) {
+    const top = chat.scrollTop + el.answer.getBoundingClientRect().top - chat.getBoundingClientRect().top;
+    chat.scrollTo({ top, behavior: scrollBehavior() });
+  } else if (isPhone()) {
+    el.answer.scrollIntoView({ behavior: scrollBehavior(), block: "start" }); // phone: the page itself is the scroller
+  }
+}
+
 function showStepOf(r, k) {
   if (r.id !== runId) return;
   const step = r.steps[k];
@@ -522,8 +553,8 @@ function showStepOf(r, k) {
   if (step.id === "answer" && !r.answerRendered) {
     r.answerRendered = true;
     prepareAnswer();
-    // once per run, at every width: the answer heading comes into view inside the chat panel
-    $("answer-h").scrollIntoView({ behavior: scrollBehavior(), block: "nearest" });
+    // once per run, at every width: the answer section goes to the top of the chat panel (never the whole page on desktop)
+    scrollAnswerToTop();
   }
 }
 
@@ -583,8 +614,13 @@ function rerun() {
   setStatus(`Search re-run with Follow calls ${el.graphOpt.checked ? "on" : "off"}${cleared ? "; answer cleared" : ""}. ${statusFor(found, ms)}`);
 }
 async function ask(question) {
+  const block = askBlock({ question, busy, ready: bundle !== null && port !== null });
+  if (block) {
+    setStatus(block.text, block.err);
+    if (block.focus) el.q.focus();
+    return;
+  }
   question = question.trim();
-  if (!question || busy) return;
   setBusy(true);
   el.welcome.hidden = true;
   stopRun();
@@ -597,12 +633,13 @@ async function ask(question) {
     const recorded = recordedFor(question);
     const { found, sources, pins, steps, ms } = search(qvec, question, recorded);
     last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [] };
+    el.answerMode.textContent = answerModeText(hasWebGpu(), Boolean(recorded?.answer));
     renderAll();
     beginRun(true);
     setStatus(statusFor(found, ms));
   } catch (err) {
     setProgress(null);
-    setStatus(`Search failed: ${err.message ?? err}`, true);
+    setStatus(searchErrorText(err), true);
   } finally {
     setBusy(false);
   }
@@ -670,6 +707,11 @@ function setExplorer(open) {
   el.actExplorer.setAttribute("aria-expanded", String(open));
 }
 function wireShell() {
+  // attached before the bundle loads: if loading fails, Ask must still never do a native form submit
+  el.form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    ask(el.q.value);
+  });
   const theme = initTheme();
   el.themeToggle.addEventListener("click", () => theme.toggle());
   $("skip-link").addEventListener("click", (e) => {
@@ -752,10 +794,6 @@ async function main() {
     });
     el.suggest.append(b);
   }
-  el.form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    ask(el.q.value);
-  });
   el.graphOpt.addEventListener("change", rerun);
   el.skip.addEventListener("click", () => {
     run?.player.skip();

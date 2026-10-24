@@ -108,6 +108,10 @@ button {
   cursor: pointer;
   transition: background-color 0.12s, color 0.12s;
 }
+#go[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: progress;
+}
 button[disabled] {
   opacity: 0.6;
   cursor: progress;
