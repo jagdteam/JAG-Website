@@ -2,12 +2,12 @@
 // ranks with search.js (the port of the Python hybrid path) and renders sources, the
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
-import { esc } from "./html.js";
+import { codeSpans, esc } from "./html.js";
 import { answerHtml, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
-import { badgesFor, buildSteps } from "./playback.js";
+import { badgesFor, buildSteps, createPlayer } from "./playback.js";
 import { initTheme } from "./theme.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
@@ -61,6 +61,8 @@ const el = {
   panelToggle: $("panel-toggle"),
   answerMode: $("answer-mode"),
   welcome: $("welcome"),
+  steps: $("steps"),
+  skip: $("skip"),
 };
 
 let bundle = null; // {manifest, chunks, vectors, bm25, graph, questions}
@@ -74,6 +76,8 @@ let filesPromise = null; // files.json, loaded lazily; resolves to null when it 
 let editor = null;
 let explorer = null;
 let busy = false;
+let runId = 0; // bumped whenever a run starts or is stopped; work from an older run checks it
+let run = null; // the current play-by-play: {id, steps, player, done, answerRendered}
 
 // ---------------------------------------------------------------- small helpers
 function setStatus(text, err = false) {
@@ -91,6 +95,7 @@ function setProgress(frac) {
 function setBusy(on) {
   busy = on;
   el.go.disabled = on;
+  el.graphOpt.disabled = on; // a toggle mid-search or mid-generation would race the run
   for (const b of el.suggest.querySelectorAll("button")) b.disabled = on;
 }
 const mb = (bytes) => (bytes / 1e6).toFixed(0);
@@ -382,40 +387,133 @@ function explainFor(step, glow) {
 }
 
 // ---------------------------------------------------------------- search flow
+const NO_STEP = { id: "none", title: "", text: "", glows: [] };
+
+function statusFor(r, ms) {
+  const extra = r.added.length ? ` + ${r.added.length} from the code graph` : "";
+  return `Top ${r.top.length} sources${extra} from ${bundle.manifest.n_chunks} chunks, ranked in ${ms.toFixed(0)} ms on your device.`;
+}
+
+/** Stop the old player and invalidate everything it or an older run still has in flight. */
+function stopRun() {
+  run?.player.stop();
+  run = null;
+  runId++;
+}
+
+/** Empty the chat steps, the answer, the Explorer badges and the editor glows. */
+function clearRun() {
+  el.steps.replaceChildren();
+  el.skip.hidden = true;
+  el.answerBody.replaceChildren();
+  el.answer.hidden = true;
+  explorer.setBadges(new Map());
+  const id = runId;
+  editor.showStep(NO_STEP).catch((err) => {
+    if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
+  });
+}
+
+/** The one place the answer area is set up for a run; Task 10 adds the recorded-answer pins and cite here. */
+function prepareAnswer() {
+  renderAnswerArea();
+}
+
+/** Steps 0..k are listed; steps already listed stay (replay only moves the current mark). */
+function renderSteps(r, k) {
+  const list = el.steps;
+  for (let n = list.children.length; n <= k; n++) {
+    const s = r.steps[n];
+    const li = document.createElement("li");
+    li.innerHTML = `<button class="step" data-step="${n}" type="button" disabled><b>${esc(s.title)}</b>${s.text ? ": " + codeSpans(s.text) : ""}</button>`;
+    list.append(li);
+  }
+  list.querySelectorAll("button.step").forEach((b, n) => {
+    if (n === k) b.setAttribute("aria-current", "step");
+    else b.removeAttribute("aria-current");
+    b.disabled = !r.done;
+  });
+}
+
+function showStepOf(r, k) {
+  if (r.id !== runId) return;
+  const step = r.steps[k];
+  renderSteps(r, k);
+  explorer.setBadges(badgesFor(step));
+  editor.showStep(step).catch((err) => {
+    if (r.id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
+  });
+  // the answer area renders once per run; replaying the answer step only re-applies its glows
+  if (step.id === "answer" && !r.answerRendered) {
+    r.answerRendered = true;
+    prepareAnswer();
+  }
+}
+
+/** Fresh player for `last.steps`. play: auto-play from step 1; otherwise land on the final state like Skip. */
+function beginRun(play) {
+  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false };
+  r.player = createPlayer({
+    steps: r.steps,
+    show: (k) => showStepOf(r, k),
+    onDone: () => {
+      if (r.id !== runId) return;
+      r.done = true;
+      el.skip.hidden = true;
+      el.steps.querySelectorAll("button.step").forEach((b) => (b.disabled = false));
+    },
+    reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+  });
+  run = r;
+  if (play) {
+    el.skip.hidden = false; // onDone hides it again at once when motion is reduced
+    r.player.start();
+  } else {
+    r.player.skip();
+  }
+}
+
 function recordedFor(question) {
   return bundle.questions.find((q) => q.question === question) ?? null;
 }
+function search(qvec, question) {
+  const useGraph = el.graphOpt.checked;
+  const t0 = performance.now();
+  const found = S.hybridSearch(bundle, qvec, question, { useGraph });
+  const ms = performance.now() - t0;
+  const sources = pack(found.results, CONTEXT_TOKENS);
+  const pins = pinsFromSources(sources);
+  const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph });
+  return { found, sources, pins, steps, ms };
+}
+/** Graph toggle: search again with the same question and land on the final state, no auto-play. */
 function rerun() {
-  if (!last) return;
-  last.run = S.hybridSearch(bundle, last.qvec, last.question, { useGraph: el.graphOpt.checked });
+  if (!last || busy) return;
+  stopRun();
+  clearRun();
+  const { found, sources, pins, steps, ms } = search(last.qvec, last.question);
+  last = { ...last, run: found, sources, pins, steps };
   renderAll();
+  beginRun(false);
+  setStatus(statusFor(found, ms));
 }
 async function ask(question) {
   question = question.trim();
   if (!question || busy) return;
   setBusy(true);
   el.welcome.hidden = true;
+  stopRun();
+  clearRun();
+  const mine = runId;
   try {
     const qvec = await embedQuery(question);
+    if (mine !== runId) return;
     setStatus("Searching…");
-    const t0 = performance.now();
-    const run = S.hybridSearch(bundle, qvec, question, { useGraph: el.graphOpt.checked });
-    const ms = performance.now() - t0;
-    const sources = pack(run.results, CONTEXT_TOKENS);
-    const pins = pinsFromSources(sources);
-    const steps = buildSteps(run, pins, {
-      chunks: bundle.chunks,
-      nChunks: bundle.manifest.n_chunks,
-      useGraph: el.graphOpt.checked,
-    });
-    last = { question, qvec, run, recorded: recordedFor(question), sources, pins, steps };
+    const { found, sources, pins, steps, ms } = search(qvec, question);
+    last = { question, qvec, run: found, recorded: recordedFor(question), sources, pins, steps };
     renderAll();
-    explorer.setBadges(badgesFor(steps.at(-1)));
-    // the editor fills in when files.json arrives; the answer area never waits for it
-    editor.showStep(steps.at(-1)).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
-    renderAnswerArea();
-    const extra = run.added.length ? ` + ${run.added.length} from the code graph` : "";
-    setStatus(`Top ${run.top.length} sources${extra} from ${bundle.manifest.n_chunks} chunks, ranked in ${ms.toFixed(0)} ms on your device.`);
+    beginRun(true);
+    setStatus(statusFor(found, ms));
   } catch (err) {
     setProgress(null);
     setStatus(`Search failed: ${err.message ?? err}`, true);
@@ -559,6 +657,14 @@ async function main() {
     ask(el.q.value);
   });
   el.graphOpt.addEventListener("change", rerun);
+  el.skip.addEventListener("click", () => {
+    run?.player.skip();
+    el.steps.querySelector("[aria-current]")?.focus(); // the Skip button just hid
+  });
+  el.steps.addEventListener("click", (e) => {
+    const b = e.target.closest("button.step");
+    if (b && !b.disabled && run) run.player.replay(Number(b.dataset.step));
+  });
   // citation [n] -> scroll to its target when there is one (Task 10 rewires this to the pins)
   el.answer.addEventListener("click", (e) => {
     const a = e.target.closest("a.cite");
