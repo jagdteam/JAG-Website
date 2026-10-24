@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { answerHtml, citedNumbers, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "../../../../../public/projects/clicr/demo/citations.js";
+import { answerHtml, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "../../../../../public/projects/clicr/demo/citations.js";
 import { codeSpans, esc } from "../../../../../public/projects/clicr/demo/html.js";
 
 const pins = pinsFromSources([
@@ -70,4 +70,15 @@ test("answerHtml and citedNumbers agree when a backtick pair spans a link", () =
   const linked = [...html.matchAll(/data-pin="(\d+)"/g)].map((m) => Number(m[1]));
   assert.deepEqual(linked, cited);
   assert.deepEqual(cited, [1, 3]);
+});
+
+test("firstCitedPin: the first citation in answer order that maps to a pin", () => {
+  const cite = new Map([[1, 4], [2, 2]]);
+  assert.equal(firstCitedPin("It is set in [2] and also [1].", cite), 2);
+  assert.equal(firstCitedPin("See [1][2].", cite), 4);
+  assert.equal(firstCitedPin("Only [9] here, then [1].", cite), 4, "unmapped numbers are skipped");
+  assert.equal(firstCitedPin("No citations at all.", cite), null);
+  assert.equal(firstCitedPin("Cited [1] but no map.", null), null);
+  assert.equal(firstCitedPin(["```py", "x[1]", "``` then [2]"].join(String.fromCharCode(10)), cite), 2, "code is ignored");
+  assert.equal(firstCitedPin("See [3-4].", new Map([[3, 7], [4, 8]])), 7);
 });

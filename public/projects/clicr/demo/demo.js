@@ -3,7 +3,7 @@
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
 import { codeSpans, esc } from "./html.js";
-import { answerHtml, citedNumbers, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "./citations.js";
+import { answerHtml, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "./citations.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
@@ -86,9 +86,10 @@ function setStatus(text, err = false) {
   el.status.textContent = text;
   el.status.classList.toggle("err", err);
 }
+const scrollBehavior = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+const isPhone = () => matchMedia("(max-width: 719px)").matches;
 function scrollToEditor() {
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  $("editor").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  $("editor").scrollIntoView({ behavior: scrollBehavior(), block: "start" });
 }
 function setProgress(frac) {
   if (frac === null) {
@@ -301,22 +302,35 @@ function renderAnswerArea() {
   renderFallback(false);
 }
 
-/** The recorded answer is on screen: give the answer step its extra pins (idempotent) and redraw if it is showing. */
-function addExtraPins() {
+/** Redraw the editor for the answer step when that is the step on screen. */
+function redrawAnswerStep() {
   const k = last.steps.findIndex((s) => s.id === "answer");
-  const step = last.steps[k];
+  if (el.steps.querySelector("[aria-current]")?.dataset.step !== String(k)) return;
+  const id = runId;
+  editor.showStep(last.steps[k]).catch((err) => {
+    if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
+  });
+}
+
+/** The answer step opens on the pin of the answer's first citation (no citations: it keeps pin 1). */
+function focusAnswerPin(pin) {
+  const step = last.steps.find((s) => s.id === "answer");
+  if (!pin || step.focus === pin) return false;
+  step.focus = pin;
+  return true;
+}
+
+/** The recorded answer is on screen: give the answer step its extra pins and first-cited focus (idempotent) and redraw if it is showing. */
+function addExtraPins() {
+  const step = last.steps.find((s) => s.id === "answer");
   let changed = false;
   for (const p of last.extra ?? []) {
     if (step.glows.some((g) => g.kind === "P" && g.pin === p.n)) continue;
     step.glows.push(pinGlow(p));
     changed = true;
   }
-  if (changed && el.steps.querySelector("[aria-current]")?.dataset.step === String(k)) {
-    const id = runId;
-    editor.showStep(step).catch((err) => {
-      if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
-    });
-  }
+  if (focusAnswerPin(firstCitedPin(last.recorded.answer, last.cite))) changed = true;
+  if (changed) redrawAnswerStep();
 }
 
 /** Recorded answer if there is one, else the sources-only note (no WebGPU, or generation failed). */
@@ -398,6 +412,7 @@ async function generate() {
       out.innerHTML = answerHtml(text, identityCite(sources.length));
     }
     out.insertAdjacentHTML("beforeend", '<p class="label">Sources in the prompt:</p>' + sourceList(sources));
+    if (focusAnswerPin(firstCitedPin(text, identityCite(sources.length)))) redrawAnswerStep();
     setStatus("Answer written on your device.");
   } catch (err) {
     setProgress(null);
@@ -493,7 +508,10 @@ function renderSteps(r, k) {
 function showStepOf(r, k) {
   if (r.id !== runId) return;
   const step = r.steps[k];
+  const first = el.steps.children.length === 0;
   const added = renderSteps(r, k);
+  // phone, after Ask: bring the play-by-play into view once, when its first step appears
+  if (first && r.play && isPhone()) el.steps.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
   // one new step is announced by the live list; bulk fills and replays are announced here
   if (added !== 1) setStatus(`Step ${k + 1} of ${r.steps.length}: ${step.title}.`);
   explorer.setBadges(badgesFor(step));
@@ -504,12 +522,14 @@ function showStepOf(r, k) {
   if (step.id === "answer" && !r.answerRendered) {
     r.answerRendered = true;
     prepareAnswer();
+    // once per run, at every width: the answer heading comes into view inside the chat panel
+    $("answer-h").scrollIntoView({ behavior: scrollBehavior(), block: "nearest" });
   }
 }
 
 /** Fresh player for `last.steps`. play: auto-play from step 1; otherwise land on the final state like Skip. */
 function beginRun(play) {
-  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false };
+  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false, play };
   r.player = createPlayer({
     steps: r.steps,
     show: (k) => showStepOf(r, k),
@@ -543,6 +563,9 @@ function search(qvec, question, recorded) {
   // recorded extra pins show only while the recorded answer is what the page shows (no WebGPU)
   const extra = hasWebGpu() ? [] : recordedCite(recorded, pins).extra;
   const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: extra });
+  // the answer step opens on the first pin the recorded answer cites (only while the recorded answer is what the page shows)
+  const first = hasWebGpu() || !recorded?.answer ? null : firstCitedPin(recorded.answer, recordedCite(recorded, pins).cite);
+  if (first) steps[steps.length - 1].focus = first;
   return { found, sources, pins, steps, ms };
 }
 /** Graph toggle: search again with the same question and land on the final state, no auto-play. */
@@ -649,6 +672,10 @@ function setExplorer(open) {
 function wireShell() {
   const theme = initTheme();
   el.themeToggle.addEventListener("click", () => theme.toggle());
+  $("skip-link").addEventListener("click", (e) => {
+    e.preventDefault();
+    el.q.focus();
+  });
 
   const wide = matchMedia("(min-width: 1024px)");
   setExplorer(wide.matches);
@@ -700,7 +727,7 @@ async function main() {
       // below 1024 px the Explorer is an overlay: close it so the opened file is visible
       if (!matchMedia("(min-width: 1024px)").matches) {
         setExplorer(false);
-        if (matchMedia("(max-width: 719px)").matches) scrollToEditor();
+        if (isPhone()) scrollToEditor();
       }
     },
   });
@@ -746,7 +773,7 @@ async function main() {
     const pin = [...last.pins, ...last.extra].find((p) => p.n === Number(a.dataset.pin));
     if (!pin) return;
     editor.reveal(pin, { flash: true }).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
-    if (matchMedia("(max-width: 719px)").matches) scrollToEditor();
+    if (isPhone()) scrollToEditor();
   });
   setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
 

@@ -91,8 +91,14 @@ export function badgesFor(step) {
   return out;
 }
 
+/** The glow the editor opens on: the step's focus pin when it has one (the answer's first citation), else the first non-cut glow. */
 export function strongest(step) {
-  return shown(step)[0] ?? null;
+  const list = shown(step);
+  if (step.focus != null) {
+    const f = list.find((g) => g.kind === "P" && g.pin === step.focus);
+    if (f) return f;
+  }
+  return list[0] ?? null;
 }
 
 /**

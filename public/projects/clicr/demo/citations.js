@@ -81,6 +81,16 @@ export function recordedPins(answer, recSources, pins) {
   return { cite, extra };
 }
 
+/** Pin of the first citation in answer order that maps onto a pin, or null (no citations: caller keeps pin 1). */
+export function firstCitedPin(answer, cite) {
+  if (!cite) return null;
+  for (const n of citedNumbers(answer)) {
+    const p = cite.get(n);
+    if (p) return p;
+  }
+  return null;
+}
+
 export function identityCite(n) {
   return new Map(Array.from({ length: n }, (_, k) => [k + 1, k + 1]));
 }

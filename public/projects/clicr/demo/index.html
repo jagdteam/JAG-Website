@@ -25,6 +25,7 @@
     <script type="module" src="demo.js"></script>
   </head>
   <body>
+    <a class="skip-link" href="#q" id="skip-link">Skip to question</a>
     <div class="ide">
       <header class="titlebar">
         <a class="back" href="/johnny">&larr; Johnny Fok</a>
@@ -85,7 +86,7 @@
             Every candidate from either search. Fused score = sum of 1 / (60 + rank) over the lists that hold the chunk.
             The top 6 by fused score are shown; the code-graph step may add definitions of functions they call.
           </p>
-          <div class="tablewrap"><table id="explain-table"></table></div>
+          <div class="tablewrap" role="region" aria-label="Retrieval candidates table, scrolls sideways" tabindex="0"><table id="explain-table"></table></div>
         </section>
       </section>
 

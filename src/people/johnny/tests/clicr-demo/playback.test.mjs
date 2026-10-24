@@ -67,6 +67,18 @@ test("extra pins take their own path and lines (P10)", () => {
   assert.deepEqual([ps[0].path, ps[0].start, ps[0].end], ["a.py", 1, 30]);
 });
 
+test("strongest honours the step's focus pin, else the first non-cut glow", () => {
+  const glows = [
+    { kind: "cut", path: "a.py", start: 1, end: 2 },
+    { kind: "P", pin: 1, path: "a.py", start: 5, end: 9 },
+    { kind: "P", pin: 3, path: "b.py", start: 40, end: 50 },
+  ];
+  assert.equal(strongest({ glows }).pin, 1);
+  assert.equal(strongest({ glows, focus: 3 }).path, "b.py");
+  assert.equal(strongest({ glows, focus: 9 }).pin, 1, "an unknown focus falls back");
+  assert.equal(strongest({ glows: [glows[0]], focus: 1 }), null);
+});
+
 test("tabsFor, badgesFor, strongest", () => {
   const s = buildSteps(run, pins, o);
   assert.deepEqual(tabsFor(s[0]), ["a.py", "b.py"]);
