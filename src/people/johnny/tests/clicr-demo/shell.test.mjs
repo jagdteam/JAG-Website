@@ -218,3 +218,9 @@ test("citations jump to pins: one prepareAnswer sets pins, cite and extra; links
   assert.ok(demoJs.includes('matchMedia("(max-width: 719px)")'), "phone query");
   assert.match(demoJs, /\$\("editor"\)\.scrollIntoView\(/, "phone scrolls to the editor");
 });
+
+test("recorded extra pins only with the recorded answer on screen; a repeated pin is numbered once", () => {
+  assert.match(demoJs, /hasWebGpu\(\) \? \[\] : recordedCite\(recorded, pins\)\.extra/, "no extra pins on the WebGPU path");
+  assert.match(demoJs, /function addExtraPins\(\)/, "fallback adds the extra pins to the answer step");
+  assert.match(demoJs, /listed\.has\(p\)/, "repeat pin skipped in the cited list");
+});

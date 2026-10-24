@@ -7,7 +7,7 @@ import { answerHtml, citedNumbers, identityCite, pinOfChunk, pinsFromSources, re
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
-import { badgesFor, buildSteps, createPlayer } from "./playback.js";
+import { badgesFor, buildSteps, createPlayer, pinGlow } from "./playback.js";
 import { initTheme } from "./theme.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
@@ -296,23 +296,45 @@ function renderAnswerArea() {
   renderFallback(false);
 }
 
+/** The recorded answer is on screen: give the answer step its extra pins (idempotent) and redraw if it is showing. */
+function addExtraPins() {
+  const k = last.steps.findIndex((s) => s.id === "answer");
+  const step = last.steps[k];
+  let changed = false;
+  for (const p of last.extra ?? []) {
+    if (step.glows.some((g) => g.kind === "P" && g.pin === p.n)) continue;
+    step.glows.push(pinGlow(p));
+    changed = true;
+  }
+  if (changed && el.steps.querySelector("[aria-current]")?.dataset.step === String(k)) {
+    const id = runId;
+    editor.showStep(step).catch((err) => {
+      if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
+    });
+  }
+}
+
 /** Recorded answer if there is one, else the sources-only note (no WebGPU, or generation failed). */
 function renderFallback(failed) {
   const rec = last.recorded;
   if (rec && rec.answer) {
     const date = rec.recorded_at ? rec.recorded_at.slice(0, 10) : "unknown date";
     const nums = citedNumbers(rec.answer);
+    const listed = new Set();
     const cited = (rec.sources ?? [])
       .map((s, k) => {
-        const p = last.cite?.get(nums[k]);
+        let p = last.cite?.get(nums[k]);
+        if (listed.has(p)) p = undefined; // two sources on one pin: number it once
+        if (p) listed.add(p);
         const label = esc(`${s.path}:${s.start}-${s.end}`);
-        return p ? `<li><a class="cite" href="#pin-${p}" data-pin="${p}">[${p}]</a> ${label}</li>` : `<li>${label}</li>`;
+        return p ?`<li><a class="cite" href="#pin-${p}" data-pin="${p}">[${p}]</a> ${label}</li>` : `<li>${label}</li>`;
       })
       .join("");
     el.answerBody.innerHTML =
       `<p class="label">Recorded from the CLI (${esc(rec.model ?? "unknown model")}, ${esc(date)})</p>` +
       answerHtml(rec.answer, last.cite) +
       (cited ? `<p class="label">Sources it cited:</p><ul class="answer-src">${cited}</ul>` : "");
+    addExtraPins();
   } else if (failed) {
     el.answerBody.innerHTML =
       '<p class="note">The answer could not be written in this browser, so the page shows the sources only.</p>';
@@ -508,7 +530,8 @@ function search(qvec, question, recorded) {
   const ms = performance.now() - t0;
   const sources = pack(found.results, CONTEXT_TOKENS);
   const pins = pinsFromSources(sources);
-  const { extra } = recordedCite(recorded, pins);
+  // recorded extra pins show only while the recorded answer is what the page shows (no WebGPU)
+  const extra = hasWebGpu() ? [] : recordedCite(recorded, pins).extra;
   const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: extra });
   return { found, sources, pins, steps, ms };
 }
