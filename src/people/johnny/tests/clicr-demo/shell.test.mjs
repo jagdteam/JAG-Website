@@ -169,3 +169,26 @@ test("layout and motion rules", () => {
   assert.ok(css.includes("@media (prefers-reduced-motion: reduce)"), "reduced motion");
   assert.ok(css.includes("@keyframes flash"), "flash animation");
 });
+
+test("play-by-play wiring in demo.js", () => {
+  assert.match(demoJs, /import \{[^}]*createPlayer[^}]*\} from "\.\/playback\.js"/, "createPlayer imported");
+  assert.match(demoJs, /import \{[^}]*codeSpans[^}]*\} from "\.\/html\.js"/, "codeSpans imported");
+  assert.ok(demoJs.includes('$("steps")') && demoJs.includes('$("skip")'), "#steps and #skip looked up");
+  assert.ok(demoJs.includes('matchMedia("(prefers-reduced-motion: reduce)")'), "reduced motion query");
+  assert.match(demoJs, /createPlayer\(\{[\s\S]*?steps[\s\S]*?show[\s\S]*?onDone[\s\S]*?reducedMotion/, "fresh player per run");
+  assert.ok(demoJs.includes('class="step"') && demoJs.includes('data-step="'), "step buttons");
+  assert.ok(demoJs.includes("aria-current"), "current step marked");
+  assert.match(demoJs, /function prepareAnswer\(/, "one shared answer hook for Task 10");
+  assert.equal(demoJs.match(/renderAnswerArea\(\)/g).length, 2, "defined once, called only from prepareAnswer");
+  assert.match(demoJs, /runId/, "run token against stale work");
+  assert.match(demoJs, /\.stop\(\)/, "old player stopped");
+  assert.match(demoJs, /\.skip\(\)/, "skip wired");
+  assert.match(demoJs, /\.replay\(/, "replay wired");
+  const rerun = demoJs.slice(demoJs.indexOf("function rerun("), demoJs.indexOf("async function ask("));
+  const search = demoJs.slice(demoJs.indexOf("function search("), demoJs.indexOf("function rerun("));
+  assert.ok(search.includes("buildSteps(") && search.includes("hybridSearch"), "search recomputes the steps");
+  assert.ok(rerun.includes("search(last.qvec") && rerun.includes("beginRun(false)"), "rerun searches again and lands on the final state");
+  assert.ok(!rerun.includes(".start()"), "rerun never auto-plays");
+  const selftestBranch = demoJs.slice(demoJs.indexOf('get("selftest") === "1"'));
+  assert.ok(!selftestBranch.includes("createPlayer") && !selftestBranch.includes("beginRun"), "selftest never plays");
+});
