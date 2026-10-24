@@ -586,8 +586,7 @@ input[type="search"] {
   font: inherit;
   font-size: 14px;
 }
-#go,
-#skip {
+#go {
   padding: 5px 12px;
   border: 0;
   background: var(--status-bg);
@@ -596,6 +595,14 @@ input[type="search"] {
 }
 #skip {
   margin-top: 8px;
+  padding: 4px 12px;
+  border: 1px solid var(--ln);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 13px;
+}
+#skip:hover {
+  border-color: var(--accent);
 }
 button.ghost {
   padding: 4px 8px;
@@ -628,6 +635,31 @@ button.ghost:hover {
   padding: 0;
   list-style: none;
   font-size: 14px;
+}
+button.step {
+  display: block;
+  width: 100%;
+  padding: 6px 8px 6px 10px;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.step:hover:not(:disabled) {
+  background: var(--bar);
+}
+button.step:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+button.step[aria-current="step"] {
+  border-left-color: var(--accent);
+  background: var(--bar);
+  color: var(--fg);
+  font-weight: 600;
 }
 #answer h3 {
   margin: 14px 0 6px;

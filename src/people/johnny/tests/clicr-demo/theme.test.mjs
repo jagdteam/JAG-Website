@@ -132,6 +132,7 @@ test("contrast AA in both themes", () => {
     for (const k of ["fg", "muted", "ln", "accent", ...TK]) at(c(k), c("bg"), 4.5, `${k} on bg`);
     for (const k of ["fg", "muted", "accent"]) at(c(k), c("side"), 4.5, `${k} on side`);
     at(c("fg"), c("bar"), 4.5, "fg on bar");
+    at(c("accent"), c("bar"), 3, "accent (current-step bar) on bar");
     at(c("status-fg"), c("status-bg"), 4.5, "status-fg on status-bg");
     at(c("pin-fg"), c("pin-bg"), 4.5, "pin-fg on pin-bg");
     for (const g of ["glow-m", "glow-k", "glow-g"]) at(c("mark-fg"), c(g), 4.5, `mark-fg on ${g}`);
