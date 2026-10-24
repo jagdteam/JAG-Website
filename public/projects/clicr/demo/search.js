@@ -153,3 +153,37 @@ export function hybridSearch(bundle, qvec, query, { useGraph = false } = {}) {
 export function chunkLabel(chunk) {
   return `${chunk.path}:${chunk.start}-${chunk.end}`;
 }
+
+/** Query words that matched chunk i in keyword search, highest idf x tf first. */
+export function matchedTerms(query, bm25, i) {
+  const nDocs = bm25.doc_len.length;
+  const weight = (term) => {
+    const key = ftsTokens(term).join(" ");
+    if (!Object.hasOwn(bm25.postings, key)) return 0;
+    const hits = bm25.postings[key];
+    const hit = hits.find(([j]) => j === i);
+    if (!hit) return 0;
+    const idf = Math.log((nDocs - hits.length + 0.5) / (hits.length + 0.5));
+    return idf <= 0 ? 0 : idf * hit[1];
+  };
+  const found = new Map();
+  const keep = (term, w) => {
+    if (!found.has(term)) found.set(term, w);
+  };
+  for (const token of query.match(TOKEN) ?? []) {
+    const whole = token.toLowerCase();
+    const wholeWeight = weight(whole);
+    if (wholeWeight > 0) {
+      keep(whole, wholeWeight);
+      continue;
+    }
+    const parts = (token.match(PART) ?? []).map((p) => p.toLowerCase());
+    if (parts.length > 1) {
+      for (const part of parts) {
+        const w = weight(part);
+        if (w > 0) keep(part, w);
+      }
+    }
+  }
+  return [...found.entries()].sort((a, b) => b[1] - a[1]).map(([term]) => term);
+}
