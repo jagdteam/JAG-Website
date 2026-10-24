@@ -3,7 +3,7 @@
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
 import { codeSpans, esc } from "./html.js";
-import { answerHtml, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "./citations.js";
+import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
@@ -491,14 +491,9 @@ function clearRun() {
   });
 }
 
-/** Recorded answer -> its cite map and extra pins (cited ranges no packed source overlaps). */
-function recordedCite(rec, pins) {
-  return rec && rec.answer ? recordedPins(rec.answer, rec.sources ?? [], pins) : { cite: null, extra: [] };
-}
-
 /** The one place the answer area is set up for a run: sets last.cite and last.extra, with or without WebGPU. */
 function prepareAnswer() {
-  const { cite, extra } = recordedCite(last.recorded, last.pins);
+  const { cite, extra } = answerStepPins({ webgpu: false, recorded: last.recorded, pins: last.pins });
   last.cite = cite;
   last.extra = extra;
   renderAnswerArea();
@@ -591,10 +586,10 @@ function search(qvec, question, recorded) {
   const sources = pack(found.results, CONTEXT_TOKENS);
   const pins = pinsFromSources(sources);
   // recorded extra pins and the first-cited focus apply only while the recorded answer is what the page shows (no WebGPU)
-  const rc = hasWebGpu() ? null : recordedCite(recorded, pins);
-  const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: rc?.extra ?? [] });
+  const { cite, extra } = answerStepPins({ webgpu: hasWebGpu(), recorded, pins });
+  const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: extra });
   // the answer step opens on the first pin the recorded answer cites
-  const first = rc?.cite ? firstCitedPin(recorded.answer, rc.cite) : null;
+  const first = cite ? firstCitedPin(recorded.answer, cite) : null;
   if (first) steps[steps.length - 1].focus = first;
   return { found, sources, pins, steps, ms };
 }

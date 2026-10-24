@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { answerHtml, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "../../../../../public/projects/clicr/demo/citations.js";
+import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "../../../../../public/projects/clicr/demo/citations.js";
 import { codeSpans, esc } from "../../../../../public/projects/clicr/demo/html.js";
 
 const pins = pinsFromSources([
@@ -18,6 +18,16 @@ test("pins", () => {
   assert.deepEqual(pins[1], { n: 2, path: "a.py", start: 15, end: 40, members: [7] });
   assert.equal(pinOfChunk(pins, 4), 1);
   assert.equal(pinOfChunk(pins, 9), null);
+});
+
+test("answerStepPins: recorded cites and extra pins without WebGPU, none with it or without a recorded answer", () => {
+  const recorded = { answer: "A [1]. B [2].", sources: [{ path: "a.py", start: 20, end: 22 }, { path: "c.py", start: 1, end: 3 }] };
+  const shown = answerStepPins({ webgpu: false, recorded, pins });
+  assert.deepEqual([...shown.cite], [[1, 2], [2, 3]]);
+  assert.deepEqual(shown.extra, [{ n: 3, path: "c.py", start: 1, end: 3, members: [] }]);
+  assert.deepEqual(answerStepPins({ webgpu: true, recorded, pins }), { cite: null, extra: [] });
+  assert.deepEqual(answerStepPins({ webgpu: false, recorded: { question: "q" }, pins }), { cite: null, extra: [] });
+  assert.deepEqual(answerStepPins({ webgpu: false, recorded: null, pins }), { cite: null, extra: [] });
 });
 
 test("recordedPins", () => {

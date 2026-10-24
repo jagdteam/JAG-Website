@@ -205,7 +205,6 @@ test("play-by-play styling and announcements", () => {
 });
 
 test("citations jump to pins: one prepareAnswer sets pins, cite and extra; links are handled by data-pin", () => {
-  assert.match(demoJs, /recordedPins\(/, "recordedPins used");
   assert.match(demoJs, /function prepareAnswer\(\)[\s\S]*?last\.cite =[\s\S]*?last\.extra =[\s\S]*?renderAnswerArea\(\)/, "hook sets cite and extra first");
   assert.ok(!/answerHtml\([^)]*undefined\)/.test(demoJs) && !/answerHtml\(rec\.answer, null\)/.test(demoJs), "recorded answer always has a cite map");
   assert.match(demoJs, /answerHtml\(rec\.answer, last\.cite\)/, "fallback renders with last.cite");
@@ -220,8 +219,6 @@ test("citations jump to pins: one prepareAnswer sets pins, cite and extra; links
 });
 
 test("recorded extra pins only with the recorded answer on screen; a repeated pin is numbered once", () => {
-  assert.match(demoJs, /const rc = hasWebGpu\(\) \? null : recordedCite\(recorded, pins\);/, "no extra pins on the WebGPU path");
-  assert.match(demoJs, /extraPins: rc\?\.extra \?\? \[\]/, "extra pins come from the one recordedCite call");
   assert.match(demoJs, /function addExtraPins\(\)/, "fallback adds the extra pins to the answer step");
   assert.match(demoJs, /listed\.has\(p\)/, "repeat pin skipped in the cited list");
 });

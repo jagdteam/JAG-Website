@@ -81,6 +81,15 @@ export function recordedPins(answer, recSources, pins) {
   return { cite, extra };
 }
 
+/**
+ * Recorded answer -> its cite map and extra pins (cited ranges no packed source overlaps). With
+ * `webgpu` the page writes its own answer instead, so the recorded one adds no cites or pins.
+ */
+export function answerStepPins({ webgpu, recorded, pins }) {
+  if (webgpu || !recorded?.answer) return { cite: null, extra: [] };
+  return recordedPins(recorded.answer, recorded.sources ?? [], pins);
+}
+
 /** Pin of the first citation in answer order that maps onto a pin, or null (no citations: caller keeps pin 1). */
 export function firstCitedPin(answer, cite) {
   if (!cite) return null;
