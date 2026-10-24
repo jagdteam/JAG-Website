@@ -2,6 +2,8 @@
 // ranks with search.js (the port of the Python hybrid path) and renders sources, the
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
+import { esc } from "./html.js";
+import { answerHtml, identityCite } from "./citations.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
 const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js";
@@ -63,9 +65,6 @@ let last = null; // {question, qvec, run, recorded}
 let busy = false;
 
 // ---------------------------------------------------------------- small helpers
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-}
 function setStatus(text, err = false) {
   el.status.textContent = text;
   el.status.classList.toggle("err", err);
@@ -287,7 +286,7 @@ function pack(rows, budget) {
               end: Math.max(...g.members.map((m) => m.c.end)),
               text: g.members.map((m) => m.c.text).join("\n"),
             };
-      return { rank: g.rank, chunk, i: best.row.i };
+      return { rank: g.rank, chunk, i: best.row.i, members: g.members.map((m) => m.row.i) };
     })
     .sort((a, b) => a.rank - b.rank);
   const out = [];
@@ -319,21 +318,6 @@ function buildMessages(question, sources) {
   ];
 }
 
-/** Answer text -> HTML: fenced code becomes <pre>, [n] links to source n's card. */
-function answerHtml(text, sources) {
-  const parts = text.split("```");
-  return parts
-    .map((part, k) => {
-      if (k % 2 === 1) return `<pre><code>${esc(part.replace(/^[\w+-]*\n/, ""))}</code></pre>`;
-      if (!part.trim()) return "";
-      const linked = esc(part.trim()).replace(/\[(\d+)\]/g, (m, n) => {
-        const s = sources ? sources[Number(n) - 1] : null;
-        return s ? `<a class="cite" href="#src-${s.i}">[${n}]</a>` : m;
-      });
-      return `<p>${linked}</p>`;
-    })
-    .join("");
-}
 function sourceList(sources) {
   return (
     '<ol class="answer-src">' +
@@ -421,7 +405,7 @@ async function generate() {
     let text = "";
     for await (const chunk of stream) {
       text += chunk.choices[0]?.delta?.content ?? "";
-      out.innerHTML = answerHtml(text, sources);
+      out.innerHTML = answerHtml(text, identityCite(sources.length));
     }
     out.insertAdjacentHTML("beforeend", '<p class="label">Sources in the prompt:</p>' + sourceList(sources));
     setStatus("Answer written on your device.");
