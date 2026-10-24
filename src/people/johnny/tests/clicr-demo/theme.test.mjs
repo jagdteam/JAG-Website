@@ -138,7 +138,7 @@ test("contrast AA in both themes", () => {
     for (const g of ["glow-m", "glow-k", "glow-g"]) at(c("mark-fg"), c(g), 4.5, `mark-fg on ${g}`);
     for (const { x, pct } of MIXES) {
       const fill = mix(c(`glow-${x}`), c("bg"), pct);
-      for (const k of ["fg", ...TK]) at(c(k), fill, 4.5, `${k} on glow-${x} ${pct}%`);
+      for (const k of ["fg", "ln", ...TK]) at(c(k), fill, 4.5, `${k} on glow-${x} ${pct}%`);
     }
     for (const k of ["glow-m", "glow-k", "glow-g"]) {
       for (const b of ["bg", "side"]) at(c(k), c(b), 3, `${k} on ${b}`);
