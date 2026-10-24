@@ -8,7 +8,7 @@
   --muted: #616161;
   --ln: #237893;
   --accent: #005fb8;
-  --focus: #0078d4;
+  --focus: #00264d;
   --status-bg: #007acc;
   --status-fg: #ffffff;
   --tk-k: #0000ff;
@@ -36,7 +36,7 @@
   --muted: #9d9d9d;
   --ln: #858585;
   --accent: #3794ff;
-  --focus: #007fd4;
+  --focus: #c8e1ff;
   --status-bg: #007acc;
   --status-fg: #ffffff;
   --tk-k: #569cd6;
@@ -76,11 +76,17 @@ body {
 a {
   color: var(--accent);
 }
+/* Focus rings sit 2px outside controls, so a filled button's ring is never drawn over its own
+   fill; --focus keeps 3:1 on --bg, --side, --bar and --status-bg (theme.test.mjs). */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
-summary:focus-visible,
-[tabindex]:focus-visible {
+summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* scroll areas and rows (#editor, pre.code, tree items): inside, over their own --bg / --side */
+[tabindex]:not(button):focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
@@ -127,7 +133,7 @@ button[disabled] {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 3px 8px;
+  padding: 5px 8px;
   background: var(--bar);
   font-size: 13px;
 }
@@ -221,8 +227,9 @@ button[disabled] {
   background: var(--side);
   border-right: 1px solid var(--bar);
 }
-/* aria-expanded on #act-explorer is the one open state (demo.js setExplorer) */
-.ide:has(#act-explorer[aria-expanded="false"]) #explorer {
+/* <html data-explorer> is set before first paint by the head script (closed below 1024 px) and then
+   by demo.js setExplorer, which writes #act-explorer aria-expanded in the same step */
+:root[data-explorer="closed"] #explorer {
   display: none;
 }
 #tree {
@@ -297,16 +304,15 @@ button[disabled] {
   box-shadow: inset 3px 0 var(--glow-g);
 }
 .glow.flash {
+  outline-offset: -2px;
   animation: flash 0.9s ease-out 1;
 }
 @keyframes flash {
   from {
     outline: 2px solid var(--focus);
-    outline-offset: -2px;
   }
   to {
     outline: 2px solid transparent;
-    outline-offset: -2px;
   }
 }
 .mark {
@@ -489,6 +495,10 @@ pre.code .ln {
 .chat .side-h {
   padding-left: 0;
   padding-right: 0;
+}
+.welcome {
+  margin: 0 0 12px;
+  font-size: 14px;
 }
 .lbl {
   display: block;

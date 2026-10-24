@@ -57,6 +57,7 @@ const el = {
   actExplorer: $("act-explorer"),
   panelToggle: $("panel-toggle"),
   answerMode: $("answer-mode"),
+  welcome: $("welcome"),
 };
 
 let bundle = null; // {manifest, chunks, vectors, bm25, graph, questions}
@@ -437,6 +438,7 @@ async function ask(question) {
   question = question.trim();
   if (!question || busy) return;
   setBusy(true);
+  el.welcome.hidden = true;
   try {
     const qvec = await embedQuery(question);
     setStatus("Searching…");
@@ -510,9 +512,11 @@ async function selftest() {
 }
 
 // ---------------------------------------------------------------- shell
-// Explorer: the button's aria-expanded is the one open state (demo.css hides #explorer from it).
-// Open by default from 1024 px up, closed (overlay / menu) below; a breakpoint change resets it.
+// Explorer: <html data-explorer> (what demo.css hides on) and #act-explorer aria-expanded always
+// move together. The inline scripts in index.html set both before first paint; here: open by
+// default from 1024 px up, closed (overlay / menu) below; a breakpoint change resets it.
 function setExplorer(open) {
+  document.documentElement.dataset.explorer = open ? "open" : "closed";
   el.actExplorer.setAttribute("aria-expanded", String(open));
 }
 function wireShell() {
