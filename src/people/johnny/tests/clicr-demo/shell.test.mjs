@@ -55,7 +55,6 @@ test("DOM contract: markup and order inside one .ide; self-test and footer outsi
     '<div id="tabs" role="tablist" aria-label="Open files">',
     '<nav id="crumb" aria-label="Breadcrumb">',
     '<div id="editor" role="tabpanel" tabindex="0">',
-    'id="results"',
     '<div id="explain-card" role="tooltip" hidden>',
     '<button id="panel-toggle" type="button" aria-expanded="false" aria-controls="explain">RETRIEVAL</button>',
     '<section id="explain"',

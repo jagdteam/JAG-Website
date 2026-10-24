@@ -85,7 +85,7 @@ summary:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
-/* scroll areas and rows (#editor, pre.code, tree items): inside, over their own --bg / --side */
+/* scroll areas and rows (#editor, tree items): inside, over their own --bg / --side */
 [tabindex]:not(button):focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
@@ -251,7 +251,9 @@ button[disabled] {
 }
 #tabs {
   display: flex;
-  min-height: 35px;
+  min-height: 39px;
+  padding: 2px; /* room for the 2px focus ring outside each tab */
+  gap: 2px;
   overflow-x: auto;
   background: var(--side);
 }
@@ -334,95 +336,160 @@ button[disabled] {
   color: var(--pin-fg);
 }
 
-/* source cards (renderResults; replaced by the editor in a later step) */
-#results {
-  padding: 8px 12px 0;
-}
-.plate {
-  margin: 0 0 10px;
-}
-.src {
-  border: 1px solid var(--bar);
-}
-.src > summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
-  padding: 6px 10px;
-  list-style: none;
-  cursor: pointer;
-  background: var(--side);
-}
-.src > summary::-webkit-details-marker {
-  display: none;
-}
-.src > summary::before {
-  content: "▸";
-  color: var(--muted);
-}
-.src[open] > summary::before {
-  content: "▾";
-}
-.src.hit {
-  border-color: var(--glow-k);
-  box-shadow: inset 3px 0 var(--glow-k);
-}
-.rank {
-  font-family: var(--mono);
-  color: var(--accent);
-}
-.loc {
+/* editor: rows are transparent and sit above the glow fills (z-index -1 inside .code's own stacking
+   context), so code text is always drawn over its glow. Line height is fixed so glows can be placed
+   by line number. */
+.code {
+  --lh: 20px;
+  position: relative;
+  isolation: isolate;
+  min-width: max-content;
+  padding: 0;
   font-family: var(--mono);
   font-size: 13px;
-  font-weight: 600;
-}
-.sym {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
-}
-.pill {
-  padding: 0 6px;
-  border: 1px solid var(--ln);
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.pill.g {
-  border-color: var(--glow-g);
-  color: var(--fg);
-}
-
-/* code with line numbers; scrolls inside itself */
-pre.code {
-  margin: 0;
-  padding: 6px 0;
-  overflow: auto;
-  max-height: 520px;
-  background: var(--bg);
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.5;
+  line-height: var(--lh);
   tab-size: 4;
 }
-pre.code .row {
-  display: block;
-  padding-right: 12px;
+.code .row {
+  display: flex;
+  height: var(--lh);
   white-space: pre;
 }
-pre.code .ln {
-  position: sticky;
-  left: 0;
-  display: inline-block;
-  min-width: 3.6em;
+.code .ln {
+  flex: none;
+  width: 4.4em;
   padding: 0 12px 0 6px;
   text-align: right;
   color: var(--ln);
-  background: var(--bg);
   user-select: none;
 }
+.code .tx {
+  padding-right: 12px;
+}
+.glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.glow[data-kind="cut"],
+.glow[data-kind="reveal"] {
+  background: none;
+  box-shadow: none;
+}
+.glow .mark {
+  position: absolute;
+  top: 0;
+  left: 6px;
+  z-index: 2;
+  height: var(--lh);
+  line-height: var(--lh);
+  pointer-events: auto;
+}
+.glow[data-kind="cut"] .mark {
+  background: var(--bar);
+  color: var(--fg);
+}
+.glow .mark:hover {
+  filter: brightness(1.1);
+}
+#explain-card strong {
+  display: block;
+  margin-bottom: 2px;
+}
+#explain-card p {
+  margin: 0;
+}
+
+/* Explorer tree */
+#tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ti-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding-right: 8px;
+  cursor: pointer;
+}
+.ti-row:hover {
+  background: var(--bar);
+}
+.ti-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.twisty::before {
+  content: "▾";
+  display: inline-block;
+  width: 1em;
+  color: var(--muted);
+}
+[aria-expanded="false"] > .ti-row .twisty::before {
+  content: "▸";
+}
+[aria-expanded="false"] > [role="group"] {
+  display: none;
+}
+.folder > .ti-row {
+  font-weight: 600;
+}
+#tree .active > .ti-row {
+  background: var(--bar);
+  box-shadow: inset 2px 0 var(--accent);
+}
+.badge {
+  flex: none;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--pin-bg);
+  color: var(--pin-fg);
+  font: 600 11px/18px var(--mono);
+  text-align: center;
+}
+
+/* tabs */
+#tabs [role="tab"] {
+  flex: none;
+  max-width: 220px;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid var(--bar);
+  background: var(--side);
+  color: var(--muted);
+  font: 13px/35px var(--sans);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#tabs [role="tab"][aria-selected="true"] {
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: inset 0 2px var(--accent);
+}
+#crumb .sep {
+  padding: 0 4px;
+}
+
+/* RETRIEVAL rows open their chunk in the editor */
+.row-open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: 13px var(--mono);
+  text-align: left;
+  text-decoration: underline;
+}
+
 .tk-k {
   color: var(--tk-k);
 }
