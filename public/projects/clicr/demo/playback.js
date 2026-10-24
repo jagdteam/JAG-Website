@@ -23,7 +23,7 @@ function chunkGlow(chunks, i, kind, rank) {
 }
 
 /** A pin glow takes the pin's own path and lines (not opts.chunks). */
-function pinGlow(pin) {
+export function pinGlow(pin) {
   return {
     i: null, kind: "P", rank: pin.n, pin: pin.n,
     path: pin.path, start: pin.start, end: pin.end, count: Math.max(1, pin.members.length),
