@@ -1,61 +1,58 @@
-/* CliCR demo. Colours and fonts follow src/people/johnny/styles.css (Mist / Night). */
+/* CliCR demo: a VS Code-style IDE. Light = VS Code Light+, dark = Dark+ (data-theme on <html>,
+   set by the inline loader in index.html and theme.js). Contrast is checked by theme.test.mjs. */
 :root {
-  --page: #d6dade;
-  --ink: #1c151d;
-  --muted: #5b5a6b;
-  --accent: #1f2a6b;
-  --focus: #047857;
-  --frame: #424144;
-  --face: #e5e8eb;
-  --hl: #eef0f2;
-  --lo: #c4c9cf;
-  --sh: #8e949e;
-  --act: #b8262c;
-  --pb: #fbf5e3;
-  --pf: #6e5617;
-  --pbd: #c9a449;
-  --c1b: #e6e9f6;
-  --c1f: #1f2a6b;
-  --c4b: #dff4f2;
-  --c4f: #14615b;
-  --code: #f4f5f7;
-  --k: #1f2a6b;
-  --s: #14615b;
-  --cm: #6b6f7c;
-  --n: #8f1d22;
-  --f: #6e5617;
+  --bg: #ffffff;
+  --side: #f3f3f3;
+  --bar: #e8e8e8;
+  --fg: #1f1f1f;
+  --muted: #616161;
+  --ln: #237893;
+  --accent: #005fb8;
+  --focus: #0078d4;
+  --status-bg: #007acc;
+  --status-fg: #ffffff;
+  --tk-k: #0000ff;
+  --tk-s: #a31515;
+  --tk-c: #008000;
+  --tk-n: #087850;
+  --tk-f: #795e26;
+  --tk-d: #795e26;
+  --tk-b: #22728a;
+  --glow-m: #0969da;
+  --glow-k: #9a6700;
+  --glow-g: #1a7f37;
+  --mark-fg: #ffffff;
+  --pin-bg: #9a6700;
+  --pin-fg: #ffffff;
   --sans: "Source Sans 3", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, monospace;
-  --c: 10px;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --page: #15171c;
-    --ink: #e7e7ec;
-    --muted: #a2a5b2;
-    --accent: #aab7ff;
-    --frame: #0b0c0f;
-    --face: #23262d;
-    --hl: #2d3139;
-    --lo: #353a44;
-    --sh: #050608;
-    --act: #ff8a8f;
-    --pb: #3d3518;
-    --pf: #efd99a;
-    --pbd: #8a7330;
-    --c1b: #262c4f;
-    --c1f: #c7cff8;
-    --c4b: #173b38;
-    --c4f: #a6e3dc;
-    --code: #1a1d23;
-    --k: #aab7ff;
-    --s: #a6e3dc;
-    --cm: #8a8c99;
-    --n: #f3c2c4;
-    --f: #efd99a;
-    color-scheme: dark;
-  }
+:root[data-theme="dark"] {
+  --bg: #1e1e1e;
+  --side: #252526;
+  --bar: #333333;
+  --fg: #d4d4d4;
+  --muted: #9d9d9d;
+  --ln: #858585;
+  --accent: #3794ff;
+  --focus: #007fd4;
+  --status-bg: #007acc;
+  --status-fg: #ffffff;
+  --tk-k: #569cd6;
+  --tk-s: #ce9178;
+  --tk-c: #6a9955;
+  --tk-n: #b5cea8;
+  --tk-f: #dcdcaa;
+  --tk-d: #dcdcaa;
+  --tk-b: #4ec9b0;
+  --glow-m: #78aaff;
+  --glow-k: #f5a524;
+  --glow-g: #2ea043;
+  --mark-fg: #1e1e1e;
+  --pin-bg: #f5a524;
+  --pin-fg: #1e1e1e;
+  color-scheme: dark;
 }
 
 * {
@@ -70,10 +67,10 @@ html {
 body {
   margin: 0;
   font-family: var(--sans);
-  font-size: 17px;
-  line-height: 1.55;
-  background: var(--page);
-  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--fg);
   overflow-wrap: anywhere;
 }
 a {
@@ -82,9 +79,10 @@ a {
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
-summary:focus-visible {
+summary:focus-visible,
+[tabindex]:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 code,
 .mono {
@@ -97,163 +95,258 @@ code,
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
-}
-
-.wrap {
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 24px 16px 40px;
-}
-.back {
-  font-family: var(--mono);
-  font-size: 13px;
-  text-decoration: none;
-}
-h1 {
-  font-size: 30px;
-  line-height: 1.2;
-  margin: 10px 0 8px;
-}
-h2 {
-  font-size: 19px;
-  margin: 0 0 10px;
-}
-.lede {
-  margin: 0 0 22px;
-  max-width: 68ch;
-}
-
-/* armor plate, as on the profile page: .plate = shadow wrapper, .pl = chamfered frame,
-   .pl::before = chamfered face */
-.plate {
-  display: block;
-  margin: 0 0 22px;
-  min-width: 0;
-  filter: drop-shadow(4px 5px 0 var(--sh));
-}
-.pl {
-  position: relative;
-  isolation: isolate;
-  min-width: 0;
-  padding: 18px 18px 18px 20px;
-  background: var(--frame);
-  clip-path: polygon(
-    var(--c) 0,
-    100% 0,
-    100% calc(100% - var(--c)),
-    calc(100% - var(--c)) 100%,
-    0 100%,
-    0 var(--c)
-  );
-}
-.pl::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 3px;
-  background: var(--face);
-  box-shadow:
-    inset 1px 1px 0 var(--hl),
-    inset -1px -1px 0 var(--lo);
-  clip-path: polygon(
-    calc(var(--c) - 2px) 0,
-    100% 0,
-    100% calc(100% - var(--c) + 2px),
-    calc(100% - var(--c) + 2px) 100%,
-    0 100%,
-    0 calc(var(--c) - 2px)
-  );
-}
-
-.lbl {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.askrow {
-  display: flex;
-  gap: 8px;
-}
-input[type="search"] {
-  flex: 1;
-  min-width: 0;
-  font: inherit;
-  padding: 8px 10px;
-  border: 2px solid var(--frame);
-  background: var(--hl);
-  color: var(--ink);
+  white-space: nowrap;
 }
 button {
   font: inherit;
-  font-weight: 600;
-  padding: 8px 14px;
-  border: 2px solid var(--frame);
-  background: var(--accent);
-  color: var(--face);
   cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
 }
 button[disabled] {
   opacity: 0.6;
   cursor: progress;
 }
-button.ghost {
-  background: var(--c1b);
-  color: var(--c1f);
-  font-weight: 400;
-  border-width: 1px;
-  text-align: left;
-}
-.note {
-  color: var(--muted);
-  font-size: 15px;
-  margin: 10px 0 0;
-}
-.opts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 18px;
-  margin: 10px 0 0;
-  font-size: 15px;
-}
-.suggest {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-.suggest button {
-  font-size: 14px;
-  padding: 4px 10px;
-}
-.status {
-  min-height: 1.4em;
-  margin-top: 12px;
-  font-size: 15px;
-}
-.status.err {
-  color: var(--act);
-}
-progress {
-  width: 100%;
-  height: 8px;
-  accent-color: var(--accent);
+
+/* ---------------------------------------------------------------- IDE grid */
+.ide {
+  position: relative;
+  display: grid;
+  height: 100vh;
+  height: 100dvh;
+  grid-template-columns: 48px auto minmax(0, 1fr) minmax(300px, 380px);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "title title title title"
+    "activity explorer editor chat"
+    "activity explorer panel chat"
+    "status status status status";
 }
 
-/* source cards (details.pl inside a .plate wrapper) */
-.src {
-  padding: 0;
+.titlebar {
+  grid-area: title;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 3px 8px;
+  background: var(--bar);
+  font-size: 13px;
 }
-.src > pre.code {
-  margin: 0 3px 3px;
+.titlebar .back {
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+.titlebar .back:hover {
+  text-decoration: underline;
+}
+.titlebar .title {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: center;
+}
+#theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fg);
+}
+#theme-toggle:hover {
+  background: var(--side);
+}
+.ic-moon {
+  display: none;
+}
+:root[data-theme="dark"] .ic-sun {
+  display: none;
+}
+:root[data-theme="dark"] .ic-moon {
+  display: block;
+}
+
+.activity {
+  grid-area: activity;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 4px;
+  background: var(--bar);
+  color: var(--muted);
+}
+#act-explorer,
+.act-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+#act-explorer {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+#act-explorer:hover,
+#act-explorer[aria-expanded="true"] {
+  color: var(--fg);
+}
+#act-explorer[aria-expanded="true"] {
+  box-shadow: inset 2px 0 var(--accent);
+}
+.act-icon.clicr {
+  color: var(--glow-k);
+}
+
+.side-h {
+  margin: 0;
+  padding: 8px 12px 6px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#explorer {
+  grid-area: explorer;
+  width: 240px;
+  overflow: auto;
+  background: var(--side);
+  border-right: 1px solid var(--bar);
+}
+/* aria-expanded on #act-explorer is the one open state (demo.js setExplorer) */
+.ide:has(#act-explorer[aria-expanded="false"]) #explorer {
+  display: none;
+}
+#tree {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 8px;
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- editor group */
+.editor-group {
+  grid-area: editor;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg);
+}
+#tabs {
+  display: flex;
+  min-height: 35px;
+  overflow-x: auto;
+  background: var(--side);
+}
+#crumb {
+  min-height: 22px;
+  padding: 2px 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+#editor {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 0 12px;
+}
+#explain-card {
+  position: absolute;
+  z-index: 30;
+  max-width: 360px;
+  padding: 8px 10px;
+  background: var(--side);
+  color: var(--fg);
+  border: 1px solid var(--ln);
+  font-size: 13px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+}
+
+/* glows: a fill plus a 3px left bar in the step colour, so they never rely on the fill alone.
+   6% is the largest mix at which every token colour keeps 4.5:1 (Dark+ comment on amber is the limit). */
+.glow {
+  display: block;
+}
+.glow[data-kind="M"] {
+  background: color-mix(in srgb, var(--glow-m) 6%, var(--bg));
+  box-shadow: inset 3px 0 var(--glow-m);
+}
+.glow[data-kind="K"],
+.glow[data-kind="P"] {
+  background: color-mix(in srgb, var(--glow-k) 6%, var(--bg));
+  box-shadow: inset 3px 0 var(--glow-k);
+}
+.glow[data-kind="MK"] {
+  background: color-mix(in srgb, var(--glow-k) 6%, var(--bg));
+  box-shadow:
+    inset 3px 0 var(--glow-m),
+    inset 6px 0 var(--glow-k);
+}
+.glow[data-kind="G"] {
+  background: color-mix(in srgb, var(--glow-g) 6%, var(--bg));
+  box-shadow: inset 3px 0 var(--glow-g);
+}
+.glow.flash {
+  animation: flash 0.9s ease-out 1;
+}
+@keyframes flash {
+  from {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  to {
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+  }
+}
+.mark {
+  padding: 0 4px;
+  border: 0;
+  border-radius: 3px;
+  font: 600 11px/1.5 var(--mono);
+  background: var(--glow-k);
+  color: var(--mark-fg);
+}
+.mark[data-kind="M"] {
+  background: var(--glow-m);
+}
+.mark[data-kind="G"] {
+  background: var(--glow-g);
+}
+.mark[data-kind="P"] {
+  background: var(--pin-bg);
+  color: var(--pin-fg);
+}
+
+/* source cards (renderResults; replaced by the editor in a later step) */
+#results {
+  padding: 8px 12px 0;
+}
+.plate {
+  margin: 0 0 10px;
+}
+.src {
+  border: 1px solid var(--bar);
 }
 .src > summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 12px 16px 12px 18px;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 10px;
+  padding: 6px 10px;
+  list-style: none;
+  cursor: pointer;
+  background: var(--side);
 }
 .src > summary::-webkit-details-marker {
   display: none;
@@ -265,170 +358,393 @@ progress {
 .src[open] > summary::before {
   content: "▾";
 }
+.src.hit {
+  border-color: var(--glow-k);
+  box-shadow: inset 3px 0 var(--glow-k);
+}
 .rank {
   font-family: var(--mono);
-  font-weight: 500;
   color: var(--accent);
 }
 .loc {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 .sym {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted);
 }
 .pill {
+  padding: 0 6px;
+  border: 1px solid var(--ln);
   font-family: var(--mono);
   font-size: 11px;
-  background: var(--pb);
-  color: var(--pf);
-  border: 1px solid var(--pbd);
-  padding: 0 7px;
+  color: var(--muted);
   white-space: nowrap;
 }
 .pill.g {
-  background: var(--c4b);
-  color: var(--c4f);
-  border-color: var(--c4f);
-}
-.src.hit::before {
-  background: var(--c4b);
+  border-color: var(--glow-g);
+  color: var(--fg);
 }
 
-/* code with line numbers; scrolls inside itself, never the page */
+/* code with line numbers; scrolls inside itself */
 pre.code {
   margin: 0;
-  padding: 10px 0;
-  background: var(--code);
-  border-top: 1px solid var(--lo);
-  overflow-x: auto;
+  padding: 6px 0;
+  overflow: auto;
   max-height: 520px;
-  overflow-y: auto;
+  background: var(--bg);
   font-family: var(--mono);
   font-size: 13px;
   line-height: 1.5;
   tab-size: 4;
 }
-pre.code .ln {
-  display: inline-block;
-  min-width: 3.2em;
-  padding: 0 10px 0 6px;
-  text-align: right;
-  color: var(--cm);
-  user-select: none;
-  position: sticky;
-  left: 0;
-  background: var(--code);
-}
 pre.code .row {
   display: block;
-  white-space: pre;
   padding-right: 12px;
+  white-space: pre;
+}
+pre.code .ln {
+  position: sticky;
+  left: 0;
+  display: inline-block;
+  min-width: 3.6em;
+  padding: 0 12px 0 6px;
+  text-align: right;
+  color: var(--ln);
+  background: var(--bg);
+  user-select: none;
 }
 .tk-k {
-  color: var(--k);
-  font-weight: 600;
+  color: var(--tk-k);
 }
 .tk-s {
-  color: var(--s);
+  color: var(--tk-s);
 }
 .tk-c {
-  color: var(--cm);
+  color: var(--tk-c);
   font-style: italic;
 }
 .tk-n {
-  color: var(--n);
+  color: var(--tk-n);
 }
-.tk-f,
+.tk-f {
+  color: var(--tk-f);
+}
 .tk-d {
-  color: var(--f);
+  color: var(--tk-d);
 }
 .tk-b {
-  color: var(--k);
+  color: var(--tk-b);
 }
 
-/* answer */
+/* ---------------------------------------------------------------- bottom panel */
+.panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  max-height: 40vh;
+  min-width: 0;
+  background: var(--bg);
+  border-top: 1px solid var(--bar);
+}
+#panel-toggle {
+  align-self: flex-start;
+  margin: 0 0 0 12px;
+  padding: 4px 2px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+#panel-toggle::before {
+  content: "▸ ";
+}
+#panel-toggle[aria-expanded="true"] {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+#panel-toggle[aria-expanded="true"]::before {
+  content: "▾ ";
+}
+#explain {
+  min-height: 0;
+  overflow: auto;
+  padding: 0 12px 8px;
+}
+
+/* ---------------------------------------------------------------- CliCR panel */
+.chat {
+  grid-area: chat;
+  min-width: 0;
+  overflow: auto;
+  padding: 0 12px 12px;
+  background: var(--side);
+  border-left: 1px solid var(--bar);
+}
+.chat .side-h {
+  padding-left: 0;
+  padding-right: 0;
+}
+.lbl {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.askrow {
+  display: flex;
+  gap: 6px;
+}
+input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--ln);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+}
+#go,
+#skip {
+  padding: 5px 12px;
+  border: 0;
+  background: var(--status-bg);
+  color: var(--status-fg);
+  font-weight: 600;
+}
+#skip {
+  margin-top: 8px;
+}
+button.ghost {
+  padding: 4px 8px;
+  border: 1px solid var(--ln);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 13px;
+  text-align: left;
+}
+button.ghost:hover {
+  border-color: var(--accent);
+}
+.opts {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+.suggest {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+#steps {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+#answer h3 {
+  margin: 14px 0 6px;
+  font-size: 14px;
+}
 #answer-body p {
   margin: 0 0 10px;
   white-space: pre-wrap;
 }
 #answer-body pre {
   margin: 0 0 10px;
-  padding: 10px;
-  background: var(--code);
+  padding: 8px;
   overflow-x: auto;
+  background: var(--bg);
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 12px;
 }
 .cite {
   font-family: var(--mono);
   font-size: 0.85em;
 }
 .answer-src {
-  font-size: 14px;
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   padding-left: 0;
   list-style: none;
+  font-size: 13px;
 }
 .label {
-  font-size: 13px;
-  color: var(--muted);
   margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-/* tables */
+/* ---------------------------------------------------------------- status bar */
+.statusbar {
+  grid-area: status;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 16px;
+  padding: 2px 10px;
+  background: var(--status-bg);
+  color: var(--status-fg);
+  font-size: 12px;
+}
+.status {
+  flex: 1;
+  min-width: 0;
+}
+.status.err {
+  font-weight: 600;
+}
+.statusbar progress {
+  width: 120px;
+  height: 6px;
+  accent-color: var(--status-fg);
+}
+
+/* ---------------------------------------------------------------- tables */
 .tablewrap {
-  overflow-x: auto;
   max-width: 100%;
+  overflow-x: auto;
 }
 table {
-  border-collapse: collapse;
-  font-size: 13px;
-  font-family: var(--mono);
   width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12px;
 }
 th,
 td {
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--bar);
   text-align: left;
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--lo);
   white-space: nowrap;
 }
 th {
   font-family: var(--sans);
   font-weight: 600;
-  font-size: 13px;
+  color: var(--muted);
 }
 tr.shown td {
   font-weight: 600;
 }
 td.ok {
-  color: var(--c4f);
+  color: var(--fg);
+  box-shadow: inset 3px 0 var(--glow-g);
 }
 td.bad {
-  color: var(--act);
+  color: var(--tk-s);
+  font-weight: 600;
 }
 
+/* ---------------------------------------------------------------- outside the IDE */
+#selftest,
 .foot {
-  margin-top: 30px;
-  font-size: 14px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+#selftest h2 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+.foot {
+  font-size: 13px;
   color: var(--muted);
 }
 .foot p {
   margin: 0 0 6px;
 }
 
-@media (max-width: 520px) {
-  h1 {
-    font-size: 25px;
+/* ---------------------------------------------------------------- middle widths: Explorer overlays the editor */
+@media (max-width: 1023px) {
+  .ide {
+    grid-template-columns: 48px minmax(0, 1fr) minmax(260px, 320px);
+    grid-template-areas:
+      "title title title"
+      "activity editor chat"
+      "activity panel chat"
+      "status status status";
   }
-  .pl {
-    padding: 14px 12px 14px 14px;
+  #explorer {
+    position: absolute;
+    z-index: 20;
+    grid-area: auto;
+    grid-column: 2 / 3;
+    grid-row: 2 / 4;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(260px, 80vw);
+    box-shadow: 4px 0 14px rgb(0 0 0 / 0.3);
   }
-  .src > summary {
-    padding: 10px 12px;
+}
+
+/* ---------------------------------------------------------------- phone: stacked, Explorer behind the menu button */
+@media (max-width: 719px) {
+  .ide {
+    height: auto;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      "activity title"
+      "chat chat"
+      "panel panel"
+      "editor editor"
+      "status status";
+  }
+  .activity {
+    flex-direction: row;
+    padding-top: 0;
+  }
+  .act-icon {
+    display: none;
+  }
+  #act-explorer {
+    width: 48px;
+    height: 40px;
+  }
+  #act-explorer[aria-expanded="true"] {
+    box-shadow: inset 0 -2px var(--accent);
+  }
+  .titlebar .title {
+    text-align: right;
+  }
+  #explorer {
+    grid-column: 1 / -1;
+    grid-row: 2 / -1;
+    bottom: auto;
+    max-height: 80vh;
+    width: min(300px, 85vw);
+  }
+  .chat {
+    overflow: visible;
+    border-left: 0;
+  }
+  .panel {
+    max-height: none;
+  }
+  #explain {
+    max-height: 60vh;
+  }
+  #editor {
+    max-height: 75vh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }

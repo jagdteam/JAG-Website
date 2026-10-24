@@ -9,6 +9,14 @@
       content="Ask a question about Flask's source code. CliCR's hybrid search (embeddings + BM25 + reciprocal-rank fusion) runs entirely in your browser."
     />
     <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") t = null;
+      } catch (e) { var t = null; }
+      if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme = t;
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.3.1/400.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.3.1/600.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.3.0/400.css" />
@@ -16,83 +24,119 @@
     <script type="module" src="demo.js"></script>
   </head>
   <body>
-    <div class="wrap">
-      <header class="top">
+    <div class="ide">
+      <header class="titlebar">
         <a class="back" href="/johnny">&larr; Johnny Fok</a>
-        <h1>CliCR, in your browser</h1>
-        <p class="lede">
-          Ask a question about <strong>Flask's source code</strong>. The page finds the code that answers it with the same
-          hybrid search as the <a href="https://github.com/jagdteam/clicr">CliCR</a> command-line tool: a meaning search
-          (embeddings), a keyword search (BM25) and a merge of the two (reciprocal-rank fusion). Everything runs on your
-          device; nothing you type is sent anywhere.
-        </p>
+        <h1 class="title">flask - CliCR</h1>
+        <button id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode">
+          <svg class="ic-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <svg class="ic-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path>
+          </svg>
+        </button>
       </header>
 
-      <section class="plate" aria-labelledby="ask-h">
-        <div class="pl">
-        <h2 id="ask-h" class="sr">Ask</h2>
+      <nav class="activity" aria-label="Activity bar">
+        <button id="act-explorer" type="button" aria-controls="explorer" aria-expanded="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 3H7a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z"></path>
+            <path d="M14 3v4h4M3 7v13a1 1 0 0 0 1 1h10"></path>
+          </svg>
+          <span class="sr">Explorer</span>
+        </button>
+        <span class="act-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <circle cx="10.5" cy="10.5" r="6"></circle>
+            <path d="M15 15l6 6"></path>
+          </svg>
+        </span>
+        <span class="act-icon clicr" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <circle cx="12" cy="12" r="8"></circle>
+            <circle cx="12" cy="12" r="3.5" fill="currentColor"></circle>
+          </svg>
+        </span>
+      </nav>
+
+      <aside id="explorer" aria-labelledby="explorer-h">
+        <h2 id="explorer-h" class="side-h">Explorer</h2>
+        <ul id="tree" role="tree" aria-label="Files"></ul>
+      </aside>
+
+      <main class="editor-group" aria-label="Editor">
+        <div id="tabs" role="tablist" aria-label="Open files"></div>
+        <nav id="crumb" aria-label="Breadcrumb"></nav>
+        <div id="editor" role="tabpanel" tabindex="0">
+          <section id="results" aria-label="Sources"></section>
+        </div>
+        <div id="explain-card" role="tooltip" hidden></div>
+      </main>
+
+      <section class="panel" aria-label="Retrieval panel">
+        <button id="panel-toggle" type="button" aria-expanded="false" aria-controls="explain">RETRIEVAL</button>
+        <section id="explain" hidden aria-labelledby="panel-toggle">
+          <p class="note">
+            Every candidate from either search. Fused score = sum of 1 / (60 + rank) over the lists that hold the chunk.
+            The top 6 by fused score are shown; the code-graph step may add definitions of functions they call.
+          </p>
+          <div class="tablewrap"><table id="explain-table"></table></div>
+        </section>
+      </section>
+
+      <aside class="chat" aria-labelledby="chat-h">
+        <h2 id="chat-h" class="side-h">CliCR</h2>
         <form id="ask" autocomplete="off">
-          <label for="q" class="lbl">Your question</label>
+          <label for="q" class="lbl">Ask about Flask's source code</label>
           <div class="askrow">
             <input id="q" name="q" type="search" placeholder="e.g. Where is url_for implemented?" required />
-            <button id="go" type="submit">Search</button>
+            <button id="go" type="submit">Ask</button>
           </div>
         </form>
+        <div class="opts">
+          <label><input id="opt-graph" type="checkbox" checked /> Follow calls (code-graph, 1 hop)</label>
+        </div>
+        <div id="suggest" class="suggest" role="group" aria-label="Suggested questions"></div>
         <p id="model-note" class="note">
           The first search downloads the embedding model <code>Xenova/bge-small-en-v1.5</code> from
           <strong>huggingface.co</strong> (about <strong id="embed-size">67 MB</strong>; Hugging Face serves the large file
           from its CDN, cdn.hf.co), and the Transformers.js library with its ONNX runtime from
           <strong>cdn.jsdelivr.net</strong>. Once only; your browser keeps them. Your question never leaves the page.
         </p>
-        <div class="opts">
-          <label><input id="opt-explain" type="checkbox" /> Explain the ranking</label>
-          <label><input id="opt-graph" type="checkbox" checked /> Follow calls (code-graph, 1 hop)</label>
-        </div>
-        <div id="suggest" class="suggest" role="group" aria-label="Suggested questions"></div>
+        <ol id="steps" aria-live="polite"></ol>
+        <button id="skip" type="button" hidden>Skip</button>
+        <section id="answer" hidden aria-labelledby="answer-h">
+          <h3 id="answer-h">Answer</h3>
+          <div id="answer-body"></div>
+        </section>
+      </aside>
+
+      <footer class="statusbar">
         <div id="status" class="status" role="status" aria-live="polite"></div>
         <progress id="progress" max="1" value="0" hidden aria-label="Download progress"></progress>
-        </div>
-      </section>
-
-      <section id="answer" class="plate" hidden aria-labelledby="answer-h">
-        <div class="pl">
-        <h2 id="answer-h">Answer</h2>
-        <div id="answer-body"></div>
-        </div>
-      </section>
-
-      <section id="explain" class="plate" hidden aria-labelledby="explain-h">
-        <div class="pl">
-        <h2 id="explain-h">How the ranking was built</h2>
-        <p class="note">
-          Every candidate from either search. Fused score = sum of 1 / (60 + rank) over the lists that hold the chunk.
-          The top 6 by fused score are shown; the code-graph step may add definitions of functions they call.
-        </p>
-        <div class="tablewrap"><table id="explain-table"></table></div>
-        </div>
-      </section>
-
-      <section id="results" aria-label="Sources"></section>
-
-      <section id="selftest" class="plate" hidden aria-labelledby="selftest-h">
-        <div class="pl">
-        <h2 id="selftest-h">Self-test against the Python CLI</h2>
-        <p id="selftest-result" class="mono">running…</p>
-        <div class="tablewrap"><table id="selftest-table"></table></div>
-        </div>
-      </section>
-
-      <footer class="foot">
-        <p>
-          Code shown: <a id="src-link" href="https://github.com/pallets/flask">Flask</a> (<span id="src-include"
-            >src/flask</span
-          >) at commit <code id="src-commit">…</code>, licensed <span id="src-license">BSD-3-Clause</span>, copyright 2010 Pallets.
-        </p>
-        <p>
-          Search: <a href="https://github.com/jagdteam/clicr">github.com/jagdteam/clicr</a> &middot; models run with
-          Transformers.js and WebLLM.
-        </p>
+        <span id="answer-mode"></span>
+        <span class="local">runs on your device</span>
       </footer>
     </div>
+
+    <section id="selftest" hidden aria-labelledby="selftest-h">
+      <h2 id="selftest-h">Self-test against the Python CLI</h2>
+      <p id="selftest-result" class="mono">running…</p>
+      <div class="tablewrap"><table id="selftest-table"></table></div>
+    </section>
+
+    <footer class="foot">
+      <p>
+        Code shown: <a id="src-link" href="https://github.com/pallets/flask">Flask</a> (<span id="src-include"
+          >src/flask</span
+        >) at commit <code id="src-commit">…</code>, licensed <span id="src-license">BSD-3-Clause</span>, copyright 2010 Pallets.
+      </p>
+      <p>
+        Search: <a href="https://github.com/jagdteam/clicr">github.com/jagdteam/clicr</a> &middot; models run with
+        Transformers.js and WebLLM.
+      </p>
+    </footer>
   </body>
 </html>

@@ -4,6 +4,7 @@
 import * as S from "./search.js";
 import { esc } from "./html.js";
 import { answerHtml, identityCite } from "./citations.js";
+import { initTheme } from "./theme.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
 const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js";
@@ -43,7 +44,6 @@ const el = {
   go: $("go"),
   note: $("model-note"),
   embedSize: $("embed-size"),
-  explainOpt: $("opt-explain"),
   graphOpt: $("opt-graph"),
   suggest: $("suggest"),
   status: $("status"),
@@ -53,6 +53,10 @@ const el = {
   explain: $("explain"),
   explainTable: $("explain-table"),
   results: $("results"),
+  themeToggle: $("theme-toggle"),
+  actExplorer: $("act-explorer"),
+  panelToggle: $("panel-toggle"),
+  answerMode: $("answer-mode"),
 };
 
 let bundle = null; // {manifest, chunks, vectors, bm25, graph, questions}
@@ -242,7 +246,6 @@ function renderAll() {
   if (!last) return;
   renderResults(last.run);
   renderExplain(last.run);
-  el.explain.hidden = !el.explainOpt.checked;
 }
 
 // ---------------------------------------------------------------- answers
@@ -328,10 +331,13 @@ function sourceList(sources) {
   );
 }
 
+function hasWebGpu() {
+  return typeof navigator !== "undefined" && "gpu" in navigator && Boolean(navigator.gpu);
+}
+
 function renderAnswerArea() {
   el.answer.hidden = false;
-  const hasGpu = typeof navigator !== "undefined" && "gpu" in navigator && navigator.gpu;
-  if (hasGpu) {
+  if (hasWebGpu()) {
     el.answerBody.innerHTML = `<p class="note">Writes an answer on your device with <code>Qwen2.5-0.5B-Instruct</code>
       through WebLLM. First use downloads WebLLM from <strong>cdn.jsdelivr.net</strong>, the model weights (about
       <strong>${LLM.mb} MB</strong>) from <strong>huggingface.co</strong> (large files come from its CDN, cdn.hf.co) and
@@ -503,8 +509,33 @@ async function selftest() {
   setStatus("Self-test finished.");
 }
 
+// ---------------------------------------------------------------- shell
+// Explorer: the button's aria-expanded is the one open state (demo.css hides #explorer from it).
+// Open by default from 1024 px up, closed (overlay / menu) below; a breakpoint change resets it.
+function setExplorer(open) {
+  el.actExplorer.setAttribute("aria-expanded", String(open));
+}
+function wireShell() {
+  const theme = initTheme();
+  el.themeToggle.addEventListener("click", () => theme.toggle());
+
+  const wide = matchMedia("(min-width: 1024px)");
+  setExplorer(wide.matches);
+  wide.addEventListener("change", () => setExplorer(wide.matches));
+  el.actExplorer.addEventListener("click", () => setExplorer(el.actExplorer.getAttribute("aria-expanded") !== "true"));
+
+  el.panelToggle.addEventListener("click", () => {
+    const open = el.panelToggle.getAttribute("aria-expanded") !== "true";
+    el.panelToggle.setAttribute("aria-expanded", String(open));
+    el.explain.hidden = !open;
+  });
+
+  el.answerMode.textContent = hasWebGpu() ? "WebGPU: answer on-device" : "recorded answer";
+}
+
 // ---------------------------------------------------------------- start
 async function main() {
+  wireShell();
   setStatus("Loading the search index…");
   bundle = await loadBundle();
   const m = bundle.manifest;
@@ -535,9 +566,6 @@ async function main() {
   el.form.addEventListener("submit", (e) => {
     e.preventDefault();
     ask(el.q.value);
-  });
-  el.explainOpt.addEventListener("change", () => {
-    if (last) el.explain.hidden = !el.explainOpt.checked;
   });
   el.graphOpt.addEventListener("change", rerun);
   // citation [n] -> open that source card and scroll to it; a card that is not shown
