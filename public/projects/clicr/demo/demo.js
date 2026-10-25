@@ -6,6 +6,7 @@ import { codeSpans, esc } from "./html.js";
 import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
 import { AUTOPLAY_STATUS, autoplayEligible, parseQvecs, storedVector } from "./autoplay.js";
 import { isCapable } from "./capability.js";
+import { loadEngine } from "./engine.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
@@ -442,6 +443,8 @@ function cancelPreload() {
   engineFrac = null;
   barLlm = null;
   capableKnown = true;
+  engine = null;
+  engineId = null;
   if (ld.eng) {
     cancelledEngines.push(ld.eng); // kept referenced: WebLLM's cleanup of an aborted load must not run while a later load uses the GPU
     ld.eng.unload().catch(() => {});
@@ -460,30 +463,25 @@ function getEngine() {
     engineState = "loading";
     barLlm = { loaded: 0, total: 0, done: false, failed: false }; // total unknown until WebLLM reports: the bar holds
     renderBar();
-    const cancelled = () => new Error("The on-device model load was cancelled.");
     enginePromise = (async () => {
       const adapter = await navigator.gpu.requestAdapter();
       if (!adapter) throw new Error("WebGPU is present but no GPU adapter is available.");
       const id = adapter.features.has("shader-f16") ? LLM.f16 : LLM.f32;
       if (!engine || engineId !== id) {
-        const webllm = await import(WEBLLM_URL);
-        if (ld.cancelled) throw cancelled();
-        const eng = new webllm.MLCEngine({ initProgressCallback: (p) => !ld.cancelled && onEngineProgress(p) }); // CreateMLCEngine, kept in hand so Cancel can unload it
-        ld.eng = eng;
-        try {
-          await eng.reload(id);
-        } catch (err) {
-          if (ld.cancelled) throw cancelled();
-          throw err;
-        }
-        if (ld.cancelled) throw cancelled();
+        const eng = await loadEngine(ld, id, {
+          create: async () => {
+            const webllm = await import(WEBLLM_URL);
+            return new webllm.MLCEngine({ initProgressCallback: (p) => !ld.cancelled && onEngineProgress(p) }); // CreateMLCEngine, kept in hand so Cancel can unload it
+          },
+          onWeights: () => {
+            const total = LLM.mb * 1e6;
+            barLlm = { loaded: total, total, done: false, failed: false }; // weights done: the bar stays full through the warm-up
+            renderBar();
+          },
+          warmUp,
+        });
         engine = eng;
         engineId = id;
-        const total = LLM.mb * 1e6;
-        barLlm = { loaded: total, total, done: false, failed: false }; // weights done: the bar stays full through the warm-up
-        renderBar();
-        await warmUp(eng);
-        if (ld.cancelled) throw cancelled();
       }
       return engine;
     })();
@@ -496,10 +494,7 @@ function getEngine() {
         renderBar();
       },
       () => {
-        if (ld.cancelled) {
-          if (engine && engine === ld.eng) engine = null;
-          return;
-        }
+        if (ld.cancelled) return;
         enginePromise = null;
         engineState = "failed";
         engineFrac = null;
