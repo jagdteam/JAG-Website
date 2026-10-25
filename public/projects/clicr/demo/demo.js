@@ -13,14 +13,19 @@ import { badgesFor, buildSteps, createPlayer, pinGlow, strongest } from "./playb
 import { initTheme } from "./theme.js";
 import {
   ModelLoadError,
+  BAR_LABEL,
   answerModeText,
   askBlock,
   createNavWatch,
+  engineWaitText,
   holdUntil,
   isHeld,
   isUserScroll,
+  nextBar,
+  preloadLineText,
   searchErrorText,
   waitingText,
+  waitingView,
 } from "./messages.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
@@ -66,6 +71,9 @@ const el = {
   status: $("status"),
   filesNote: $("files-note"),
   progress: $("progress"),
+  preload: $("preload"),
+  preloadText: $("preload-text"),
+  preloadCancel: $("preload-cancel"),
   answer: $("answer"),
   answerBody: $("answer-body"),
   explain: $("explain"),
@@ -86,12 +94,20 @@ let embedderReady = false;
 let engine = null;
 let engineId = null;
 let enginePromise = null; // the WebLLM engine load, shared by the page-load preload and every generation
-let engineText = null; // the engine download status text while it loads, else null
+let engineState = "idle"; // the WebLLM engine: "idle", "loading", "ready" or "failed" (ready = loaded and warmed up)
 let engineFrac = null; // the engine download progress while it loads, else null
-let lastEngineStatus = null; // the engine text last written to the status line
+let preloadCancelled = false; // Cancel was pressed: no more preloading this visit
+const cancelledEngines = [];
+let curLoad = null; // the running engine load: {cancelled, eng}; Cancel flips it and unloads the engine (aborts its fetches)
+let curKind = null; // what the current question is: "suggested", "typed", "manual" (the fresh-answer button) or null
+let barEmbed = null; // the bottom bar's embedding-model part: {loaded, total, done, failed} or null
+let barLlm = null; // the bottom bar's WebLLM part, same shape (null when not preloading, or cancelled)
+let barValue = 0; // the bar's last value (it never goes backwards while shown)
 let capable = false; // this device may write the answer by itself (capability.js), probed at page load
-let gen = null; // the running generation: {last, runId, auto, cancelled, eng}
-let last = null; // {question, qvec, run, recorded, sources, pins, steps}
+let capableKnown = false; // the probe has finished (a slow first GPU start must not hold the example back)
+let probePromise = null; // the running probe, or null (self-test)
+let gen = null; // the running generation: {last, runId, cancelled, eng}
+let last = null; // {question, qvec, run, recorded, sources, pins, steps, kind, live}
 let filesPromise = null; // files.json, loaded lazily; resolves to null when it cannot be had
 let editor = null;
 let explorer = null;
@@ -102,10 +118,9 @@ let answerGenerated = false; // a WebLLM answer is on screen (a graph toggle cle
 let run = null; // the current play-by-play: {id, steps, player, done, answerRendered, play, autoplay}
 let qvecs = null; // qvecs.bin as a Float32Array (one row per questions.json entry), once loaded
 let downloadText = null; // the embedding-model download status text while a download is running, else null
-let lastDownloadStatus = null; // the download text last written to the status line
 let readyText = ""; // the normal "Ready: ..." status line
 let selectOnFocus = false; // autoplay put question 1 in #q: its first focus selects the text
-const autoplayActive = () => Boolean(run?.autoplay && !run.done); // the example question is still playing
+const view = () => waitingView({ embedReady: embedderReady, engineState, capable, questionKind: curKind });
 const nav = createNavWatch(); // the user navigated since the current generation started
 
 // ---------------------------------------------------------------- small helpers
@@ -119,13 +134,19 @@ const isPhone = () => matchMedia("(max-width: 719px)").matches;
 function scrollToEditor() {
   $("editor").scrollIntoView({ behavior: scrollBehavior(), block: "start" });
 }
-function setProgress(frac) {
-  if (frac === null) {
-    el.progress.hidden = true;
-    return;
-  }
-  el.progress.hidden = false;
-  el.progress.value = Math.max(0, Math.min(1, frac));
+/** The one bottom bar over both background loads (embedding model + WebLLM); the WebLLM part adds one line and Cancel. */
+function renderBar() {
+  const b = nextBar({ embed: barEmbed, llm: barLlm }, barValue);
+  barValue = b.value;
+  el.progress.hidden = b.hidden;
+  el.progress.value = b.value;
+  el.progress.setAttribute("aria-label", BAR_LABEL);
+  el.progress.setAttribute("aria-valuemin", "0");
+  el.progress.setAttribute("aria-valuemax", "100");
+  el.progress.setAttribute("aria-valuenow", String(Math.round(b.value * 100)));
+  const show = !b.hidden && b.llmActive;
+  if (show && el.preload.hidden) el.preloadText.textContent = preloadLineText(LLM.mb); // set once, so the polite announcement is not repeated
+  el.preload.hidden = !show;
 }
 function setBusy(phase) {
   busy = phase;
@@ -166,6 +187,8 @@ async function loadBundle() {
 function getExtractor() {
   if (!extractorPromise) {
     const files = new Map();
+    barEmbed = { loaded: 0, total: 0, done: false, failed: false };
+    renderBar();
     extractorPromise = (async () => {
       const T = await import(TRANSFORMERS_URL);
       return T.pipeline("feature-extraction", port.id, {
@@ -181,11 +204,9 @@ function getExtractor() {
               total += t;
             }
             downloadText = `Downloading the embedding model: ${mb(loaded)} / ${mb(total)} MB`;
-            if (!autoplayActive()) {
-              lastDownloadStatus = downloadText;
-              setStatus(downloadText); // while the example plays, only the progress bar shows the download
-            }
-            setProgress(loaded / total);
+            barEmbed = { loaded, total, done: false, failed: false };
+            renderBar();
+            if (view().status === "embed") setStatus(downloadText); // only a typed question that waits on the model sees the text
           }
         },
       }).catch((err) => {
@@ -193,10 +214,16 @@ function getExtractor() {
       });
     })();
     extractorPromise.then(
-      () => (downloadText = null),
+      () => {
+        downloadText = null;
+        barEmbed = { ...barEmbed, done: true };
+        renderBar();
+      },
       () => {
         downloadText = null;
         extractorPromise = null;
+        barEmbed = { ...barEmbed, failed: true };
+        renderBar();
       },
     );
   }
@@ -204,30 +231,25 @@ function getExtractor() {
 }
 /** Start the embedding model download at page load. Not awaited; a failure stays quiet until a typed question retries it. */
 function preloadEmbedder() {
-  const quiet = () => {
-    setProgress(engineFrac);
-    // a download line left on the status goes back to the ready line (the example's end does this itself)
-    if (!autoplayActive() && el.status.textContent === lastDownloadStatus) setStatus(readyText);
-  };
-  getExtractor().then(() => {
-    if (!embedderReady) {
-      embedderReady = true;
-      el.note.textContent = `Embedding model ${port.id} is loaded.`;
-    }
-    quiet();
-  }, quiet);
+  getExtractor().then(
+    () => {
+      if (!embedderReady) {
+        embedderReady = true;
+        el.note.textContent = `Embedding model ${port.id} is loaded.`;
+      }
+    },
+    () => {},
+  );
 }
 async function embedQuery(text) {
   if (!embedderReady) {
     setStatus(`Loading the embedding model from huggingface.co (about ${port.mb} MB the first time)…`);
-    setProgress(0);
   }
   const extractor = await getExtractor();
   if (!embedderReady) {
     embedderReady = true;
     el.note.textContent = `Embedding model ${port.id} is loaded.`;
   }
-  setProgress(null);
   const out = await extractor(bundle.manifest.embed.query_prefix + text, { pooling: "cls", normalize: true });
   return Float32Array.from(out.data);
 }
@@ -374,49 +396,118 @@ async function probeCapable() {
   }
 }
 
-function hideEngineProgress() {
-  if (downloadText === null) setProgress(null);
+/** A visitor who waits on the on-device model sees "Getting the on-device model ready… N%" (status and answer area). */
+function syncEngineWait() {
+  if (!gen || view().status !== "engine") return; // the text belongs to a visitor whose answer is waiting on the model
+  const text = engineWaitText(engineFrac);
+  setStatus(text);
+  const w = el.answerBody.querySelector("[data-wait-engine]");
+  if (w) w.textContent = text;
 }
 
 function onEngineProgress(p) {
-  engineText = p.text;
   engineFrac = p.progress;
-  if (!autoplayActive() && downloadText === null && busy !== "search") {
-    lastEngineStatus = p.text;
-    setStatus(p.text);
+  const total = LLM.mb * 1e6;
+  barLlm = { loaded: p.progress * total, total, done: false, failed: false };
+  renderBar();
+  syncEngineWait();
+}
+
+/** One generation of max_tokens 1, output discarded, so the first real answer does not pay the GPU start-up. A real question waits for it (the engine promise includes it). */
+async function warmUp(eng) {
+  engineFrac = 1;
+  const mark = (window.clicrWarmup = { start: performance.now(), done: null });
+  try {
+    await eng.chat.completions.create({ messages: [{ role: "user", content: "Hi" }], max_tokens: 1, temperature: 0 });
+  } catch {
+    // a failed (or cancelled) warm-up costs only speed
   }
-  if (downloadText === null) setProgress(p.progress);
+  mark.done = performance.now();
+  console.info(`clicr: warm-up done in ${Math.round(mark.done - mark.start)} ms`);
+}
+
+/** The Cancel button: stop the WebLLM preload (or warm-up) for this visit. Fetches are aborted by unloading the engine. */
+function cancelPreload() {
+  const ld = curLoad;
+  if (!ld || engineState !== "loading") return;
+  ld.cancelled = true;
+  preloadCancelled = true;
+  curLoad = null;
+  enginePromise = null;
+  engineState = "idle";
+  engineFrac = null;
+  barLlm = null;
+  capable = false; // from here a typed question behaves as in a browser that is not capable
+  capableKnown = true;
+  if (ld.eng) {
+    cancelledEngines.push(ld.eng); // kept referenced: WebLLM's cleanup of an aborted load must not run while a later load uses the GPU
+    ld.eng.unload().catch(() => {});
+  }
+  renderBar();
+  if (gen && !gen.eng) stopByUser(); // a typed question was waiting on the model: it stops with it
+  if (last?.gen?.phase === "idle") drawAnswer(); // the answer area now explains the manual button
+  if (document.activeElement === document.body || el.preload.contains(document.activeElement)) el.q.focus({ preventScroll: true });
 }
 
 /** WebLLM + the model weights, loaded once. A failure clears the promise so the next try starts again. */
 function getEngine() {
   if (!enginePromise) {
+    const ld = { cancelled: false, eng: null };
+    curLoad = ld;
+    engineState = "loading";
+    barLlm = { loaded: 0, total: 0, done: false, failed: false }; // total unknown until WebLLM reports: the bar holds
+    renderBar();
+    const cancelled = () => new Error("The on-device model load was cancelled.");
     enginePromise = (async () => {
       const adapter = await navigator.gpu.requestAdapter();
       if (!adapter) throw new Error("WebGPU is present but no GPU adapter is available.");
       const id = adapter.features.has("shader-f16") ? LLM.f16 : LLM.f32;
       if (!engine || engineId !== id) {
         const webllm = await import(WEBLLM_URL);
-        engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onEngineProgress });
+        if (ld.cancelled) throw cancelled();
+        const eng = new webllm.MLCEngine({ initProgressCallback: (p) => !ld.cancelled && onEngineProgress(p) }); // CreateMLCEngine, kept in hand so Cancel can unload it
+        ld.eng = eng;
+        try {
+          await eng.reload(id);
+        } catch (err) {
+          if (ld.cancelled) throw cancelled();
+          throw err;
+        }
+        if (ld.cancelled) throw cancelled();
+        engine = eng;
         engineId = id;
+        const total = LLM.mb * 1e6;
+        barLlm = { loaded: total, total, done: false, failed: false }; // weights done: the bar stays full through the warm-up
+        renderBar();
+        await warmUp(eng);
+        if (ld.cancelled) throw cancelled();
       }
       return engine;
     })();
-    const done = () => {
-      engineText = null;
-      engineFrac = null;
-      hideEngineProgress();
-      if (!autoplayActive() && lastEngineStatus !== null && el.status.textContent === lastEngineStatus && !gen) setStatus(readyText);
-      lastEngineStatus = null;
-    };
-    enginePromise.then(done, () => {
-      enginePromise = null;
-      done();
-    });
+    enginePromise.then(
+      () => {
+        if (ld.cancelled) return;
+        engineState = "ready";
+        engineFrac = null;
+        barLlm = { ...barLlm, done: true };
+        renderBar();
+      },
+      () => {
+        if (ld.cancelled) {
+          if (engine && engine === ld.eng) engine = null;
+          return;
+        }
+        enginePromise = null;
+        engineState = "failed";
+        engineFrac = null;
+        barLlm = { ...barLlm, failed: true };
+        renderBar();
+      },
+    );
   }
   return enginePromise;
 }
-/** Page-load preload on capable desktops (never awaited, failures stay quiet; the generation retries and reports). */
+/** Page-load preload on capable desktops (never awaited, failures stay quiet; a typed question retries and reports). */
 function preloadEngine() {
   getEngine().catch(() => {});
 }
@@ -481,19 +572,22 @@ function drawAnswer() {
   if (L.shown === "generated" && g.sources && g.text) main = generatedBlock(g);
   else if (hasRec) main = recordedBlock();
   if (g.phase === "writing") {
-    ctl = '<p class="label gen-state">Writing a fresh answer on your device… (<button type="button" class="linkbtn" data-act="stop">Stop</button>)</p>';
+    const stop = '(<button type="button" class="linkbtn" data-act="stop">Stop</button>)';
+    if (!L.live) ctl = `<p class="label gen-state">Writing a fresh answer on your device… ${stop}</p>`;
+    else if (engineState !== "ready") ctl = `<p class="label gen-state"><span data-wait-engine>${engineWaitText(engineFrac)}</span> ${stop}</p>`;
+    else ctl = `<p class="label gen-state">Written on your device ${stop}</p>`;
     if (!hasRec) main = '<div class="gen-out"></div>';
   } else if (g.phase === "done") {
     ctl = hasRec
       ? `<p class="label gen-state">${L.shown === "generated" ? "Generated on your device" : "A fresh answer was generated on your device."}</p><button type="button" class="ghost" data-act="toggle">${L.shown === "generated" ? "Show recorded answer" : "Show generated answer"}</button>`
-      : '<p class="label gen-state">Generated on your device</p>';
+      : '<p class="label gen-state">Written on your device</p>';
   } else if (g.phase === "stopped") {
     ctl = '<p class="label gen-state">Stopped.</p>' + GEN_BUTTON;
   } else if (g.phase === "failed") {
     ctl = `<p class="note gen-state">Could not write a fresh answer on your device: ${esc(g.error ?? "unknown error")}</p>` + GEN_BUTTON;
     if (!hasRec) main = '<p class="note">The answer could not be written in this browser, so the page shows the sources only.</p>';
   } else {
-    ctl = GEN_NOTE + GEN_BUTTON;
+    ctl = (capable || !capableKnown ? "" : GEN_NOTE) + GEN_BUTTON; // a capable device is already loading the model quietly: just the button
   }
   const active = document.activeElement;
   const had = el.answerBody.contains(active) && active !== el.answerBody;
@@ -554,7 +648,14 @@ function renderAnswerArea() {
   last.shown = last.recorded?.answer ? "recorded" : "generated";
   drawAnswer();
   applyAnswerPins();
-  if (capable) startGeneration(true);
+  if (last.live) {
+    // a typed question on a capable desktop is answered live; after this run's setup has finished
+    const L = last;
+    const id = runId;
+    setTimeout(() => {
+      if (last === L && runId === id) startGeneration();
+    }, 0);
+  }
 }
 
 /** Redraw the editor for the answer step when that is the step on screen and the user has not moved the editor since. */
@@ -592,17 +693,18 @@ function stopGeneration() {
   gen = null;
   stopWaiting();
   g.eng?.interruptGenerate(); // an interrupt raised before the request starts is cleared by it; the drain loop raises it again
-  hideEngineProgress();
+  curKind = g.last.kind ?? null;
   setBusy(null);
   return g;
 }
 
-/** Start writing an answer. auto: the page's own start (no focus, no page scroll); otherwise the visitor's button. */
-function startGeneration(auto) {
+/** Start writing an answer: a typed question's live answer, or the visitor's "Write a fresh answer" button. */
+function startGeneration() {
   if (!last || gen || busy) return;
   const L = last;
-  const g = { last: L, runId, auto, cancelled: false, eng: null };
+  const g = { last: L, runId, cancelled: false, eng: null };
   gen = g;
+  curKind = L.live ? "typed" : "manual";
   setBusy("generate");
   nav.start();
   L.gen = { phase: "writing", text: "", sources: null };
@@ -615,14 +717,16 @@ async function runGeneration(g) {
   const L = g.last;
   const hasRec = Boolean(L.recorded?.answer);
   try {
-    if (!enginePromise) {
-      setStatus(`Loading WebLLM (cdn.jsdelivr.net) and the model (huggingface.co, raw.githubusercontent.com; about ${LLM.mb} MB the first time)…`);
-      setProgress(0);
+    const fresh = !enginePromise;
+    const ep = getEngine();
+    if (engineState !== "ready") {
+      if (fresh && !L.live) setStatus(`Loading WebLLM (cdn.jsdelivr.net) and the model (huggingface.co, raw.githubusercontent.com; about ${LLM.mb} MB the first time)…`);
+      else syncEngineWait();
     }
-    const eng = await getEngine();
+    const eng = await ep;
     if (staleGen(g)) return;
     g.eng = eng;
-    hideEngineProgress();
+    if (L.live) drawAnswer(); // the "getting ready" label becomes "Written on your device"
     const sources = pack(L.run.results, CONTEXT_TOKENS);
     const messages = buildMessages(L.question, sources);
     L.gen.sources = sources;
@@ -655,7 +759,7 @@ async function runGeneration(g) {
       }
       if (firstToken) {
         firstToken = false;
-        if (!hasRec && nav.mayScroll()) scrollAnswerToTop(!g.auto); // once at the first token ...
+        if (!hasRec && nav.mayScroll()) scrollAnswerToTop(); // once at the first token ...
       }
     }
     if (staleGen(g)) return;
@@ -671,11 +775,10 @@ async function runGeneration(g) {
     }
     setStatus("Answer written on your device.");
     // ... and once when the stream ends, so the heading and first lines are in the chat panel; neither runs once the user moved
-    if (!g.auto && nav.mayScroll()) scrollAnswerToTop();
+    if (nav.mayScroll()) scrollAnswerToTop();
   } catch (err) {
     if (staleGen(g)) return;
     stopWaiting();
-    hideEngineProgress();
     L.gen = { phase: "failed", error: String(err?.message ?? err) };
     drawAnswer();
     applyAnswerPins();
@@ -684,6 +787,7 @@ async function runGeneration(g) {
     if (gen === g) {
       gen = null;
       stopWaiting();
+      curKind = L.kind ?? null;
       setBusy(null);
     }
   }
@@ -821,12 +925,7 @@ function beginRun(play, autoplay = false) {
       if (r.id !== runId) return;
       r.done = true;
       el.steps.querySelectorAll("button.step").forEach((b) => (b.disabled = false));
-      // the example is over: the status line shows a download still running, else the ready line
-      if (r.autoplay) {
-        if (downloadText !== null) lastDownloadStatus = downloadText;
-        else if (engineText !== null) lastEngineStatus = engineText;
-        setStatus(downloadText ?? engineText ?? readyText);
-      }
+      if (r.autoplay) setStatus(readyText); // the example is over (model loading stays quiet: only the bottom bar shows it)
     },
   });
   run = r;
@@ -888,24 +987,29 @@ async function ask(question, { qvec: stored = null, autoplay = false } = {}) {
   }
   question = question.trim();
   if (!autoplay) selectOnFocus = false; // the visitor took over: #q is theirs
+  const kind = stored ? "suggested" : "typed"; // only suggestions (and the autoplay) carry a stored vector
+  curKind = kind;
+  let live = false; // a typed question on a capable desktop is answered live, never from a recording
   setBusy("search");
   el.welcome.hidden = true;
   stopRun();
   clearRun();
   const mine = runId;
   try {
+    if (kind === "typed" && probePromise && !capableKnown) await probePromise;
+    if (mine !== runId) return;
+    live = kind === "typed" && capable;
     const qvec = stored ?? (await embedQuery(question)); // a stored vector runs synchronously
     if (mine !== runId) return;
     if (!autoplay) setStatus("Searching…");
-    const recorded = recordedFor(question);
+    const recorded = live ? null : recordedFor(question);
     const { found, sources, pins, steps, ms } = search(qvec, question, recorded);
-    last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [] };
+    last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [], kind, live };
     el.answerMode.textContent = answerModeText(hasWebGpu(), Boolean(recorded?.answer));
     renderAll();
     beginRun(true, autoplay);
     setStatus(autoplay ? AUTOPLAY_STATUS : statusFor(found, ms));
   } catch (err) {
-    setProgress(null);
     setStatus(searchErrorText(err), true);
   } finally {
     setBusy(null);
@@ -917,6 +1021,7 @@ async function selftest() {
   const box = $("selftest");
   const result = $("selftest-result");
   box.hidden = false;
+  curKind = "typed"; // the self-test waits on the embedding model like a typed question
   const parity = await fetchOk("parity.json").then((r) => r.json());
   const items = parity.items;
   const refs = parity.query_vectors ?? [];
@@ -1000,6 +1105,7 @@ function wireShell() {
   for (const type of ["wheel", "touchmove", "keydown"]) window.addEventListener(type, noteScroll, { passive: true });
   chat?.addEventListener("pointerdown", noteScroll);
 
+  el.preloadCancel.addEventListener("click", cancelPreload);
   el.panelToggle.addEventListener("click", () => {
     const open = el.panelToggle.getAttribute("aria-expanded") !== "true";
     el.panelToggle.setAttribute("aria-expanded", String(open));
@@ -1117,9 +1223,12 @@ async function main() {
       .then((r) => r.arrayBuffer())
       .then((buf) => parseQvecs(buf, bundle.questions.length, m.embed.dim))
       .catch(() => null);
-    capable = await probeCapable();
-    if (capable) preloadEngine(); // WebLLM downloads in parallel with the embedding model
-    qvecs = await qvecsPromise;
+    probePromise = probeCapable().then((c) => {
+      capable = c;
+      capableKnown = true;
+      if (c && !preloadCancelled) preloadEngine(); // WebLLM downloads in parallel with the embedding model
+    });
+    qvecs = await qvecsPromise; // the example never waits for the probe
     // the visitor may already have asked something while the file loaded
     if (autoplayEligible({ selftest: false, questions: bundle.questions, qvecs, dim: m.embed.dim }) && !run && !last && !busy) {
       const first = bundle.questions[0].question;
@@ -1142,6 +1251,5 @@ async function main() {
 
 main().catch((err) => {
   load = "failed";
-  setProgress(null);
   setStatus(`Could not start the demo: ${err.message ?? err}`, true);
 });

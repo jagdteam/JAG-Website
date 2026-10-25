@@ -768,6 +768,10 @@ button.linkbtn {
   height: 6px;
   accent-color: var(--status-fg);
 }
+.statusbar .preload {
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 /* ---------------------------------------------------------------- tables */
 .tablewrap {
