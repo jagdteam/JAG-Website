@@ -794,7 +794,8 @@ async function main() {
   el.graphOpt.addEventListener("change", rerun);
   el.skip.addEventListener("click", () => {
     run?.player.skip();
-    el.steps.querySelector("[aria-current]")?.focus(); // the Skip button just hid
+    // the Skip button just hid; preventScroll keeps the answer scroll from being cancelled
+    el.steps.querySelector("[aria-current]")?.focus({ preventScroll: true });
   });
   el.steps.addEventListener("click", (e) => {
     const b = e.target.closest("button.step");
