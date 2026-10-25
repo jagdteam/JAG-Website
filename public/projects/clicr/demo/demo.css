@@ -772,6 +772,9 @@ button.linkbtn {
   font-size: 12px;
   white-space: nowrap;
 }
+.statusbar .linkbtn {
+  color: var(--status-fg); /* --accent is unreadable on --status-bg */
+}
 
 /* ---------------------------------------------------------------- tables */
 .tablewrap {
