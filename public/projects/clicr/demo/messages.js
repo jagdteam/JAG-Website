@@ -23,6 +23,19 @@ export function waitingText(secs) {
   return `Writing the answer… the first answer also prepares the model for your GPU, which can take a minute. (${n} s)`;
 }
 
+/** How long a block message ("Still writing...", "Still searching...") keeps the status before the wait counter may take it back. */
+export const BLOCK_HOLD_MS = 3000;
+
+/** When a block message shown at `now` (ms) stops being held. */
+export function holdUntil(now) {
+  return now + BLOCK_HOLD_MS;
+}
+
+/** True while the wait counter must leave the status alone. */
+export function isHeld(now, until) {
+  return now < until;
+}
+
 /** Right-hand status-bar label: what the answer area will hold for this question. */
 export function answerModeText(webgpu, hasRecorded) {
   if (webgpu) return "WebGPU: answer on-device";

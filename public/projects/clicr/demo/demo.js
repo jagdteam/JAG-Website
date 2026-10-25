@@ -9,7 +9,7 @@ import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
 import { badgesFor, buildSteps, createPlayer, pinGlow, refocus } from "./playback.js";
 import { initTheme } from "./theme.js";
-import { ModelLoadError, answerModeText, askBlock, searchErrorText, waitingText } from "./messages.js";
+import { ModelLoadError, answerModeText, askBlock, holdUntil, isHeld, searchErrorText, waitingText } from "./messages.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
 const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js";
@@ -370,8 +370,10 @@ function renderFallback(failed) {
 }
 
 let waitTimer = null;
+let holdStatusUntil = 0; // performance.now() time until which a block message keeps the status
 function setWaiting(secs) {
   if (waitTimer !== null && el.status.dataset.wait !== "1") return; // another message took the status
+  if (isHeld(performance.now(), holdStatusUntil)) return; // a block message is still being read; the next tick shows the right seconds
   el.status.textContent = waitingText(secs);
   el.status.classList.remove("err");
   el.status.dataset.wait = "1";
@@ -416,7 +418,7 @@ async function generate() {
     el.answerBody.append(out);
     const head = $("answer-h");
     head.tabIndex = -1;
-    head.focus(); // the Generate button was just replaced
+    head.focus({ preventScroll: true }); // the Generate button was just replaced; scrollAnswerToTop does the scrolling
     const stream = await engine.chat.completions.create({
       messages,
       stream: true,
@@ -424,14 +426,20 @@ async function generate() {
       max_tokens: MAX_ANSWER_TOKENS,
     });
     let text = "";
+    let firstToken = true;
     for await (const chunk of stream) {
       stopWaiting(); // the first token ends the wait
       text += chunk.choices[0]?.delta?.content ?? "";
       out.innerHTML = answerHtml(text, identityCite(sources.length));
+      if (firstToken) {
+        firstToken = false;
+        scrollAnswerToTop(); // once at the first token ...
+      }
     }
     out.insertAdjacentHTML("beforeend", '<p class="label">Sources in the prompt:</p>' + sourceList(sources));
     if (focusAnswerPin(firstCitedPin(text, identityCite(sources.length)))) redrawAnswerStep();
     setStatus("Answer written on your device.");
+    scrollAnswerToTop(); // ... and once when the stream ends, so the heading and first lines are in the chat panel
   } catch (err) {
     stopWaiting();
     setProgress(null);
@@ -613,7 +621,10 @@ async function ask(question) {
     if (block.text === null) return;
     const waiting = el.status.dataset.wait === "1";
     setStatus(block.text, block.err);
-    if (waiting) el.status.dataset.wait = "1";
+    if (waiting) {
+      el.status.dataset.wait = "1";
+      holdStatusUntil = holdUntil(performance.now());
+    }
     if (block.focus) el.q.focus();
     return;
   }

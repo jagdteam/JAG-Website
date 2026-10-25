@@ -5,7 +5,10 @@ import {
   MODEL_LOAD_TEXT,
   ModelLoadError,
   answerModeText,
+  BLOCK_HOLD_MS,
   askBlock,
+  holdUntil,
+  isHeld,
   searchErrorText,
   waitingText,
 } from "../../../../../public/projects/clicr/demo/messages.js";
@@ -19,6 +22,17 @@ test("waitingText: the GPU hint followed by a whole-second counter", () => {
   );
   assert.ok(waitingText(12.9).endsWith("(12 s)"));
   assert.ok(waitingText(-1).endsWith("(0 s)"));
+});
+
+test("block message hold: stays at least 3 s, then the wait counter may take the status back", () => {
+  assert.ok(BLOCK_HOLD_MS >= 3000);
+  const until = holdUntil(10_000);
+  assert.equal(until, 10_000 + BLOCK_HOLD_MS);
+  assert.equal(isHeld(10_000, until), true);
+  assert.equal(isHeld(12_500, until), true); // 2.5 s after the block message: still showing
+  assert.equal(isHeld(until - 1, until), true);
+  assert.equal(isHeld(until, until), false);
+  assert.equal(isHeld(5, 0), false); // never held before any block message
 });
 
 test("searchErrorText: model load errors get the huggingface.co advice, others keep their message", () => {
