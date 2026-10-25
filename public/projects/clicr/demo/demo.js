@@ -546,6 +546,7 @@ function showStepOf(r, k) {
   // the answer area renders once per run; replaying the answer step only re-applies its glows
   if (step.id === "answer" && !r.answerRendered) {
     r.answerRendered = true;
+    el.skip.hidden = true;
     prepareAnswer();
     // once per run, at every width: the answer section goes to the top of the chat panel (never the whole page on desktop)
     scrollAnswerToTop();
@@ -561,14 +562,13 @@ function beginRun(play) {
     onDone: () => {
       if (r.id !== runId) return;
       r.done = true;
-      el.skip.hidden = true;
       el.steps.querySelectorAll("button.step").forEach((b) => (b.disabled = false));
     },
     reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
   });
   run = r;
   if (play) {
-    el.skip.hidden = false; // onDone hides it again at once when motion is reduced
+    el.skip.hidden = false; // the answer step hides it again at once when motion is reduced
     r.player.start();
   } else {
     r.player.skip();
