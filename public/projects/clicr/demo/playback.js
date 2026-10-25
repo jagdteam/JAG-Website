@@ -111,10 +111,10 @@ export function refocus(step, pin) {
 
 /**
  * Timer-driven player. onDone fires exactly once per run on every path to done (natural end,
- * skip, reducedMotion); stop() never fires it.
+ * skip); stop() never fires it.
  */
 export function createPlayer({
-  steps, show, onDone = () => {}, reducedMotion = false,
+  steps, show, onDone = () => {},
   setTimer = (fn, ms) => globalThis.setTimeout(fn, ms),
   clearTimer = (id) => globalThis.clearTimeout(id),
 }) {
@@ -152,13 +152,7 @@ export function createPlayer({
       cancel();
       stopped = false;
       done = false;
-      if (reducedMotion) {
-        current = last;
-        show(last);
-        finish();
-      } else {
-        go(0);
-      }
+      go(0); // reduced motion steps through too: it changes how things move, not what is shown
     },
     skip() {
       if (stopped || done) return;

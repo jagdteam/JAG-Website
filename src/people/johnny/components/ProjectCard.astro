@@ -16,6 +16,7 @@ interface Props {
   tags: string[];
   image?: string;
   thumb?: string;
+  thumbStill?: string;
   thumbFit?: "cover" | "contain";
   links?: { label: string; href?: string }[];
   myPart?: string;
@@ -31,6 +32,7 @@ const {
   tags,
   image,
   thumb,
+  thumbStill,
   thumbFit,
   links = [],
   myPart,
@@ -81,7 +83,13 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
           </div>
           <span class="open-tag" aria-hidden="true"><span class="tri"></span> <span class="open-word"></span></span>
           </div>
-          {thumb && <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />}
+          {thumb && thumbStill && (
+            <picture class="thumbpic">
+              <source srcset={thumbStill} media="(prefers-reduced-motion: reduce)" />
+              <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />
+            </picture>
+          )}
+          {thumb && !thumbStill && <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />}
         </summary>
         <div class="panel">
           {extraDesc && <p class="desc">{extraDesc}</p>}
@@ -190,7 +198,13 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
           )}
         </div>
         </div>
-        {thumb && <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />}
+        {thumb && thumbStill && (
+          <picture class="thumbpic">
+            <source srcset={thumbStill} media="(prefers-reduced-motion: reduce)" />
+            <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />
+          </picture>
+        )}
+        {thumb && !thumbStill && <img class:list={["thumb", { contain: thumbFit === "contain" }]} src={thumb} alt={thumbAlt} loading="lazy" />}
       </div>
     )}
   </article>

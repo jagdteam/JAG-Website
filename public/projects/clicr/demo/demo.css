@@ -716,6 +716,21 @@ button.step[aria-current="step"] {
   list-style: none;
   font-size: 13px;
 }
+button.linkbtn {
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  font-size: inherit;
+}
+.gen-ctl {
+  margin: 0 0 10px;
+}
+.gen-ctl .label,
+.gen-ctl .note {
+  margin: 0 0 6px;
+}
 .label {
   margin: 0 0 8px;
   font-size: 12px;

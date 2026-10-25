@@ -4,10 +4,12 @@
 import * as S from "./search.js";
 import { codeSpans, esc } from "./html.js";
 import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
+import { AUTOPLAY_STATUS, autoplayEligible, parseQvecs, storedVector } from "./autoplay.js";
+import { isCapable } from "./capability.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
-import { badgesFor, buildSteps, createPlayer, pinGlow, refocus } from "./playback.js";
+import { badgesFor, buildSteps, createPlayer, pinGlow, strongest } from "./playback.js";
 import { initTheme } from "./theme.js";
 import {
   ModelLoadError,
@@ -83,6 +85,12 @@ let extractorPromise = null;
 let embedderReady = false;
 let engine = null;
 let engineId = null;
+let enginePromise = null; // the WebLLM engine load, shared by the page-load preload and every generation
+let engineText = null; // the engine download status text while it loads, else null
+let engineFrac = null; // the engine download progress while it loads, else null
+let lastEngineStatus = null; // the engine text last written to the status line
+let capable = false; // this device may write the answer by itself (capability.js), probed at page load
+let gen = null; // the running generation: {last, runId, auto, cancelled, eng}
 let last = null; // {question, qvec, run, recorded, sources, pins, steps}
 let filesPromise = null; // files.json, loaded lazily; resolves to null when it cannot be had
 let editor = null;
@@ -91,7 +99,13 @@ let busy = null; // the running phase: null, "search", "generate" or "selftest"
 let load = "loading"; // the demo data: "loading", "failed" or "ready"
 let runId = 0; // bumped whenever a run starts or is stopped; work from an older run checks it
 let answerGenerated = false; // a WebLLM answer is on screen (a graph toggle clears it)
-let run = null; // the current play-by-play: {id, steps, player, done, answerRendered}
+let run = null; // the current play-by-play: {id, steps, player, done, answerRendered, play, autoplay}
+let qvecs = null; // qvecs.bin as a Float32Array (one row per questions.json entry), once loaded
+let downloadText = null; // the embedding-model download status text while a download is running, else null
+let lastDownloadStatus = null; // the download text last written to the status line
+let readyText = ""; // the normal "Ready: ..." status line
+let selectOnFocus = false; // autoplay put question 1 in #q: its first focus selects the text
+const autoplayActive = () => Boolean(run?.autoplay && !run.done); // the example question is still playing
 const nav = createNavWatch(); // the user navigated since the current generation started
 
 // ---------------------------------------------------------------- small helpers
@@ -116,9 +130,10 @@ function setProgress(frac) {
 function setBusy(phase) {
   busy = phase;
   const on = phase !== null;
-  el.go.setAttribute("aria-disabled", String(on)); // not `disabled`: Enter and Ask must still reach ask(), which says why nothing starts
+  const lock = on && phase !== "generate"; // a new question may always interrupt a generation
+  el.go.setAttribute("aria-disabled", String(lock)); // not `disabled`: Enter and Ask must still reach ask(), which says why nothing starts
   el.graphOpt.disabled = on; // a toggle mid-search or mid-generation would race the run
-  for (const b of el.suggest.querySelectorAll("button")) b.disabled = on;
+  for (const b of el.suggest.querySelectorAll("button")) b.disabled = lock;
 }
 const mb = (bytes) => (bytes / 1e6).toFixed(0);
 
@@ -165,7 +180,11 @@ function getExtractor() {
               loaded += l;
               total += t;
             }
-            setStatus(`Downloading the embedding model: ${mb(loaded)} / ${mb(total)} MB`);
+            downloadText = `Downloading the embedding model: ${mb(loaded)} / ${mb(total)} MB`;
+            if (!autoplayActive()) {
+              lastDownloadStatus = downloadText;
+              setStatus(downloadText); // while the example plays, only the progress bar shows the download
+            }
             setProgress(loaded / total);
           }
         },
@@ -173,9 +192,30 @@ function getExtractor() {
         throw new ModelLoadError(err); // the model host is blocked or offline
       });
     })();
-    extractorPromise.catch(() => (extractorPromise = null));
+    extractorPromise.then(
+      () => (downloadText = null),
+      () => {
+        downloadText = null;
+        extractorPromise = null;
+      },
+    );
   }
   return extractorPromise;
+}
+/** Start the embedding model download at page load. Not awaited; a failure stays quiet until a typed question retries it. */
+function preloadEmbedder() {
+  const quiet = () => {
+    setProgress(engineFrac);
+    // a download line left on the status goes back to the ready line (the example's end does this itself)
+    if (!autoplayActive() && el.status.textContent === lastDownloadStatus) setStatus(readyText);
+  };
+  getExtractor().then(() => {
+    if (!embedderReady) {
+      embedderReady = true;
+      el.note.textContent = `Embedding model ${port.id} is loaded.`;
+    }
+    quiet();
+  }, quiet);
 }
 async function embedQuery(text) {
   if (!embedderReady) {
@@ -304,19 +344,217 @@ function hasWebGpu() {
   return typeof navigator !== "undefined" && "gpu" in navigator && Boolean(navigator.gpu);
 }
 
+// ---------------------------------------------------------------- WebLLM engine
+/** Probe the browser and ask capability.js whether it may write the answer by itself. Any failure means no. */
+async function probeCapable() {
+  try {
+    if (!hasWebGpu()) return false;
+    const adapter = await navigator.gpu.requestAdapter();
+    let battery = null;
+    try {
+      const b = typeof navigator.getBattery === "function" ? await navigator.getBattery() : null;
+      if (b) battery = { charging: b.charging, level: b.level };
+    } catch {
+      battery = null;
+    }
+    const conn = navigator.connection;
+    const probe = {
+      gpuAdapter: Boolean(adapter),
+      deviceMemory: navigator.deviceMemory,
+      saveData: conn?.saveData,
+      effectiveType: conn?.effectiveType,
+      battery,
+      width: window.innerWidth,
+      coarsePointer: matchMedia("(pointer: coarse)").matches,
+    };
+    window.clicrProbe = probe; // read-only record of what the capability rule saw (for checking, not used by the page)
+    return isCapable(probe);
+  } catch {
+    return false;
+  }
+}
+
+function hideEngineProgress() {
+  if (downloadText === null) setProgress(null);
+}
+
+function onEngineProgress(p) {
+  engineText = p.text;
+  engineFrac = p.progress;
+  if (!autoplayActive() && downloadText === null && busy !== "search") {
+    lastEngineStatus = p.text;
+    setStatus(p.text);
+  }
+  if (downloadText === null) setProgress(p.progress);
+}
+
+/** WebLLM + the model weights, loaded once. A failure clears the promise so the next try starts again. */
+function getEngine() {
+  if (!enginePromise) {
+    enginePromise = (async () => {
+      const adapter = await navigator.gpu.requestAdapter();
+      if (!adapter) throw new Error("WebGPU is present but no GPU adapter is available.");
+      const id = adapter.features.has("shader-f16") ? LLM.f16 : LLM.f32;
+      if (!engine || engineId !== id) {
+        const webllm = await import(WEBLLM_URL);
+        engine = await webllm.CreateMLCEngine(id, { initProgressCallback: onEngineProgress });
+        engineId = id;
+      }
+      return engine;
+    })();
+    const done = () => {
+      engineText = null;
+      engineFrac = null;
+      hideEngineProgress();
+      if (!autoplayActive() && lastEngineStatus !== null && el.status.textContent === lastEngineStatus && !gen) setStatus(readyText);
+      lastEngineStatus = null;
+    };
+    enginePromise.then(done, () => {
+      enginePromise = null;
+      done();
+    });
+  }
+  return enginePromise;
+}
+/** Page-load preload on capable desktops (never awaited, failures stay quiet; the generation retries and reports). */
+function preloadEngine() {
+  getEngine().catch(() => {});
+}
+
+// ---------------------------------------------------------------- answer area
+/** The recorded answer's block, or null when this question has none. */
+function recordedBlock() {
+  const rec = last.recorded;
+  if (!rec || !rec.answer) return null;
+  const date = rec.recorded_at ? rec.recorded_at.slice(0, 10) : "unknown date";
+  const nums = citedNumbers(rec.answer);
+  const listed = new Set();
+  const cited = (rec.sources ?? [])
+    .map((s, k) => {
+      let p = last.cite?.get(nums[k]);
+      if (listed.has(p)) p = undefined; // two sources on one pin: number it once
+      if (p) listed.add(p);
+      const label = esc(`${s.path}:${s.start}-${s.end}`);
+      return p ?`<li><a class="cite" href="#pin-${p}" data-pin="${p}">[${p}]</a> ${label}</li>` : `<li>${label}</li>`;
+    })
+    .join("");
+  return (
+    `<p class="label">Recorded from the CLI (${esc(rec.model ?? "unknown model")}, ${esc(date)})</p>` +
+    answerHtml(rec.answer, last.cite) +
+    (cited ? `<p class="label">Sources it cited:</p><ul class="answer-src">${cited}</ul>` : "")
+  );
+}
+
+/** Recorded answer if there is one, else the sources-only note (no WebGPU). */
+function renderFallback() {
+  const html = recordedBlock();
+  if (html !== null) {
+    el.answerBody.innerHTML = html;
+    applyAnswerPins();
+  } else if (last.recorded) {
+    el.answerBody.innerHTML =
+      '<p class="note">No recorded answer for this question yet, and this browser has no WebGPU to write one here, so the page shows the sources only.</p>';
+  } else {
+    el.answerBody.innerHTML =
+      '<p class="note">Your browser has no WebGPU, so the page shows the sources only (in-browser answers need WebGPU).</p>';
+  }
+}
+
+const GEN_NOTE = `<p class="note">Writes an answer on your device with <code>Qwen2.5-0.5B-Instruct</code>
+  through WebLLM. First use downloads WebLLM from <strong>cdn.jsdelivr.net</strong>, the model weights (about
+  <strong>${LLM.mb} MB</strong>) from <strong>huggingface.co</strong> (large files come from its CDN, cdn.hf.co) and
+  the model's WebGPU library (about 6 MB) from <strong>raw.githubusercontent.com</strong>. Once only; your browser
+  keeps them. Your question never leaves the page.</p>`;
+const GEN_BUTTON = '<button id="gen" class="ghost" type="button" data-act="generate">Write a fresh answer on your device</button>';
+
+function generatedBlock(g) {
+  return answerHtml(g.text, identityCite(g.sources.length)) + '<p class="label">Sources in the prompt:</p>' + sourceList(g.sources);
+}
+
+/** Paint the answer area of a WebGPU browser from last.gen {phase, text, sources, error} and last.shown. */
+function drawAnswer() {
+  const L = last;
+  const g = L.gen;
+  const hasRec = Boolean(L.recorded?.answer);
+  let ctl = "";
+  let main = "";
+  if (L.shown === "generated" && g.sources && g.text) main = generatedBlock(g);
+  else if (hasRec) main = recordedBlock();
+  if (g.phase === "writing") {
+    ctl = '<p class="label gen-state">Writing a fresh answer on your device… (<button type="button" class="linkbtn" data-act="stop">Stop</button>)</p>';
+    if (!hasRec) main = '<div class="gen-out"></div>';
+  } else if (g.phase === "done") {
+    ctl = hasRec
+      ? `<p class="label gen-state">${L.shown === "generated" ? "Generated on your device" : "A fresh answer was generated on your device."}</p><button type="button" class="ghost" data-act="toggle">${L.shown === "generated" ? "Show recorded answer" : "Show generated answer"}</button>`
+      : '<p class="label gen-state">Generated on your device</p>';
+  } else if (g.phase === "stopped") {
+    ctl = '<p class="label gen-state">Stopped.</p>' + GEN_BUTTON;
+  } else if (g.phase === "failed") {
+    ctl = `<p class="note gen-state">Could not write a fresh answer on your device: ${esc(g.error ?? "unknown error")}</p>` + GEN_BUTTON;
+    if (!hasRec) main = '<p class="note">The answer could not be written in this browser, so the page shows the sources only.</p>';
+  } else {
+    ctl = GEN_NOTE + GEN_BUTTON;
+  }
+  const active = document.activeElement;
+  const had = el.answerBody.contains(active) && active !== el.answerBody;
+  const key = had ? active.dataset?.act : null;
+  el.answerBody.innerHTML = `<div class="gen-ctl">${ctl}</div>${main}`;
+  if (had) {
+    const next = (key && el.answerBody.querySelector(`[data-act="${key}"]`)) || el.answerBody.querySelector("button");
+    next?.focus({ preventScroll: true }); // a control the visitor used was just replaced: keep keyboard focus in the answer area
+  }
+}
+
+/** The recorded answer is on screen: give the answer step its extra pins (idempotent). */
+function addExtraPins() {
+  const step = last.steps.find((x) => x.id === "answer");
+  for (const p of last.extra ?? []) if (!step.glows.some((g) => g.kind === "P" && g.pin === p.n)) step.glows.push(pinGlow(p));
+}
+
+/** The answer step's extra pins and first-cited focus follow the answer on screen; true when the editor's view changes. */
+function applyAnswerPins() {
+  const L = last;
+  const step = L.steps.find((s) => s.id === "answer");
+  const before = strongest(step);
+  const count = step.glows.length;
+  if (L.shown === "generated" && L.gen?.sources) {
+    step.glows = step.glows.filter((g) => !(g.kind === "P" && g.pin > L.pins.length)); // recorded-only pins go
+    step.focus = firstCitedPin(L.gen.text ?? "", L.cite) ?? null;
+  } else {
+    addExtraPins();
+    step.focus = L.recorded?.answer ? (firstCitedPin(L.recorded.answer, L.cite) ?? null) : null;
+  }
+  const changed = strongest(step) !== before || step.glows.length !== count;
+  if (changed) redrawAnswerStep();
+  return changed;
+}
+
+/** Switch which answer the page shows; the cite links, the pins and the editor follow it. */
+function showAnswer(which) {
+  const L = last;
+  L.shown = which;
+  if (which === "generated") {
+    L.cite = identityCite(L.gen.sources.length);
+    L.extra = [];
+  } else {
+    L.cite = L.recCite;
+    L.extra = L.recExtra;
+  }
+  drawAnswer();
+  applyAnswerPins();
+}
+
 function renderAnswerArea() {
   el.answer.hidden = false;
-  if (hasWebGpu()) {
-    el.answerBody.innerHTML = `<p class="note">Writes an answer on your device with <code>Qwen2.5-0.5B-Instruct</code>
-      through WebLLM. First use downloads WebLLM from <strong>cdn.jsdelivr.net</strong>, the model weights (about
-      <strong>${LLM.mb} MB</strong>) from <strong>huggingface.co</strong> (large files come from its CDN, cdn.hf.co) and
-      the model's WebGPU library (about 6 MB) from <strong>raw.githubusercontent.com</strong>. Once only; your browser
-      keeps them. Your question never leaves the page.</p>
-      <button id="gen" type="button">Generate answer in your browser</button>`;
-    $("gen").addEventListener("click", generate);
+  if (!hasWebGpu()) {
+    renderFallback();
     return;
   }
-  renderFallback(false);
+  last.gen = { phase: "idle" };
+  last.shown = last.recorded?.answer ? "recorded" : "generated";
+  drawAnswer();
+  applyAnswerPins();
+  if (capable) startGeneration(true);
 }
 
 /** Redraw the editor for the answer step when that is the step on screen and the user has not moved the editor since. */
@@ -324,60 +562,10 @@ function redrawAnswerStep() {
   const k = last.steps.findIndex((s) => s.id === "answer");
   if (el.steps.querySelector("[aria-current]")?.dataset.step !== String(k) || editor.navigated()) return;
   const id = runId;
+  explorer.setBadges(badgesFor(last.steps[k])); // the pins changed: so do the per-file counts
   editor.showStep(last.steps[k]).catch((err) => {
     if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
   });
-}
-
-/** The answer step opens on the pin of the answer's first citation (no citations: it keeps pin 1); true when that changes its view. */
-function focusAnswerPin(pin) {
-  return refocus(last.steps.find((s) => s.id === "answer"), pin);
-}
-
-/** The recorded answer is on screen: give the answer step its extra pins and first-cited focus (idempotent) and redraw if it is showing. */
-function addExtraPins() {
-  const step = last.steps.find((s) => s.id === "answer");
-  let changed = false;
-  for (const p of last.extra ?? []) {
-    if (step.glows.some((g) => g.kind === "P" && g.pin === p.n)) continue;
-    step.glows.push(pinGlow(p));
-    changed = true;
-  }
-  if (focusAnswerPin(firstCitedPin(last.recorded.answer, last.cite))) changed = true;
-  if (changed) redrawAnswerStep();
-}
-
-/** Recorded answer if there is one, else the sources-only note (no WebGPU, or generation failed). */
-function renderFallback(failed) {
-  const rec = last.recorded;
-  if (rec && rec.answer) {
-    const date = rec.recorded_at ? rec.recorded_at.slice(0, 10) : "unknown date";
-    const nums = citedNumbers(rec.answer);
-    const listed = new Set();
-    const cited = (rec.sources ?? [])
-      .map((s, k) => {
-        let p = last.cite?.get(nums[k]);
-        if (listed.has(p)) p = undefined; // two sources on one pin: number it once
-        if (p) listed.add(p);
-        const label = esc(`${s.path}:${s.start}-${s.end}`);
-        return p ?`<li><a class="cite" href="#pin-${p}" data-pin="${p}">[${p}]</a> ${label}</li>` : `<li>${label}</li>`;
-      })
-      .join("");
-    el.answerBody.innerHTML =
-      `<p class="label">Recorded from the CLI (${esc(rec.model ?? "unknown model")}, ${esc(date)})</p>` +
-      answerHtml(rec.answer, last.cite) +
-      (cited ? `<p class="label">Sources it cited:</p><ul class="answer-src">${cited}</ul>` : "");
-    addExtraPins();
-  } else if (failed) {
-    el.answerBody.innerHTML =
-      '<p class="note">The answer could not be written in this browser, so the page shows the sources only.</p>';
-  } else if (rec) {
-    el.answerBody.innerHTML =
-      '<p class="note">No recorded answer for this question yet, and this browser has no WebGPU to write one here, so the page shows the sources only.</p>';
-  } else {
-    el.answerBody.innerHTML =
-      '<p class="note">Your browser has no WebGPU, so the page shows the sources only (in-browser answers need WebGPU).</p>';
-  }
 }
 
 let waitTimer = null;
@@ -394,44 +582,58 @@ function stopWaiting() {
   waitTimer = null;
 }
 
-async function generate() {
-  if (busy || !last) return;
-  const btn = $("gen");
+const staleGen = (g) => g.cancelled || g.last !== last || g.runId !== runId;
+
+/** Stop the running generation now: WebLLM is interrupted, its loop drains in the background, the engine stays usable. */
+function stopGeneration() {
+  const g = gen;
+  if (!g) return null;
+  g.cancelled = true;
+  gen = null;
+  stopWaiting();
+  g.eng?.interruptGenerate(); // an interrupt raised before the request starts is cleared by it; the drain loop raises it again
+  hideEngineProgress();
+  setBusy(null);
+  return g;
+}
+
+/** Start writing an answer. auto: the page's own start (no focus, no page scroll); otherwise the visitor's button. */
+function startGeneration(auto) {
+  if (!last || gen || busy) return;
+  const L = last;
+  const g = { last: L, runId, auto, cancelled: false, eng: null };
+  gen = g;
   setBusy("generate");
   nav.start();
-  if (btn) btn.disabled = true;
+  L.gen = { phase: "writing", text: "", sources: null };
+  if (!L.recorded?.answer) L.shown = "generated";
+  drawAnswer();
+  runGeneration(g);
+}
+
+async function runGeneration(g) {
+  const L = g.last;
+  const hasRec = Boolean(L.recorded?.answer);
   try {
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) throw new Error("WebGPU is present but no GPU adapter is available.");
-    const id = adapter.features.has("shader-f16") ? LLM.f16 : LLM.f32;
-    if (!engine || engineId !== id) {
-      setStatus(
-        `Loading WebLLM (cdn.jsdelivr.net) and ${id} (huggingface.co, raw.githubusercontent.com; about ${LLM.mb} MB the first time)…`,
-      );
+    if (!enginePromise) {
+      setStatus(`Loading WebLLM (cdn.jsdelivr.net) and the model (huggingface.co, raw.githubusercontent.com; about ${LLM.mb} MB the first time)…`);
       setProgress(0);
-      const webllm = await import(WEBLLM_URL);
-      engine = await webllm.CreateMLCEngine(id, {
-        initProgressCallback: (p) => {
-          setStatus(p.text);
-          setProgress(p.progress);
-        },
-      });
-      engineId = id;
     }
-    setProgress(null);
-    const sources = pack(last.run.results, CONTEXT_TOKENS);
-    const messages = buildMessages(last.question, sources);
+    const eng = await getEngine();
+    if (staleGen(g)) return;
+    g.eng = eng;
+    hideEngineProgress();
+    const sources = pack(L.run.results, CONTEXT_TOKENS);
+    const messages = buildMessages(L.question, sources);
+    L.gen.sources = sources;
+    if (!hasRec) {
+      L.cite = identityCite(sources.length);
+      L.extra = [];
+    }
     setWaiting(0);
     const t0 = performance.now();
     waitTimer = setInterval(() => setWaiting((performance.now() - t0) / 1000), 1000);
-    const out = document.createElement("div");
-    answerGenerated = true;
-    el.answerBody.innerHTML = `<p class="label">Generated in your browser (${esc(id)})</p>`;
-    el.answerBody.append(out);
-    const head = $("answer-h");
-    head.tabIndex = -1;
-    head.focus({ preventScroll: true }); // the Generate button was just replaced; scrollAnswerToTop does the scrolling
-    const stream = await engine.chat.completions.create({
+    const stream = await eng.chat.completions.create({
       messages,
       stream: true,
       temperature: 0.2, // the CLI's Ollama default
@@ -440,28 +642,60 @@ async function generate() {
     let text = "";
     let firstToken = true;
     for await (const chunk of stream) {
+      if (staleGen(g)) {
+        eng.interruptGenerate(); // keep draining until the stream ends, so the engine is free for the next request
+        continue;
+      }
       stopWaiting(); // the first token ends the wait
       text += chunk.choices[0]?.delta?.content ?? "";
-      out.innerHTML = answerHtml(text, identityCite(sources.length));
+      L.gen.text = text;
+      if (!hasRec) {
+        const out = el.answerBody.querySelector(".gen-out");
+        if (out) out.innerHTML = answerHtml(text, identityCite(sources.length));
+      }
       if (firstToken) {
         firstToken = false;
-        if (nav.mayScroll()) scrollAnswerToTop(); // once at the first token ...
+        if (!hasRec && nav.mayScroll()) scrollAnswerToTop(!g.auto); // once at the first token ...
       }
     }
-    out.insertAdjacentHTML("beforeend", '<p class="label">Sources in the prompt:</p>' + sourceList(sources));
-    if (focusAnswerPin(firstCitedPin(text, identityCite(sources.length)))) redrawAnswerStep();
+    if (staleGen(g)) return;
+    L.gen = { phase: "done", text, sources };
+    answerGenerated = true;
+    stopWaiting();
+    if (hasRec) {
+      showAnswer("generated"); // the recorded answer was on screen the whole time; the generated one swaps in
+    } else {
+      L.shown = "generated";
+      drawAnswer();
+      applyAnswerPins();
+    }
     setStatus("Answer written on your device.");
     // ... and once when the stream ends, so the heading and first lines are in the chat panel; neither runs once the user moved
-    if (nav.mayScroll()) scrollAnswerToTop();
+    if (!g.auto && nav.mayScroll()) scrollAnswerToTop();
   } catch (err) {
+    if (staleGen(g)) return;
     stopWaiting();
-    setProgress(null);
+    hideEngineProgress();
+    L.gen = { phase: "failed", error: String(err?.message ?? err) };
+    drawAnswer();
+    applyAnswerPins();
     setStatus(`Could not generate an answer: ${err.message ?? err}`, true);
-    renderFallback(true);
   } finally {
-    stopWaiting();
-    setBusy(null);
+    if (gen === g) {
+      gen = null;
+      stopWaiting();
+      setBusy(null);
+    }
   }
+}
+
+/** The Stop button: stop writing and keep the page as it was (the recorded answer, or the partial text when there is none). */
+function stopByUser() {
+  const g = stopGeneration();
+  if (!g || g.last !== last) return;
+  last.gen = { phase: "stopped", text: last.gen?.text ?? "", sources: last.gen?.sources ?? null };
+  drawAnswer();
+  setStatus("Stopped writing the answer.");
 }
 
 // ---------------------------------------------------------------- explain card
@@ -517,6 +751,8 @@ function prepareAnswer() {
   const { cite, extra } = answerStepPins({ webgpu: false, recorded: last.recorded, pins: last.pins });
   last.cite = cite;
   last.extra = extra;
+  last.recCite = cite; // the recorded answer's map, kept for the toggle back from the generated answer
+  last.recExtra = extra;
   renderAnswerArea();
 }
 
@@ -524,7 +760,7 @@ function prepareAnswer() {
 function renderSteps(r, k) {
   const list = el.steps;
   const added = k + 1 - list.children.length;
-  // Skip, reduced motion and a graph toggle add several at once: keep the live list quiet, status says where we are
+  // Skip and a graph toggle add several at once: keep the live list quiet, status says where we are
   if (added > 1) list.setAttribute("aria-live", "off");
   for (let n = list.children.length; n <= k; n++) {
     const s = r.steps[n];
@@ -541,12 +777,13 @@ function renderSteps(r, k) {
   return added;
 }
 
-function scrollAnswerToTop() {
+/** `page` false (the example question): only the chat panel may scroll, never the page. */
+function scrollAnswerToTop(page = true) {
   const chat = el.answer.closest(".chat");
   if (chat && chat.scrollHeight > chat.clientHeight + 1) {
     const top = chat.scrollTop + el.answer.getBoundingClientRect().top - chat.getBoundingClientRect().top;
     chat.scrollTo({ top, behavior: scrollBehavior() });
-  } else if (isPhone()) {
+  } else if (page && isPhone()) {
     el.answer.scrollIntoView({ behavior: scrollBehavior(), block: "start" }); // phone: the page itself is the scroller
   }
 }
@@ -557,7 +794,7 @@ function showStepOf(r, k) {
   const first = el.steps.children.length === 0;
   const added = renderSteps(r, k);
   // phone, after Ask: bring the play-by-play into view once, when its first step appears
-  if (first && r.play && isPhone()) el.steps.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  if (first && r.play && !r.autoplay && isPhone()) el.steps.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
   // one new step is announced by the live list; bulk fills and replays are announced here
   if (added !== 1) setStatus(`Step ${k + 1} of ${r.steps.length}: ${step.title}.`);
   explorer.setBadges(badgesFor(step));
@@ -570,13 +807,13 @@ function showStepOf(r, k) {
     el.skip.hidden = true;
     prepareAnswer();
     // once per run, at every width: the answer section goes to the top of the chat panel (never the whole page on desktop)
-    scrollAnswerToTop();
+    scrollAnswerToTop(!r.autoplay);
   }
 }
 
-/** Fresh player for `last.steps`. play: auto-play from step 1; otherwise land on the final state like Skip. */
-function beginRun(play) {
-  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false, play };
+/** Fresh player for `last.steps`. play: auto-play from step 1; otherwise land on the final state like Skip. autoplay: the page's own example question (never moves the page). */
+function beginRun(play, autoplay = false) {
+  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false, play, autoplay };
   r.player = createPlayer({
     steps: r.steps,
     show: (k) => showStepOf(r, k),
@@ -584,12 +821,17 @@ function beginRun(play) {
       if (r.id !== runId) return;
       r.done = true;
       el.steps.querySelectorAll("button.step").forEach((b) => (b.disabled = false));
+      // the example is over: the status line shows a download still running, else the ready line
+      if (r.autoplay) {
+        if (downloadText !== null) lastDownloadStatus = downloadText;
+        else if (engineText !== null) lastEngineStatus = engineText;
+        setStatus(downloadText ?? engineText ?? readyText);
+      }
     },
-    reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
   });
   run = r;
   if (play) {
-    el.skip.hidden = false; // the answer step hides it again at once when motion is reduced
+    el.skip.hidden = false;
     r.player.start();
   } else {
     r.player.skip();
@@ -606,8 +848,8 @@ function search(qvec, question, recorded) {
   const ms = performance.now() - t0;
   const sources = pack(found.results, CONTEXT_TOKENS);
   const pins = pinsFromSources(sources);
-  // recorded extra pins and the first-cited focus apply only while the recorded answer is what the page shows (no WebGPU)
-  const { cite, extra } = answerStepPins({ webgpu: hasWebGpu(), recorded, pins });
+  // the recorded answer is always shown first, so its extra pins and first-cited focus are always there at the start
+  const { cite, extra } = answerStepPins({ webgpu: false, recorded, pins });
   const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: extra });
   // the answer step opens on the first pin the recorded answer cites
   const first = cite ? firstCitedPin(recorded.answer, cite) : null;
@@ -628,7 +870,10 @@ function rerun() {
   beginRun(false);
   setStatus(`Search re-run with Follow calls ${el.graphOpt.checked ? "on" : "off"}${cleared ? "; answer cleared" : ""}. ${statusFor(found, ms)}`);
 }
-async function ask(question) {
+/** `qvec`: a stored question vector (no embedding needed, so the run starts at once). `autoplay`: the page's own example. */
+async function ask(question, { qvec: stored = null, autoplay = false } = {}) {
+  // a new question always interrupts a generation in progress; the partial text is thrown away with the run
+  if (busy === "generate" && load === "ready" && String(question ?? "").trim()) stopGeneration();
   const block = askBlock({ question, busy, load });
   if (block) {
     if (block.text === null) return;
@@ -642,22 +887,23 @@ async function ask(question) {
     return;
   }
   question = question.trim();
+  if (!autoplay) selectOnFocus = false; // the visitor took over: #q is theirs
   setBusy("search");
   el.welcome.hidden = true;
   stopRun();
   clearRun();
   const mine = runId;
   try {
-    const qvec = await embedQuery(question);
+    const qvec = stored ?? (await embedQuery(question)); // a stored vector runs synchronously
     if (mine !== runId) return;
-    setStatus("Searching…");
+    if (!autoplay) setStatus("Searching…");
     const recorded = recordedFor(question);
     const { found, sources, pins, steps, ms } = search(qvec, question, recorded);
     last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [] };
     el.answerMode.textContent = answerModeText(hasWebGpu(), Boolean(recorded?.answer));
     renderAll();
-    beginRun(true);
-    setStatus(statusFor(found, ms));
+    beginRun(true, autoplay);
+    setStatus(autoplay ? AUTOPLAY_STATUS : statusFor(found, ms));
   } catch (err) {
     setProgress(null);
     setStatus(searchErrorText(err), true);
@@ -820,7 +1066,7 @@ async function main() {
     b.textContent = q.question;
     b.addEventListener("click", () => {
       el.q.value = q.question;
-      ask(q.question);
+      ask(q.question, { qvec: storedVector(qvecs, bundle.questions, q.question, m.embed.dim) }); // stored vector: instant, no model
     });
     el.suggest.append(b);
   }
@@ -847,10 +1093,41 @@ async function main() {
     editor.reveal(pin, { flash: true }).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
     if (isPhone()) scrollToEditor();
   });
+  el.answerBody.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-act]");
+    if (!b || !last?.gen) return;
+    if (b.dataset.act === "stop") stopByUser();
+    else if (b.dataset.act === "generate") startGeneration(false);
+    else if (b.dataset.act === "toggle") showAnswer(last.shown === "generated" ? "recorded" : "generated");
+  });
+  el.q.addEventListener("focus", () => {
+    if (!selectOnFocus) return;
+    selectOnFocus = false;
+    el.q.select(); // question 1 was put there by the autoplay: typing replaces it
+  });
   load = "ready";
-  setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
+  readyText = `Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`;
+  setStatus(readyText);
 
-  if (new URLSearchParams(location.search).get("selftest") === "1") {
+  const selftestMode = new URLSearchParams(location.search).get("selftest") === "1";
+  if (!selftestMode) {
+    // the embedding model downloads in the background (never awaited); stored question vectors load lazily like files.json
+    preloadEmbedder();
+    const qvecsPromise = fetchOk("qvecs.bin")
+      .then((r) => r.arrayBuffer())
+      .then((buf) => parseQvecs(buf, bundle.questions.length, m.embed.dim))
+      .catch(() => null);
+    capable = await probeCapable();
+    if (capable) preloadEngine(); // WebLLM downloads in parallel with the embedding model
+    qvecs = await qvecsPromise;
+    // the visitor may already have asked something while the file loaded
+    if (autoplayEligible({ selftest: false, questions: bundle.questions, qvecs, dim: m.embed.dim }) && !run && !last && !busy) {
+      const first = bundle.questions[0].question;
+      el.q.value = first;
+      selectOnFocus = true;
+      ask(first, { qvec: storedVector(qvecs, bundle.questions, first, m.embed.dim), autoplay: true });
+    }
+  } else {
     setBusy("selftest");
     try {
       await selftest();
