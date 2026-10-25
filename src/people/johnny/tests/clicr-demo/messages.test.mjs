@@ -7,6 +7,7 @@ import {
   answerModeText,
   BLOCK_HOLD_MS,
   askBlock,
+  autoModel,
   BAR_LABEL,
   createNavWatch,
   engineWaitText,
@@ -127,23 +128,31 @@ test("pickGlow: a pin wins over a cut glow on the same line, else the first cove
   assert.equal(pickGlow([cut, m], 99), undefined);
 });
 
+test("autoModel: a capable device loads the model by itself until the visitor cancels; Cancel holds for the visit", () => {
+  assert.equal(autoModel({ capable: true, cancelled: false }), true);
+  assert.equal(autoModel({ capable: false, cancelled: false }), false);
+  // Cancel while a typed question waits, or a probe that answers "capable" after Cancel: nothing auto-starts the model
+  assert.equal(autoModel({ capable: true, cancelled: true }), false);
+  assert.equal(autoModel({ capable: false, cancelled: true }), false);
+});
+
 test("waitingView: suggested questions never wait on a model, typed ones wait on the model they need", () => {
   const base = { embedReady: false, engineState: "loading", capable: true };
-  assert.deepEqual(waitingView({ ...base, questionKind: "suggested" }), { answer: "recorded", status: "none" });
-  assert.deepEqual(waitingView({ ...base, questionKind: null }), { answer: "none", status: "none" });
+  assert.deepEqual(waitingView({ ...base, questionKind: "suggested" }), { status: "none" });
+  assert.deepEqual(waitingView({ ...base, questionKind: null }), { status: "none" });
   // typed, embedding model still downloading: its progress is what the visitor waits on
-  assert.deepEqual(waitingView({ ...base, questionKind: "typed" }), { answer: "embed-wait", status: "embed" });
+  assert.deepEqual(waitingView({ ...base, questionKind: "typed" }), { status: "embed" });
   // typed, capable, engine not ready: sources first, then the "getting ready" text
   const t = { ...base, embedReady: true, questionKind: "typed" };
-  assert.deepEqual(waitingView({ ...t, engineState: "loading" }), { answer: "engine-wait", status: "engine" });
-  assert.deepEqual(waitingView({ ...t, engineState: "idle" }), { answer: "engine-wait", status: "engine" });
-  assert.deepEqual(waitingView({ ...t, engineState: "ready" }), { answer: "live", status: "none" });
-  assert.deepEqual(waitingView({ ...t, engineState: "failed" }), { answer: "live", status: "none" });
-  // typed, not capable: sources plus the manual button, no model text
-  assert.deepEqual(waitingView({ ...t, capable: false }), { answer: "sources-button", status: "none" });
+  assert.deepEqual(waitingView({ ...t, engineState: "loading" }), { status: "engine" });
+  assert.deepEqual(waitingView({ ...t, engineState: "idle" }), { status: "engine" });
+  assert.deepEqual(waitingView({ ...t, engineState: "ready" }), { status: "none" });
+  assert.deepEqual(waitingView({ ...t, engineState: "failed" }), { status: "none" });
+  // typed, not capable (or cancelled): sources plus the manual button, no model text
+  assert.deepEqual(waitingView({ ...t, capable: autoModel({ capable: true, cancelled: true }) }), { status: "none" });
   // the manual button waits on the engine whatever the device
-  assert.deepEqual(waitingView({ ...t, capable: false, questionKind: "manual" }), { answer: "engine-wait", status: "engine" });
-  assert.deepEqual(waitingView({ ...t, capable: false, questionKind: "manual", engineState: "ready" }), { answer: "live", status: "none" });
+  assert.deepEqual(waitingView({ ...t, capable: false, questionKind: "manual" }), { status: "engine" });
+  assert.deepEqual(waitingView({ ...t, capable: false, questionKind: "manual", engineState: "ready" }), { status: "none" });
 });
 
 test("engineWaitText: a whole percent, clamped", () => {
@@ -205,4 +214,17 @@ test("nextBar: a failed preload drops out quietly; both failed, or nothing expec
 test("nextBar: an embedding model that was already cached (done, no total) leaves the bar to the other download", () => {
   const b = nextBar({ embed: { loaded: 0, total: 0, done: true, failed: false }, llm: { loaded: 100, total: 400, done: false, failed: false } }, 0);
   assert.equal(b.value, 0.25);
+});
+
+test("nextBar: the embedding finishing before a slow capability probe answers keeps the bar up (no hide, then show again)", () => {
+  const embedDone = { loaded: 100, total: 100, done: true, failed: false };
+  let b = nextBar({ embed: { loaded: 40, total: 100, done: false, failed: false }, probing: true }, 0.2);
+  assert.deepEqual(b, { hidden: false, value: 0.2, llmActive: false }); // the WebLLM load may still join: hold
+  b = nextBar({ embed: embedDone, llm: null, probing: true }, b.value);
+  assert.deepEqual(b, { hidden: false, value: 0.2, llmActive: false });
+  // probe says capable: the WebLLM preload starts and the bar carries on from where it was
+  b = nextBar({ embed: embedDone, llm: { loaded: 0, total: 0, done: false, failed: false } }, b.value);
+  assert.deepEqual(b, { hidden: false, value: 0.2, llmActive: true });
+  // probe says not capable (or Cancel was pressed first): nothing else will run, so the bar hides
+  assert.equal(nextBar({ embed: embedDone, llm: null, probing: false }, 0.2).hidden, true);
 });

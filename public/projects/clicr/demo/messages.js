@@ -86,21 +86,26 @@ export function askBlock({ question, busy, load }) {
 }
 
 /**
- * What the answer area and status line show while the background models load (C12b).
+ * Whether the page loads and uses the on-device model by itself (the page-load preload, typed questions answered
+ * live): a capable device, unless the visitor pressed Cancel this visit. After Cancel only the "Write a fresh answer
+ * on your device" button loads the model.
+ */
+export function autoModel({ capable, cancelled }) {
+  return Boolean(capable) && !cancelled;
+}
+
+/**
+ * Which model download text the status line shows while the background models load (C12b).
  * questionKind: "suggested" (recorded answer, instant), "typed" (the visitor's own question), "manual"
  * (the visitor pressed "Write a fresh answer on your device"), or null (no question). engineState: "idle",
- * "loading", "ready" or "failed". Returns {answer, status}:
- *  - answer: "none" | "recorded" | "embed-wait" | "sources-button" | "engine-wait" | "live"
- *  - status: "none" | "embed" (embedding download text) | "engine" (on-device model text)
- * Model download text appears only when the visitor is waiting on that model.
+ * "loading", "ready" or "failed"; `capable` is autoModel(). Returns {status}: "none" | "embed" (embedding download
+ * text) | "engine" (on-device model text). Model download text appears only when the visitor is waiting on that model.
  */
 export function waitingView({ embedReady, engineState, capable, questionKind }) {
-  if (questionKind === "suggested") return { answer: "recorded", status: "none" };
-  if (questionKind !== "typed" && questionKind !== "manual") return { answer: "none", status: "none" };
-  if (questionKind === "typed" && !embedReady) return { answer: "embed-wait", status: "embed" };
-  if (questionKind === "typed" && !capable) return { answer: "sources-button", status: "none" };
-  if (engineState === "ready" || engineState === "failed") return { answer: "live", status: "none" }; // failed: the generation retries and reports
-  return { answer: "engine-wait", status: "engine" };
+  if (questionKind === "typed" && !embedReady) return { status: "embed" };
+  const onEngine = questionKind === "manual" || (questionKind === "typed" && capable);
+  if (onEngine && engineState !== "ready" && engineState !== "failed") return { status: "engine" }; // failed: the generation retries and reports
+  return { status: "none" };
 }
 
 /** The visitor's waiting text while the on-device model loads; `frac` is 0..1 (unknown counts as 0). */
@@ -117,11 +122,12 @@ export const BAR_LABEL = "Preparing models";
  * {loaded, total, done, failed}. The value is (all loaded bytes) / (all totals), never below `prev`; while an
  * expected load has not reported its total yet the bar holds at `prev`. A part stays "not done" through engine
  * init and warm-up, so the bar stays full until then. Failed parts drop out; the bar hides once nothing is left loading.
- * A cancelled load is passed as null. Returns {hidden, value, llmActive}.
+ * A cancelled load is passed as null. `probing`: the capability probe has not answered yet, so the WebLLM load may
+ * still start; the bar stays up and holds (like a load without a total) until it answers. Returns {hidden, value, llmActive}.
  */
-export function nextBar({ embed = null, llm = null }, prev = 0) {
+export function nextBar({ embed = null, llm = null, probing = false }, prev = 0) {
   const live = [embed, llm].filter((p) => p && !p.failed);
-  if (!live.some((p) => !p.done)) return { hidden: true, value: 0, llmActive: false };
+  if (!probing && !live.some((p) => !p.done)) return { hidden: true, value: 0, llmActive: false };
   const llmActive = Boolean(llm && !llm.failed && !llm.done); // the WebLLM load is running: the Cancel line shows
   let loaded = 0;
   let total = 0;
@@ -139,7 +145,7 @@ export function nextBar({ embed = null, llm = null }, prev = 0) {
       unknown = true;
     }
   }
-  if (unknown || total === 0) return { hidden: false, value: prev, llmActive };
+  if (probing || unknown || total === 0) return { hidden: false, value: prev, llmActive };
   return { hidden: false, value: Math.max(prev, Math.min(1, loaded / total)), llmActive };
 }
 

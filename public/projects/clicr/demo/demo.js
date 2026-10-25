@@ -16,6 +16,7 @@ import {
   BAR_LABEL,
   answerModeText,
   askBlock,
+  autoModel,
   createNavWatch,
   engineWaitText,
   holdUntil,
@@ -103,11 +104,11 @@ let curKind = null; // what the current question is: "suggested", "typed", "manu
 let barEmbed = null; // the bottom bar's embedding-model part: {loaded, total, done, failed} or null
 let barLlm = null; // the bottom bar's WebLLM part, same shape (null when not preloading, or cancelled)
 let barValue = 0; // the bar's last value (it never goes backwards while shown)
-let capable = false; // this device may write the answer by itself (capability.js), probed at page load
+let capable = false; // the probe's answer: this device may write the answer by itself (capability.js); see auto()
 let capableKnown = false; // the probe has finished (a slow first GPU start must not hold the example back)
 let probePromise = null; // the running probe, or null (self-test)
 let gen = null; // the running generation: {last, runId, cancelled, eng}
-let last = null; // {question, qvec, run, recorded, sources, pins, steps, kind, live}
+let last = null; // {question, qvec, run, recorded, sources, pins, steps, kind}
 let filesPromise = null; // files.json, loaded lazily; resolves to null when it cannot be had
 let editor = null;
 let explorer = null;
@@ -120,7 +121,9 @@ let qvecs = null; // qvecs.bin as a Float32Array (one row per questions.json ent
 let downloadText = null; // the embedding-model download status text while a download is running, else null
 let readyText = ""; // the normal "Ready: ..." status line
 let selectOnFocus = false; // autoplay put question 1 in #q: its first focus selects the text
-const view = () => waitingView({ embedReady: embedderReady, engineState, capable, questionKind: curKind });
+const auto = () => autoModel({ capable, cancelled: preloadCancelled });
+const isLive = (L) => L.kind === "typed" && auto(); // a typed question on a capable desktop is answered live, never from a recording
+const view = () => waitingView({ embedReady: embedderReady, engineState, capable: auto(), questionKind: curKind });
 const nav = createNavWatch(); // the user navigated since the current generation started
 
 // ---------------------------------------------------------------- small helpers
@@ -136,7 +139,7 @@ function scrollToEditor() {
 }
 /** The one bottom bar over both background loads (embedding model + WebLLM); the WebLLM part adds one line and Cancel. */
 function renderBar() {
-  const b = nextBar({ embed: barEmbed, llm: barLlm }, barValue);
+  const b = nextBar({ embed: barEmbed, llm: barLlm, probing: probePromise !== null && !capableKnown }, barValue);
   barValue = b.value;
   el.progress.hidden = b.hidden;
   el.progress.value = b.value;
@@ -431,13 +434,12 @@ function cancelPreload() {
   const ld = curLoad;
   if (!ld || engineState !== "loading") return;
   ld.cancelled = true;
-  preloadCancelled = true;
+  preloadCancelled = true; // from here a typed question behaves as in a browser that is not capable (auto())
   curLoad = null;
   enginePromise = null;
   engineState = "idle";
   engineFrac = null;
   barLlm = null;
-  capable = false; // from here a typed question behaves as in a browser that is not capable
   capableKnown = true;
   if (ld.eng) {
     cancelledEngines.push(ld.eng); // kept referenced: WebLLM's cleanup of an aborted load must not run while a later load uses the GPU
@@ -573,7 +575,7 @@ function drawAnswer() {
   else if (hasRec) main = recordedBlock();
   if (g.phase === "writing") {
     const stop = '(<button type="button" class="linkbtn" data-act="stop">Stop</button>)';
-    if (!L.live) ctl = `<p class="label gen-state">Writing a fresh answer on your device… ${stop}</p>`;
+    if (!isLive(L)) ctl = `<p class="label gen-state">Writing a fresh answer on your device… ${stop}</p>`;
     else if (engineState !== "ready") ctl = `<p class="label gen-state"><span data-wait-engine>${engineWaitText(engineFrac)}</span> ${stop}</p>`;
     else ctl = `<p class="label gen-state">Written on your device ${stop}</p>`;
     if (!hasRec) main = '<div class="gen-out"></div>';
@@ -587,7 +589,7 @@ function drawAnswer() {
     ctl = `<p class="note gen-state">Could not write a fresh answer on your device: ${esc(g.error ?? "unknown error")}</p>` + GEN_BUTTON;
     if (!hasRec) main = '<p class="note">The answer could not be written in this browser, so the page shows the sources only.</p>';
   } else {
-    ctl = (capable || !capableKnown ? "" : GEN_NOTE) + GEN_BUTTON; // a capable device is already loading the model quietly: just the button
+    ctl = (auto() || !capableKnown ? "" : GEN_NOTE) + GEN_BUTTON; // a capable device is already loading the model quietly: just the button
   }
   const active = document.activeElement;
   const had = el.answerBody.contains(active) && active !== el.answerBody;
@@ -648,8 +650,8 @@ function renderAnswerArea() {
   last.shown = last.recorded?.answer ? "recorded" : "generated";
   drawAnswer();
   applyAnswerPins();
-  if (last.live) {
-    // a typed question on a capable desktop is answered live; after this run's setup has finished
+  if (isLive(last)) {
+    // after this run's setup has finished
     const L = last;
     const id = runId;
     setTimeout(() => {
@@ -704,7 +706,7 @@ function startGeneration() {
   const L = last;
   const g = { last: L, runId, cancelled: false, eng: null };
   gen = g;
-  curKind = L.live ? "typed" : "manual";
+  curKind = isLive(L) ? "typed" : "manual";
   setBusy("generate");
   nav.start();
   L.gen = { phase: "writing", text: "", sources: null };
@@ -720,13 +722,13 @@ async function runGeneration(g) {
     const fresh = !enginePromise;
     const ep = getEngine();
     if (engineState !== "ready") {
-      if (fresh && !L.live) setStatus(`Loading WebLLM (cdn.jsdelivr.net) and the model (huggingface.co, raw.githubusercontent.com; about ${LLM.mb} MB the first time)…`);
+      if (fresh && !isLive(L)) setStatus(`Loading WebLLM (cdn.jsdelivr.net) and the model (huggingface.co, raw.githubusercontent.com; about ${LLM.mb} MB the first time)…`);
       else syncEngineWait();
     }
     const eng = await ep;
     if (staleGen(g)) return;
     g.eng = eng;
-    if (L.live) drawAnswer(); // the "getting ready" label becomes "Written on your device"
+    if (isLive(L)) drawAnswer(); // the "getting ready" label becomes "Written on your device"
     const sources = pack(L.run.results, CONTEXT_TOKENS);
     const messages = buildMessages(L.question, sources);
     L.gen.sources = sources;
@@ -989,7 +991,6 @@ async function ask(question, { qvec: stored = null, autoplay = false } = {}) {
   if (!autoplay) selectOnFocus = false; // the visitor took over: #q is theirs
   const kind = stored ? "suggested" : "typed"; // only suggestions (and the autoplay) carry a stored vector
   curKind = kind;
-  let live = false; // a typed question on a capable desktop is answered live, never from a recording
   setBusy("search");
   el.welcome.hidden = true;
   stopRun();
@@ -998,13 +999,12 @@ async function ask(question, { qvec: stored = null, autoplay = false } = {}) {
   try {
     if (kind === "typed" && probePromise && !capableKnown) await probePromise;
     if (mine !== runId) return;
-    live = kind === "typed" && capable;
     const qvec = stored ?? (await embedQuery(question)); // a stored vector runs synchronously
     if (mine !== runId) return;
     if (!autoplay) setStatus("Searching…");
-    const recorded = live ? null : recordedFor(question);
+    const recorded = isLive({ kind }) ? null : recordedFor(question);
     const { found, sources, pins, steps, ms } = search(qvec, question, recorded);
-    last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [], kind, live };
+    last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [], kind };
     el.answerMode.textContent = answerModeText(hasWebGpu(), Boolean(recorded?.answer));
     renderAll();
     beginRun(true, autoplay);
@@ -1203,7 +1203,7 @@ async function main() {
     const b = e.target.closest("button[data-act]");
     if (!b || !last?.gen) return;
     if (b.dataset.act === "stop") stopByUser();
-    else if (b.dataset.act === "generate") startGeneration(false);
+    else if (b.dataset.act === "generate") startGeneration();
     else if (b.dataset.act === "toggle") showAnswer(last.shown === "generated" ? "recorded" : "generated");
   });
   el.q.addEventListener("focus", () => {
@@ -1226,7 +1226,8 @@ async function main() {
     probePromise = probeCapable().then((c) => {
       capable = c;
       capableKnown = true;
-      if (c && !preloadCancelled) preloadEngine(); // WebLLM downloads in parallel with the embedding model
+      if (auto()) preloadEngine(); // WebLLM downloads in parallel with the embedding model
+      renderBar(); // the probe answered: the bar may hide now
     });
     qvecs = await qvecsPromise; // the example never waits for the probe
     // the visitor may already have asked something while the file loaded
