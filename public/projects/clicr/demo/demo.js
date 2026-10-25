@@ -15,6 +15,7 @@ import {
   ModelLoadError,
   BAR_LABEL,
   answerModeText,
+  answersLive,
   askBlock,
   autoModel,
   createNavWatch,
@@ -122,7 +123,7 @@ let downloadText = null; // the embedding-model download status text while a dow
 let readyText = ""; // the normal "Ready: ..." status line
 let selectOnFocus = false; // autoplay put question 1 in #q: its first focus selects the text
 const auto = () => autoModel({ capable, cancelled: preloadCancelled });
-const isLive = (L) => L.kind === "typed" && auto(); // a typed question on a capable desktop is answered live, never from a recording
+const isLive = (L) => answersLive({ kind: L.kind, capable, cancelled: preloadCancelled });
 const view = () => waitingView({ embedReady: embedderReady, engineState, capable: auto(), questionKind: curKind });
 const nav = createNavWatch(); // the user navigated since the current generation started
 
@@ -655,7 +656,7 @@ function renderAnswerArea() {
     const L = last;
     const id = runId;
     setTimeout(() => {
-      if (last === L && runId === id) startGeneration();
+      if (last === L && runId === id && isLive(L)) startGeneration();
     }, 0);
   }
 }
@@ -700,10 +701,11 @@ function stopGeneration() {
   return g;
 }
 
-/** Start writing an answer: a typed question's live answer, or the visitor's "Write a fresh answer" button. */
-function startGeneration() {
+/** Start writing an answer: a typed question's live answer, or (`manual`) the visitor's "Write a fresh answer" button. */
+function startGeneration({ manual = false } = {}) {
   if (!last || gen || busy) return;
   const L = last;
+  if (!manual && !isLive(L)) return; // after Cancel only the button loads the model
   const g = { last: L, runId, cancelled: false, eng: null };
   gen = g;
   curKind = isLive(L) ? "typed" : "manual";
@@ -1203,7 +1205,7 @@ async function main() {
     const b = e.target.closest("button[data-act]");
     if (!b || !last?.gen) return;
     if (b.dataset.act === "stop") stopByUser();
-    else if (b.dataset.act === "generate") startGeneration();
+    else if (b.dataset.act === "generate") startGeneration({ manual: true });
     else if (b.dataset.act === "toggle") showAnswer(last.shown === "generated" ? "recorded" : "generated");
   });
   el.q.addEventListener("focus", () => {

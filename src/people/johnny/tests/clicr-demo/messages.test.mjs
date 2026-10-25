@@ -5,6 +5,7 @@ import {
   MODEL_LOAD_TEXT,
   ModelLoadError,
   answerModeText,
+  answersLive,
   BLOCK_HOLD_MS,
   askBlock,
   autoModel,
@@ -134,6 +135,14 @@ test("autoModel: a capable device loads the model by itself until the visitor ca
   // Cancel while a typed question waits, or a probe that answers "capable" after Cancel: nothing auto-starts the model
   assert.equal(autoModel({ capable: true, cancelled: true }), false);
   assert.equal(autoModel({ capable: false, cancelled: true }), false);
+});
+
+test("answersLive: only typed questions on a capable device go live, and never after Cancel", () => {
+  assert.equal(answersLive({ kind: "typed", capable: true, cancelled: false }), true);
+  assert.equal(answersLive({ kind: "suggested", capable: true, cancelled: false }), false);
+  assert.equal(answersLive({ kind: "typed", capable: false, cancelled: false }), false);
+  // Cancel pressed while a live question's playback runs: its answer step must not auto-start the model
+  assert.equal(answersLive({ kind: "typed", capable: true, cancelled: true }), false);
 });
 
 test("waitingView: suggested questions never wait on a model, typed ones wait on the model they need", () => {

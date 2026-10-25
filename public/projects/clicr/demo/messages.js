@@ -94,6 +94,11 @@ export function autoModel({ capable, cancelled }) {
   return Boolean(capable) && !cancelled;
 }
 
+/** A typed question on a capable desktop is answered live (on the device, never from a recording) unless Cancel was pressed this visit. */
+export function answersLive({ kind, capable, cancelled }) {
+  return kind === "typed" && autoModel({ capable, cancelled });
+}
+
 /**
  * Which model download text the status line shows while the background models load (C12b).
  * questionKind: "suggested" (recorded answer, instant), "typed" (the visitor's own question), "manual"
