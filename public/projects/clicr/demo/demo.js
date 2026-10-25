@@ -822,7 +822,11 @@ function beginRun(play, autoplay = false) {
       r.done = true;
       el.steps.querySelectorAll("button.step").forEach((b) => (b.disabled = false));
       // the example is over: the status line shows a download still running, else the ready line
-      if (r.autoplay) setStatus(downloadText ?? engineText ?? readyText);
+      if (r.autoplay) {
+        if (downloadText !== null) lastDownloadStatus = downloadText;
+        else if (engineText !== null) lastEngineStatus = engineText;
+        setStatus(downloadText ?? engineText ?? readyText);
+      }
     },
   });
   run = r;
