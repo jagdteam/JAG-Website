@@ -62,10 +62,31 @@ export function coveringGlow(nodes, line, exact = null) {
   if (exact) return nodes.find((d) => d._glow && d._glow.start === exact.start && d._glow.end === exact.end);
   return nodes.find((d) => d._glow && d._glow.start <= line && line <= d._glow.end);
 }
+/** Tab captions: the file name, plus the parent folder when another open tab shares the name. */
+export function tabLabels(paths) {
+  const base = (p) => p.slice(p.lastIndexOf("/") + 1);
+  return paths.map((path) => {
+    const name = base(path);
+    const clash = paths.some((o) => o !== path && base(o) === name);
+    const parts = path.split("/");
+    return { path, name, dir: clash && parts.length > 1 ? parts[parts.length - 2] : "" };
+  });
+}
+
+/** The glow a line opens the explain card for: a pin wins over any other glow covering the line. */
+export function pickGlow(glows, line) {
+  const here = glows.filter((g) => g.start <= line && line <= g.end);
+  return here.find((g) => g.kind === "P") ?? here[0];
+}
+
+/** Glows that get a gutter marker: a cut "×" is dropped when a pin marker sits on the same first line. */
+export function markedGlows(glows) {
+  return glows.filter((g) => g.kind !== "cut" || !glows.some((o) => o.kind === "P" && o.path === g.path && o.start === g.start));
+}
 const where = (g) => `${g.path}:${g.start}-${g.end}`;
 const tabId = (path) => "tab-" + path.replace(/[^\w-]/g, "_");
 
-export function createEditor(els, { chunks, getFiles, explain }) {
+export function createEditor(els, { chunks, getFiles, explain, onNavigate = () => {} }) {
   const langOf = (path) => chunks.find((c) => c.path === path)?.lang ?? null;
   const htmlCache = new Map(); // path -> highlighted lines (per files.json state)
   let tabs = [];
@@ -73,6 +94,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   let step = null;
   let token = 0;
   let cardFor = null;
+  let navigated = false; // the user opened a file or revealed a range since the last step was shown
 
   function symbolOf(g) {
     if (!g) return null;
@@ -84,7 +106,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   // ------------------------------------------------------------ tabs and breadcrumb
   function drawTabs() {
     els.tabs.replaceChildren(
-      ...tabs.map((path) => {
+      ...tabLabels(tabs).map(({ path, name, dir }) => {
         const b = document.createElement("button");
         b.type = "button";
         b.id = tabId(path);
@@ -93,7 +115,14 @@ export function createEditor(els, { chunks, getFiles, explain }) {
         b.tabIndex = path === active ? 0 : -1;
         b.dataset.path = path;
         b.title = path;
-        b.textContent = path.slice(path.lastIndexOf("/") + 1);
+        b.setAttribute("aria-label", path);
+        b.textContent = name;
+        if (dir) {
+          const d = document.createElement("span");
+          d.className = "tdir";
+          d.textContent = dir;
+          b.append(d);
+        }
         return b;
       }),
     );
@@ -150,8 +179,10 @@ export function createEditor(els, { chunks, getFiles, explain }) {
       d.style.height = `calc(${g.end - g.start + 1} * var(--lh))`;
       d._glow = g;
       host.append(d);
+    }
+    for (const g of markedGlows(glows)) {
       const b = markFor(g);
-      b.style.top = d.style.top;
+      b.style.top = `calc(${g.start - 1} * var(--lh))`;
       b._glow = g;
       marks.append(b);
     }
@@ -215,7 +246,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     cardFor?.removeAttribute("aria-describedby");
     cardFor = null;
   }
-  const glowAt = (line) => glowsHere().find((g) => g.start <= line && line <= g.end);
+  const glowAt = (line) => pickGlow(glowsHere(), line);
 
   els.view.addEventListener("click", (e) => {
     const mark = e.target.closest(".mark");
@@ -258,6 +289,8 @@ export function createEditor(els, { chunks, getFiles, explain }) {
 
   // ------------------------------------------------------------ public API
   async function open(path) {
+    navigated = true;
+    onNavigate();
     if (!tabs.includes(path)) tabs.push(path);
     active = path;
     drawTabs();
@@ -268,6 +301,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
 
   async function showStep(next) {
     step = next;
+    navigated = false;
     const want = tabsFor(next);
     const top = strongest(next);
     if (want.length) {
@@ -284,6 +318,8 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   }
 
   async function reveal(range, { flash = false } = {}) {
+    navigated = true;
+    onNavigate();
     if (active !== range.path || !els.view.querySelector(".code")) {
       if (!tabs.includes(range.path)) tabs.push(range.path);
       active = range.path;
@@ -313,5 +349,5 @@ export function createEditor(els, { chunks, getFiles, explain }) {
     setTimeout(() => (t.dataset.kind === "reveal" ? t.remove() : t.classList.remove("flash")), 1000);
   }
 
-  return { showStep, open, reveal };
+  return { showStep, open, reveal, navigated: () => navigated };
 }

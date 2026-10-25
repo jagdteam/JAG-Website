@@ -3,12 +3,23 @@
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
 import { codeSpans, esc } from "./html.js";
-import { answerHtml, citedNumbers, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "./citations.js";
+import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
-import { badgesFor, buildSteps, createPlayer, pinGlow } from "./playback.js";
+import { badgesFor, buildSteps, createPlayer, pinGlow, refocus } from "./playback.js";
 import { initTheme } from "./theme.js";
+import {
+  ModelLoadError,
+  answerModeText,
+  askBlock,
+  createNavWatch,
+  holdUntil,
+  isHeld,
+  isUserScroll,
+  searchErrorText,
+  waitingText,
+} from "./messages.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
 const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js";
@@ -76,19 +87,23 @@ let last = null; // {question, qvec, run, recorded, sources, pins, steps}
 let filesPromise = null; // files.json, loaded lazily; resolves to null when it cannot be had
 let editor = null;
 let explorer = null;
-let busy = false;
+let busy = null; // the running phase: null, "search", "generate" or "selftest"
+let load = "loading"; // the demo data: "loading", "failed" or "ready"
 let runId = 0; // bumped whenever a run starts or is stopped; work from an older run checks it
 let answerGenerated = false; // a WebLLM answer is on screen (a graph toggle clears it)
 let run = null; // the current play-by-play: {id, steps, player, done, answerRendered}
+const nav = createNavWatch(); // the user navigated since the current generation started
 
 // ---------------------------------------------------------------- small helpers
 function setStatus(text, err = false) {
+  delete el.status.dataset.wait; // any other message ends the waiting counter's right to overwrite the status
   el.status.textContent = text;
   el.status.classList.toggle("err", err);
 }
+const scrollBehavior = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+const isPhone = () => matchMedia("(max-width: 719px)").matches;
 function scrollToEditor() {
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  $("editor").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  $("editor").scrollIntoView({ behavior: scrollBehavior(), block: "start" });
 }
 function setProgress(frac) {
   if (frac === null) {
@@ -98,9 +113,10 @@ function setProgress(frac) {
   el.progress.hidden = false;
   el.progress.value = Math.max(0, Math.min(1, frac));
 }
-function setBusy(on) {
-  busy = on;
-  el.go.disabled = on;
+function setBusy(phase) {
+  busy = phase;
+  const on = phase !== null;
+  el.go.setAttribute("aria-disabled", String(on)); // not `disabled`: Enter and Ask must still reach ask(), which says why nothing starts
   el.graphOpt.disabled = on; // a toggle mid-search or mid-generation would race the run
   for (const b of el.suggest.querySelectorAll("button")) b.disabled = on;
 }
@@ -153,6 +169,8 @@ function getExtractor() {
             setProgress(loaded / total);
           }
         },
+      }).catch((err) => {
+        throw new ModelLoadError(err); // the model host is blocked or offline
       });
     })();
     extractorPromise.catch(() => (extractorPromise = null));
@@ -301,22 +319,32 @@ function renderAnswerArea() {
   renderFallback(false);
 }
 
-/** The recorded answer is on screen: give the answer step its extra pins (idempotent) and redraw if it is showing. */
-function addExtraPins() {
+/** Redraw the editor for the answer step when that is the step on screen and the user has not moved the editor since. */
+function redrawAnswerStep() {
   const k = last.steps.findIndex((s) => s.id === "answer");
-  const step = last.steps[k];
+  if (el.steps.querySelector("[aria-current]")?.dataset.step !== String(k) || editor.navigated()) return;
+  const id = runId;
+  editor.showStep(last.steps[k]).catch((err) => {
+    if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
+  });
+}
+
+/** The answer step opens on the pin of the answer's first citation (no citations: it keeps pin 1); true when that changes its view. */
+function focusAnswerPin(pin) {
+  return refocus(last.steps.find((s) => s.id === "answer"), pin);
+}
+
+/** The recorded answer is on screen: give the answer step its extra pins and first-cited focus (idempotent) and redraw if it is showing. */
+function addExtraPins() {
+  const step = last.steps.find((s) => s.id === "answer");
   let changed = false;
   for (const p of last.extra ?? []) {
     if (step.glows.some((g) => g.kind === "P" && g.pin === p.n)) continue;
     step.glows.push(pinGlow(p));
     changed = true;
   }
-  if (changed && el.steps.querySelector("[aria-current]")?.dataset.step === String(k)) {
-    const id = runId;
-    editor.showStep(step).catch((err) => {
-      if (id === runId) setStatus(`Could not show the code: ${err.message ?? err}`, true);
-    });
-  }
+  if (focusAnswerPin(firstCitedPin(last.recorded.answer, last.cite))) changed = true;
+  if (changed) redrawAnswerStep();
 }
 
 /** Recorded answer if there is one, else the sources-only note (no WebGPU, or generation failed). */
@@ -352,10 +380,25 @@ function renderFallback(failed) {
   }
 }
 
+let waitTimer = null;
+let holdStatusUntil = 0; // performance.now() time until which a block message keeps the status
+function setWaiting(secs) {
+  if (waitTimer !== null && el.status.dataset.wait !== "1") return; // another message took the status
+  if (isHeld(performance.now(), holdStatusUntil)) return; // a block message is still being read; the next tick shows the right seconds
+  el.status.textContent = waitingText(secs);
+  el.status.classList.remove("err");
+  el.status.dataset.wait = "1";
+}
+function stopWaiting() {
+  clearInterval(waitTimer);
+  waitTimer = null;
+}
+
 async function generate() {
   if (busy || !last) return;
   const btn = $("gen");
-  setBusy(true);
+  setBusy("generate");
+  nav.start();
   if (btn) btn.disabled = true;
   try {
     const adapter = await navigator.gpu.requestAdapter();
@@ -378,14 +421,16 @@ async function generate() {
     setProgress(null);
     const sources = pack(last.run.results, CONTEXT_TOKENS);
     const messages = buildMessages(last.question, sources);
-    setStatus("Writing the answer…");
+    setWaiting(0);
+    const t0 = performance.now();
+    waitTimer = setInterval(() => setWaiting((performance.now() - t0) / 1000), 1000);
     const out = document.createElement("div");
     answerGenerated = true;
     el.answerBody.innerHTML = `<p class="label">Generated in your browser (${esc(id)})</p>`;
     el.answerBody.append(out);
     const head = $("answer-h");
     head.tabIndex = -1;
-    head.focus(); // the Generate button was just replaced
+    head.focus({ preventScroll: true }); // the Generate button was just replaced; scrollAnswerToTop does the scrolling
     const stream = await engine.chat.completions.create({
       messages,
       stream: true,
@@ -393,18 +438,29 @@ async function generate() {
       max_tokens: MAX_ANSWER_TOKENS,
     });
     let text = "";
+    let firstToken = true;
     for await (const chunk of stream) {
+      stopWaiting(); // the first token ends the wait
       text += chunk.choices[0]?.delta?.content ?? "";
       out.innerHTML = answerHtml(text, identityCite(sources.length));
+      if (firstToken) {
+        firstToken = false;
+        if (nav.mayScroll()) scrollAnswerToTop(); // once at the first token ...
+      }
     }
     out.insertAdjacentHTML("beforeend", '<p class="label">Sources in the prompt:</p>' + sourceList(sources));
+    if (focusAnswerPin(firstCitedPin(text, identityCite(sources.length)))) redrawAnswerStep();
     setStatus("Answer written on your device.");
+    // ... and once when the stream ends, so the heading and first lines are in the chat panel; neither runs once the user moved
+    if (nav.mayScroll()) scrollAnswerToTop();
   } catch (err) {
+    stopWaiting();
     setProgress(null);
     setStatus(`Could not generate an answer: ${err.message ?? err}`, true);
     renderFallback(true);
   } finally {
-    setBusy(false);
+    stopWaiting();
+    setBusy(null);
   }
 }
 
@@ -456,14 +512,9 @@ function clearRun() {
   });
 }
 
-/** Recorded answer -> its cite map and extra pins (cited ranges no packed source overlaps). */
-function recordedCite(rec, pins) {
-  return rec && rec.answer ? recordedPins(rec.answer, rec.sources ?? [], pins) : { cite: null, extra: [] };
-}
-
 /** The one place the answer area is set up for a run: sets last.cite and last.extra, with or without WebGPU. */
 function prepareAnswer() {
-  const { cite, extra } = recordedCite(last.recorded, last.pins);
+  const { cite, extra } = answerStepPins({ webgpu: false, recorded: last.recorded, pins: last.pins });
   last.cite = cite;
   last.extra = extra;
   renderAnswerArea();
@@ -490,10 +541,23 @@ function renderSteps(r, k) {
   return added;
 }
 
+function scrollAnswerToTop() {
+  const chat = el.answer.closest(".chat");
+  if (chat && chat.scrollHeight > chat.clientHeight + 1) {
+    const top = chat.scrollTop + el.answer.getBoundingClientRect().top - chat.getBoundingClientRect().top;
+    chat.scrollTo({ top, behavior: scrollBehavior() });
+  } else if (isPhone()) {
+    el.answer.scrollIntoView({ behavior: scrollBehavior(), block: "start" }); // phone: the page itself is the scroller
+  }
+}
+
 function showStepOf(r, k) {
   if (r.id !== runId) return;
   const step = r.steps[k];
+  const first = el.steps.children.length === 0;
   const added = renderSteps(r, k);
+  // phone, after Ask: bring the play-by-play into view once, when its first step appears
+  if (first && r.play && isPhone()) el.steps.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
   // one new step is announced by the live list; bulk fills and replays are announced here
   if (added !== 1) setStatus(`Step ${k + 1} of ${r.steps.length}: ${step.title}.`);
   explorer.setBadges(badgesFor(step));
@@ -503,27 +567,29 @@ function showStepOf(r, k) {
   // the answer area renders once per run; replaying the answer step only re-applies its glows
   if (step.id === "answer" && !r.answerRendered) {
     r.answerRendered = true;
+    el.skip.hidden = true;
     prepareAnswer();
+    // once per run, at every width: the answer section goes to the top of the chat panel (never the whole page on desktop)
+    scrollAnswerToTop();
   }
 }
 
 /** Fresh player for `last.steps`. play: auto-play from step 1; otherwise land on the final state like Skip. */
 function beginRun(play) {
-  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false };
+  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false, play };
   r.player = createPlayer({
     steps: r.steps,
     show: (k) => showStepOf(r, k),
     onDone: () => {
       if (r.id !== runId) return;
       r.done = true;
-      el.skip.hidden = true;
       el.steps.querySelectorAll("button.step").forEach((b) => (b.disabled = false));
     },
     reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
   });
   run = r;
   if (play) {
-    el.skip.hidden = false; // onDone hides it again at once when motion is reduced
+    el.skip.hidden = false; // the answer step hides it again at once when motion is reduced
     r.player.start();
   } else {
     r.player.skip();
@@ -540,9 +606,12 @@ function search(qvec, question, recorded) {
   const ms = performance.now() - t0;
   const sources = pack(found.results, CONTEXT_TOKENS);
   const pins = pinsFromSources(sources);
-  // recorded extra pins show only while the recorded answer is what the page shows (no WebGPU)
-  const extra = hasWebGpu() ? [] : recordedCite(recorded, pins).extra;
+  // recorded extra pins and the first-cited focus apply only while the recorded answer is what the page shows (no WebGPU)
+  const { cite, extra } = answerStepPins({ webgpu: hasWebGpu(), recorded, pins });
   const steps = buildSteps(found, pins, { chunks: bundle.chunks, nChunks: bundle.manifest.n_chunks, useGraph, extraPins: extra });
+  // the answer step opens on the first pin the recorded answer cites
+  const first = cite ? firstCitedPin(recorded.answer, cite) : null;
+  if (first) steps[steps.length - 1].focus = first;
   return { found, sources, pins, steps, ms };
 }
 /** Graph toggle: search again with the same question and land on the final state, no auto-play. */
@@ -560,9 +629,20 @@ function rerun() {
   setStatus(`Search re-run with Follow calls ${el.graphOpt.checked ? "on" : "off"}${cleared ? "; answer cleared" : ""}. ${statusFor(found, ms)}`);
 }
 async function ask(question) {
+  const block = askBlock({ question, busy, load });
+  if (block) {
+    if (block.text === null) return;
+    const waiting = el.status.dataset.wait === "1";
+    setStatus(block.text, block.err);
+    if (waiting) {
+      el.status.dataset.wait = "1";
+      holdStatusUntil = holdUntil(performance.now());
+    }
+    if (block.focus) el.q.focus();
+    return;
+  }
   question = question.trim();
-  if (!question || busy) return;
-  setBusy(true);
+  setBusy("search");
   el.welcome.hidden = true;
   stopRun();
   clearRun();
@@ -574,14 +654,15 @@ async function ask(question) {
     const recorded = recordedFor(question);
     const { found, sources, pins, steps, ms } = search(qvec, question, recorded);
     last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [] };
+    el.answerMode.textContent = answerModeText(hasWebGpu(), Boolean(recorded?.answer));
     renderAll();
     beginRun(true);
     setStatus(statusFor(found, ms));
   } catch (err) {
     setProgress(null);
-    setStatus(`Search failed: ${err.message ?? err}`, true);
+    setStatus(searchErrorText(err), true);
   } finally {
-    setBusy(false);
+    setBusy(null);
   }
 }
 
@@ -647,13 +728,31 @@ function setExplorer(open) {
   el.actExplorer.setAttribute("aria-expanded", String(open));
 }
 function wireShell() {
+  // attached before the bundle loads: if loading fails, Ask must still never do a native form submit
+  el.form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    ask(el.q.value);
+  });
   const theme = initTheme();
   el.themeToggle.addEventListener("click", () => theme.toggle());
+  $("skip-link").addEventListener("click", (e) => {
+    e.preventDefault();
+    el.q.focus();
+  });
 
   const wide = matchMedia("(min-width: 1024px)");
   setExplorer(wide.matches);
   wide.addEventListener("change", () => setExplorer(wide.matches));
   el.actExplorer.addEventListener("click", () => setExplorer(el.actExplorer.getAttribute("aria-expanded") !== "true"));
+
+  // a manual scroll of the page or the chat panel counts as navigating (scrollTo/scrollIntoView fire no input events)
+  const chat = el.answer.closest(".chat");
+  const noteScroll = (e) => {
+    const inControl = Boolean(e.target.closest?.("input, textarea, select, button, [contenteditable]"));
+    if (isUserScroll({ type: e.type, key: e.key, inControl, onScroller: e.target === chat })) nav.note();
+  };
+  for (const type of ["wheel", "touchmove", "keydown"]) window.addEventListener(type, noteScroll, { passive: true });
+  chat?.addEventListener("pointerdown", noteScroll);
 
   el.panelToggle.addEventListener("click", () => {
     const open = el.panelToggle.getAttribute("aria-expanded") !== "true";
@@ -700,13 +799,13 @@ async function main() {
       // below 1024 px the Explorer is an overlay: close it so the opened file is visible
       if (!matchMedia("(min-width: 1024px)").matches) {
         setExplorer(false);
-        if (matchMedia("(max-width: 719px)").matches) scrollToEditor();
+        if (isPhone()) scrollToEditor();
       }
     },
   });
   editor = createEditor(
     { tabs: $("tabs"), crumb: $("crumb"), view: $("editor"), card: $("explain-card") },
-    { chunks: bundle.chunks, getFiles: () => filesPromise, explain: explainFor },
+    { chunks: bundle.chunks, getFiles: () => filesPromise, explain: explainFor, onNavigate: () => nav.note() },
   );
   $("tabs").addEventListener("tabchange", (e) => explorer.setActive(e.detail.path));
   el.explainTable.addEventListener("click", (e) => {
@@ -725,18 +824,18 @@ async function main() {
     });
     el.suggest.append(b);
   }
-  el.form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    ask(el.q.value);
-  });
   el.graphOpt.addEventListener("change", rerun);
   el.skip.addEventListener("click", () => {
     run?.player.skip();
-    el.steps.querySelector("[aria-current]")?.focus(); // the Skip button just hid
+    // the Skip button just hid; preventScroll keeps the answer scroll from being cancelled
+    el.steps.querySelector("[aria-current]")?.focus({ preventScroll: true });
   });
   el.steps.addEventListener("click", (e) => {
     const b = e.target.closest("button.step");
-    if (b && !b.disabled && run) run.player.replay(Number(b.dataset.step));
+    if (b && !b.disabled && run) {
+      nav.note();
+      run.player.replay(Number(b.dataset.step));
+    }
   });
   // citation [n] -> reveal and flash its pin's lines; on a phone also scroll down to the editor
   el.answer.addEventListener("click", (e) => {
@@ -746,24 +845,26 @@ async function main() {
     const pin = [...last.pins, ...last.extra].find((p) => p.n === Number(a.dataset.pin));
     if (!pin) return;
     editor.reveal(pin, { flash: true }).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
-    if (matchMedia("(max-width: 719px)").matches) scrollToEditor();
+    if (isPhone()) scrollToEditor();
   });
+  load = "ready";
   setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
 
   if (new URLSearchParams(location.search).get("selftest") === "1") {
-    setBusy(true);
+    setBusy("selftest");
     try {
       await selftest();
     } catch (err) {
       $("selftest-result").textContent = `PARITY failed to run: ${err.message ?? err}`;
       setStatus(`Self-test failed: ${err.message ?? err}`, true);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 }
 
 main().catch((err) => {
+  load = "failed";
   setProgress(null);
   setStatus(`Could not start the demo: ${err.message ?? err}`, true);
 });

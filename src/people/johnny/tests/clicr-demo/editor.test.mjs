@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { breadcrumb, coveringGlow, fileLines, highlight } from "../../../../../public/projects/clicr/demo/editor.js";
+import { breadcrumb, coveringGlow, fileLines, highlight, markedGlows, tabLabels } from "../../../../../public/projects/clicr/demo/editor.js";
 
 test("highlight: python tokens per line, markdown as escaped plain text", () => {
   assert.deepEqual(highlight("def f():\n  return 1", "python"),
@@ -38,4 +38,20 @@ test("coveringGlow prefers a glow whose range matches the pin exactly", () => {
   assert.equal(coveringGlow(nodes, 5, { start: 5, end: 30 }), nodes[1]);
   assert.equal(coveringGlow(nodes, 5, { start: 5, end: 99 }), undefined);
   assert.equal(coveringGlow(nodes, 5), nodes[0]);
+});
+
+test("tabLabels: the parent folder shows only when two tabs share a file name", () => {
+  const out = tabLabels(["src/flask/sessions.py", "src/flask/app.py", "src/flask/sansio/app.py", "src/flask/testing.py"]);
+  assert.deepEqual(out.map((t) => [t.name, t.dir]), [["sessions.py", ""], ["app.py", "flask"], ["app.py", "sansio"], ["testing.py", ""]]);
+  assert.deepEqual(tabLabels(["src/flask/app.py"]).map((t) => t.dir), [""], "a lone tab has no folder");
+  assert.deepEqual(tabLabels(["app.py", "x/app.py"]).map((t) => t.dir), ["", "x"], "a top-level file has no folder to show");
+});
+
+test("markedGlows: a cut marker is dropped when a pin marker sits on the same line", () => {
+  const cut = { kind: "cut", path: "a.py", start: 10, end: 20 };
+  const pin = { kind: "P", pin: 4, path: "a.py", start: 10, end: 20 };
+  const otherCut = { kind: "cut", path: "a.py", start: 30, end: 40 };
+  const otherFile = { kind: "cut", path: "b.py", start: 10, end: 12 };
+  assert.deepEqual(markedGlows([cut, pin, otherCut, otherFile]), [pin, otherCut, otherFile]);
+  assert.deepEqual(markedGlows([cut]), [cut]);
 });

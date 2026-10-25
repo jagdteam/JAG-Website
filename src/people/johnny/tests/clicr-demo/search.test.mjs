@@ -17,7 +17,7 @@ const bm = {
 
 test("ordered by idf x tf", () => assert.deepEqual(matchedTerms("route decorator", bm, 0), ["route", "decorator"]));
 test("whole token drops its parts", () => assert.deepEqual(matchedTerms("url_for", bm, 0), ["url_for"]));
-test("parts shown when the whole token missed", () => assert.deepEqual(matchedTerms("url_for", bm, 1), ["url", "for"]));
+test("parts shown when the whole token missed (the stopword part \"for\" is dropped, E13)", () => assert.deepEqual(matchedTerms("url_for", bm, 1), ["url"]));
 test("idf-floor terms dropped", () => assert.deepEqual(matchedTerms("the route", bm, 0), ["route"]));
 test("prototype words", () => assert.deepEqual(matchedTerms("constructor __proto__ toString", bm, 0), []));
 test("chunk with no hit", () => assert.deepEqual(matchedTerms("route", bm, 9), []));
