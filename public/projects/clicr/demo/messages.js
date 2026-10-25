@@ -36,6 +36,35 @@ export function isHeld(now, until) {
   return now < until;
 }
 
+const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
+
+/**
+ * True when an input event is the user scrolling: a wheel turn, a touch drag, a press on a
+ * scroller's own box (its scrollbar), or a scroll key while focus is not on a control that uses it.
+ */
+export function isUserScroll({ type, key, inControl = false, onScroller = false }) {
+  if (type === "wheel" || type === "touchmove") return true;
+  if (type === "pointerdown") return onScroller;
+  return type === "keydown" && !inControl && SCROLL_KEYS.has(key);
+}
+
+/** Whether the user navigated (cite, Explorer, tab, step replay, manual scroll) since a generation started. */
+export function createNavWatch() {
+  let moved = false;
+  return {
+    start() {
+      moved = false;
+    },
+    note() {
+      moved = true;
+    },
+    /** True when the end-of-stream answer scroll may run: nothing moved since start(). */
+    mayScroll() {
+      return !moved;
+    },
+  };
+}
+
 /** Right-hand status-bar label: what the answer area will hold for this question. */
 export function answerModeText(webgpu, hasRecorded) {
   if (webgpu) return "WebGPU: answer on-device";

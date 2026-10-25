@@ -9,7 +9,17 @@ import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
 import { badgesFor, buildSteps, createPlayer, pinGlow, refocus } from "./playback.js";
 import { initTheme } from "./theme.js";
-import { ModelLoadError, answerModeText, askBlock, holdUntil, isHeld, searchErrorText, waitingText } from "./messages.js";
+import {
+  ModelLoadError,
+  answerModeText,
+  askBlock,
+  createNavWatch,
+  holdUntil,
+  isHeld,
+  isUserScroll,
+  searchErrorText,
+  waitingText,
+} from "./messages.js";
 
 // Pinned CDN builds (see the C7b report for why these versions).
 const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1/dist/transformers.min.js";
@@ -82,6 +92,7 @@ let load = "loading"; // the demo data: "loading", "failed" or "ready"
 let runId = 0; // bumped whenever a run starts or is stopped; work from an older run checks it
 let answerGenerated = false; // a WebLLM answer is on screen (a graph toggle clears it)
 let run = null; // the current play-by-play: {id, steps, player, done, answerRendered}
+const nav = createNavWatch(); // the user navigated since the current generation started
 
 // ---------------------------------------------------------------- small helpers
 function setStatus(text, err = false) {
@@ -387,6 +398,7 @@ async function generate() {
   if (busy || !last) return;
   const btn = $("gen");
   setBusy("generate");
+  nav.start();
   if (btn) btn.disabled = true;
   try {
     const adapter = await navigator.gpu.requestAdapter();
@@ -439,7 +451,8 @@ async function generate() {
     out.insertAdjacentHTML("beforeend", '<p class="label">Sources in the prompt:</p>' + sourceList(sources));
     if (focusAnswerPin(firstCitedPin(text, identityCite(sources.length)))) redrawAnswerStep();
     setStatus("Answer written on your device.");
-    scrollAnswerToTop(); // ... and once when the stream ends, so the heading and first lines are in the chat panel
+    // ... and once when the stream ends, so the heading and first lines are in the chat panel, unless the user moved meanwhile
+    if (nav.mayScroll()) scrollAnswerToTop();
   } catch (err) {
     stopWaiting();
     setProgress(null);
@@ -732,6 +745,15 @@ function wireShell() {
   wide.addEventListener("change", () => setExplorer(wide.matches));
   el.actExplorer.addEventListener("click", () => setExplorer(el.actExplorer.getAttribute("aria-expanded") !== "true"));
 
+  // a manual scroll of the page or the chat panel counts as navigating (scrollTo/scrollIntoView fire no input events)
+  const chat = el.answer.closest(".chat");
+  const noteScroll = (e) => {
+    const inControl = Boolean(e.target.closest?.("input, textarea, select, button, [contenteditable]"));
+    if (isUserScroll({ type: e.type, key: e.key, inControl, onScroller: e.target === chat })) nav.note();
+  };
+  for (const type of ["wheel", "touchmove", "keydown"]) window.addEventListener(type, noteScroll, { passive: true });
+  chat?.addEventListener("pointerdown", noteScroll);
+
   el.panelToggle.addEventListener("click", () => {
     const open = el.panelToggle.getAttribute("aria-expanded") !== "true";
     el.panelToggle.setAttribute("aria-expanded", String(open));
@@ -783,7 +805,7 @@ async function main() {
   });
   editor = createEditor(
     { tabs: $("tabs"), crumb: $("crumb"), view: $("editor"), card: $("explain-card") },
-    { chunks: bundle.chunks, getFiles: () => filesPromise, explain: explainFor },
+    { chunks: bundle.chunks, getFiles: () => filesPromise, explain: explainFor, onNavigate: () => nav.note() },
   );
   $("tabs").addEventListener("tabchange", (e) => explorer.setActive(e.detail.path));
   el.explainTable.addEventListener("click", (e) => {
@@ -810,7 +832,10 @@ async function main() {
   });
   el.steps.addEventListener("click", (e) => {
     const b = e.target.closest("button.step");
-    if (b && !b.disabled && run) run.player.replay(Number(b.dataset.step));
+    if (b && !b.disabled && run) {
+      nav.note();
+      run.player.replay(Number(b.dataset.step));
+    }
   });
   // citation [n] -> reveal and flash its pin's lines; on a phone also scroll down to the editor
   el.answer.addEventListener("click", (e) => {

@@ -7,8 +7,10 @@ import {
   answerModeText,
   BLOCK_HOLD_MS,
   askBlock,
+  createNavWatch,
   holdUntil,
   isHeld,
+  isUserScroll,
   searchErrorText,
   waitingText,
 } from "../../../../../public/projects/clicr/demo/messages.js";
@@ -33,6 +35,32 @@ test("block message hold: stays at least 3 s, then the wait counter may take the
   assert.equal(isHeld(until - 1, until), true);
   assert.equal(isHeld(until, until), false);
   assert.equal(isHeld(5, 0), false); // never held before any block message
+});
+
+test("createNavWatch: the end-of-stream scroll runs only when nothing moved since the generation started", () => {
+  const nav = createNavWatch();
+  nav.start();
+  assert.equal(nav.mayScroll(), true);
+  nav.note(); // a cite click, Explorer open, tab switch, step replay or manual scroll
+  assert.equal(nav.mayScroll(), false);
+  nav.note();
+  assert.equal(nav.mayScroll(), false);
+  nav.start(); // the next generation forgets the previous one's navigation
+  assert.equal(nav.mayScroll(), true);
+});
+
+test("isUserScroll: wheel, touch drag, scrollbar press and scroll keys outside controls", () => {
+  assert.equal(isUserScroll({ type: "wheel" }), true);
+  assert.equal(isUserScroll({ type: "touchmove" }), true);
+  assert.equal(isUserScroll({ type: "pointerdown", onScroller: true }), true);
+  assert.equal(isUserScroll({ type: "pointerdown", onScroller: false }), false);
+  for (const key of ["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "]) {
+    assert.equal(isUserScroll({ type: "keydown", key }), true, key);
+    assert.equal(isUserScroll({ type: "keydown", key, inControl: true }), false, key);
+  }
+  assert.equal(isUserScroll({ type: "keydown", key: "Enter" }), false);
+  assert.equal(isUserScroll({ type: "keydown", key: "a" }), false);
+  assert.equal(isUserScroll({ type: "scroll" }), false); // programmatic scrolls fire scroll, never input events
 });
 
 test("searchErrorText: model load errors get the huggingface.co advice, others keep their message", () => {

@@ -86,7 +86,7 @@ export function markedGlows(glows) {
 const where = (g) => `${g.path}:${g.start}-${g.end}`;
 const tabId = (path) => "tab-" + path.replace(/[^\w-]/g, "_");
 
-export function createEditor(els, { chunks, getFiles, explain }) {
+export function createEditor(els, { chunks, getFiles, explain, onNavigate = () => {} }) {
   const langOf = (path) => chunks.find((c) => c.path === path)?.lang ?? null;
   const htmlCache = new Map(); // path -> highlighted lines (per files.json state)
   let tabs = [];
@@ -290,6 +290,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
   // ------------------------------------------------------------ public API
   async function open(path) {
     navigated = true;
+    onNavigate();
     if (!tabs.includes(path)) tabs.push(path);
     active = path;
     drawTabs();
@@ -318,6 +319,7 @@ export function createEditor(els, { chunks, getFiles, explain }) {
 
   async function reveal(range, { flash = false } = {}) {
     navigated = true;
+    onNavigate();
     if (active !== range.path || !els.view.querySelector(".code")) {
       if (!tabs.includes(range.path)) tabs.push(range.path);
       active = range.path;
