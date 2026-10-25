@@ -859,7 +859,11 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
 }
-.card.thumbed :is(.more-head, .headrow) > .thumb {
+/* an animated thumb sits in a <picture> with a still for reduced motion */
+.thumbpic {
+  display: block;
+}
+.card.thumbed :is(.more-head, .headrow) > :is(.thumb, .thumbpic) {
   order: -1;
   margin-bottom: 14px;
 }
@@ -871,10 +875,13 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
     grid-template-columns: minmax(0, 1fr) 236px;
     column-gap: 20px;
   }
-  .card.thumbed :is(.more-head, .headrow) > .thumb {
+  .card.thumbed :is(.more-head, .headrow) > :is(.thumb, .thumbpic) {
     order: 0;
-    aspect-ratio: 4 / 3;
     align-self: start;
     margin-bottom: 0;
+  }
+  .card.thumbed :is(.more-head, .headrow) > .thumb,
+  .card.thumbed :is(.more-head, .headrow) > .thumbpic > .thumb {
+    aspect-ratio: 4 / 3;
   }
 }
