@@ -445,13 +445,13 @@ async function generate() {
       out.innerHTML = answerHtml(text, identityCite(sources.length));
       if (firstToken) {
         firstToken = false;
-        scrollAnswerToTop(); // once at the first token ...
+        if (nav.mayScroll()) scrollAnswerToTop(); // once at the first token ...
       }
     }
     out.insertAdjacentHTML("beforeend", '<p class="label">Sources in the prompt:</p>' + sourceList(sources));
     if (focusAnswerPin(firstCitedPin(text, identityCite(sources.length)))) redrawAnswerStep();
     setStatus("Answer written on your device.");
-    // ... and once when the stream ends, so the heading and first lines are in the chat panel, unless the user moved meanwhile
+    // ... and once when the stream ends, so the heading and first lines are in the chat panel; neither runs once the user moved
     if (nav.mayScroll()) scrollAnswerToTop();
   } catch (err) {
     stopWaiting();

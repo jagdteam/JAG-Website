@@ -58,7 +58,7 @@ export function createNavWatch() {
     note() {
       moved = true;
     },
-    /** True when the end-of-stream answer scroll may run: nothing moved since start(). */
+    /** True when the generation's answer scrolls (first token, stream end) may run: nothing moved since start(). */
     mayScroll() {
       return !moved;
     },

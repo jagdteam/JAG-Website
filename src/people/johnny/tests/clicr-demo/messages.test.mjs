@@ -37,7 +37,7 @@ test("block message hold: stays at least 3 s, then the wait counter may take the
   assert.equal(isHeld(5, 0), false); // never held before any block message
 });
 
-test("createNavWatch: the end-of-stream scroll runs only when nothing moved since the generation started", () => {
+test("createNavWatch: the first-token and end-of-stream scrolls run only when nothing moved since the generation started", () => {
   const nav = createNavWatch();
   nav.start();
   assert.equal(nav.mayScroll(), true);
