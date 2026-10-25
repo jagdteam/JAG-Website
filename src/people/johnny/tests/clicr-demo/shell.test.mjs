@@ -175,7 +175,7 @@ test("play-by-play wiring in demo.js", () => {
   assert.match(demoJs, /import \{[^}]*codeSpans[^}]*\} from "\.\/html\.js"/, "codeSpans imported");
   assert.ok(demoJs.includes('$("steps")') && demoJs.includes('$("skip")'), "#steps and #skip looked up");
   assert.ok(demoJs.includes('matchMedia("(prefers-reduced-motion: reduce)")'), "reduced motion query");
-  assert.match(demoJs, /createPlayer\(\{[\s\S]*?steps[\s\S]*?show[\s\S]*?onDone[\s\S]*?reducedMotion/, "fresh player per run");
+  assert.match(demoJs, /createPlayer\(\{[\s\S]*?steps[\s\S]*?show[\s\S]*?onDone/, "fresh player per run");
   assert.ok(demoJs.includes('class="step"') && demoJs.includes('data-step="'), "step buttons");
   assert.ok(demoJs.includes("aria-current"), "current step marked");
   assert.match(demoJs, /function prepareAnswer\(/, "one shared answer hook for Task 10");

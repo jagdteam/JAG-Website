@@ -162,11 +162,16 @@ test("skip at the last step calls onDone once", () => {
   assert.equal(h.done.n, 1);
 });
 
-test("reducedMotion", () => {
-  const h = harness(six(), { reducedMotion: true });
+test("reduced motion still steps through (the option no longer jumps to the end)", () => {
+  const h = harness(six(-1), { reducedMotion: true });
   h.p.start();
-  assert.deepEqual(h.shows, [5]);
-  assert.equal(h.timers.length, 0);
+  assert.deepEqual(h.shows, [0]);
+  assert.equal(h.p.done, false);
+  for (let k = 1; k <= 5; k++) {
+    assert.equal(h.live()[0].ms, STEP_MS);
+    h.tick();
+    assert.equal(h.shows.at(-1), k);
+  }
   assert.equal(h.p.done, true);
   assert.equal(h.done.n, 1);
 });

@@ -4,6 +4,7 @@
 import * as S from "./search.js";
 import { codeSpans, esc } from "./html.js";
 import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
+import { AUTOPLAY_STATUS, autoplayEligible, parseQvecs, storedVector } from "./autoplay.js";
 import { createEditor } from "./editor.js";
 import { createExplorer, buildTree } from "./explorer.js";
 import { explainGlow, shortLabel } from "./explain.js";
@@ -91,7 +92,13 @@ let busy = null; // the running phase: null, "search", "generate" or "selftest"
 let load = "loading"; // the demo data: "loading", "failed" or "ready"
 let runId = 0; // bumped whenever a run starts or is stopped; work from an older run checks it
 let answerGenerated = false; // a WebLLM answer is on screen (a graph toggle clears it)
-let run = null; // the current play-by-play: {id, steps, player, done, answerRendered}
+let run = null; // the current play-by-play: {id, steps, player, done, answerRendered, play, autoplay}
+let qvecs = null; // qvecs.bin as a Float32Array (one row per questions.json entry), once loaded
+let downloadText = null; // the embedding-model download status text while a download is running, else null
+let lastDownloadStatus = null; // the download text last written to the status line
+let readyText = ""; // the normal "Ready: ..." status line
+let selectOnFocus = false; // autoplay put question 1 in #q: its first focus selects the text
+const autoplayActive = () => Boolean(run?.autoplay && !run.done); // the example question is still playing
 const nav = createNavWatch(); // the user navigated since the current generation started
 
 // ---------------------------------------------------------------- small helpers
@@ -165,7 +172,11 @@ function getExtractor() {
               loaded += l;
               total += t;
             }
-            setStatus(`Downloading the embedding model: ${mb(loaded)} / ${mb(total)} MB`);
+            downloadText = `Downloading the embedding model: ${mb(loaded)} / ${mb(total)} MB`;
+            if (!autoplayActive()) {
+              lastDownloadStatus = downloadText;
+              setStatus(downloadText); // while the example plays, only the progress bar shows the download
+            }
             setProgress(loaded / total);
           }
         },
@@ -173,9 +184,30 @@ function getExtractor() {
         throw new ModelLoadError(err); // the model host is blocked or offline
       });
     })();
-    extractorPromise.catch(() => (extractorPromise = null));
+    extractorPromise.then(
+      () => (downloadText = null),
+      () => {
+        downloadText = null;
+        extractorPromise = null;
+      },
+    );
   }
   return extractorPromise;
+}
+/** Start the embedding model download at page load. Not awaited; a failure stays quiet until a typed question retries it. */
+function preloadEmbedder() {
+  const quiet = () => {
+    setProgress(null);
+    // a download line left on the status goes back to the ready line (the example's end does this itself)
+    if (!autoplayActive() && el.status.textContent === lastDownloadStatus) setStatus(readyText);
+  };
+  getExtractor().then(() => {
+    if (!embedderReady) {
+      embedderReady = true;
+      el.note.textContent = `Embedding model ${port.id} is loaded.`;
+    }
+    quiet();
+  }, quiet);
 }
 async function embedQuery(text) {
   if (!embedderReady) {
@@ -524,7 +556,7 @@ function prepareAnswer() {
 function renderSteps(r, k) {
   const list = el.steps;
   const added = k + 1 - list.children.length;
-  // Skip, reduced motion and a graph toggle add several at once: keep the live list quiet, status says where we are
+  // Skip and a graph toggle add several at once: keep the live list quiet, status says where we are
   if (added > 1) list.setAttribute("aria-live", "off");
   for (let n = list.children.length; n <= k; n++) {
     const s = r.steps[n];
@@ -541,12 +573,13 @@ function renderSteps(r, k) {
   return added;
 }
 
-function scrollAnswerToTop() {
+/** `page` false (the example question): only the chat panel may scroll, never the page. */
+function scrollAnswerToTop(page = true) {
   const chat = el.answer.closest(".chat");
   if (chat && chat.scrollHeight > chat.clientHeight + 1) {
     const top = chat.scrollTop + el.answer.getBoundingClientRect().top - chat.getBoundingClientRect().top;
     chat.scrollTo({ top, behavior: scrollBehavior() });
-  } else if (isPhone()) {
+  } else if (page && isPhone()) {
     el.answer.scrollIntoView({ behavior: scrollBehavior(), block: "start" }); // phone: the page itself is the scroller
   }
 }
@@ -557,7 +590,7 @@ function showStepOf(r, k) {
   const first = el.steps.children.length === 0;
   const added = renderSteps(r, k);
   // phone, after Ask: bring the play-by-play into view once, when its first step appears
-  if (first && r.play && isPhone()) el.steps.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  if (first && r.play && !r.autoplay && isPhone()) el.steps.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
   // one new step is announced by the live list; bulk fills and replays are announced here
   if (added !== 1) setStatus(`Step ${k + 1} of ${r.steps.length}: ${step.title}.`);
   explorer.setBadges(badgesFor(step));
@@ -570,13 +603,13 @@ function showStepOf(r, k) {
     el.skip.hidden = true;
     prepareAnswer();
     // once per run, at every width: the answer section goes to the top of the chat panel (never the whole page on desktop)
-    scrollAnswerToTop();
+    scrollAnswerToTop(!r.autoplay);
   }
 }
 
-/** Fresh player for `last.steps`. play: auto-play from step 1; otherwise land on the final state like Skip. */
-function beginRun(play) {
-  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false, play };
+/** Fresh player for `last.steps`. play: auto-play from step 1; otherwise land on the final state like Skip. autoplay: the page's own example question (never moves the page). */
+function beginRun(play, autoplay = false) {
+  const r = { id: runId, steps: last.steps, player: null, done: false, answerRendered: false, play, autoplay };
   r.player = createPlayer({
     steps: r.steps,
     show: (k) => showStepOf(r, k),
@@ -584,12 +617,13 @@ function beginRun(play) {
       if (r.id !== runId) return;
       r.done = true;
       el.steps.querySelectorAll("button.step").forEach((b) => (b.disabled = false));
+      // the example is over: the status line shows a download still running, else the ready line
+      if (r.autoplay) setStatus(downloadText ?? readyText);
     },
-    reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
   });
   run = r;
   if (play) {
-    el.skip.hidden = false; // the answer step hides it again at once when motion is reduced
+    el.skip.hidden = false;
     r.player.start();
   } else {
     r.player.skip();
@@ -628,7 +662,8 @@ function rerun() {
   beginRun(false);
   setStatus(`Search re-run with Follow calls ${el.graphOpt.checked ? "on" : "off"}${cleared ? "; answer cleared" : ""}. ${statusFor(found, ms)}`);
 }
-async function ask(question) {
+/** `qvec`: a stored question vector (no embedding needed, so the run starts at once). `autoplay`: the page's own example. */
+async function ask(question, { qvec: stored = null, autoplay = false } = {}) {
   const block = askBlock({ question, busy, load });
   if (block) {
     if (block.text === null) return;
@@ -642,22 +677,23 @@ async function ask(question) {
     return;
   }
   question = question.trim();
+  if (!autoplay) selectOnFocus = false; // the visitor took over: #q is theirs
   setBusy("search");
   el.welcome.hidden = true;
   stopRun();
   clearRun();
   const mine = runId;
   try {
-    const qvec = await embedQuery(question);
+    const qvec = stored ?? (await embedQuery(question)); // a stored vector runs synchronously
     if (mine !== runId) return;
-    setStatus("Searching…");
+    if (!autoplay) setStatus("Searching…");
     const recorded = recordedFor(question);
     const { found, sources, pins, steps, ms } = search(qvec, question, recorded);
     last = { question, qvec, run: found, recorded, sources, pins, steps, cite: null, extra: [] };
     el.answerMode.textContent = answerModeText(hasWebGpu(), Boolean(recorded?.answer));
     renderAll();
-    beginRun(true);
-    setStatus(statusFor(found, ms));
+    beginRun(true, autoplay);
+    setStatus(autoplay ? AUTOPLAY_STATUS : statusFor(found, ms));
   } catch (err) {
     setProgress(null);
     setStatus(searchErrorText(err), true);
@@ -820,7 +856,7 @@ async function main() {
     b.textContent = q.question;
     b.addEventListener("click", () => {
       el.q.value = q.question;
-      ask(q.question);
+      ask(q.question, { qvec: storedVector(qvecs, bundle.questions, q.question, m.embed.dim) }); // stored vector: instant, no model
     });
     el.suggest.append(b);
   }
@@ -847,10 +883,32 @@ async function main() {
     editor.reveal(pin, { flash: true }).catch((err) => setStatus(`Could not show the code: ${err.message ?? err}`, true));
     if (isPhone()) scrollToEditor();
   });
+  el.q.addEventListener("focus", () => {
+    if (!selectOnFocus) return;
+    selectOnFocus = false;
+    el.q.select(); // question 1 was put there by the autoplay: typing replaces it
+  });
   load = "ready";
-  setStatus(`Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`);
+  readyText = `Ready: ${m.n_chunks} chunks of ${src.name} indexed. Pick a question or type your own.`;
+  setStatus(readyText);
 
-  if (new URLSearchParams(location.search).get("selftest") === "1") {
+  const selftestMode = new URLSearchParams(location.search).get("selftest") === "1";
+  if (!selftestMode) {
+    // the embedding model downloads in the background (never awaited); stored question vectors load lazily like files.json
+    preloadEmbedder();
+    const qvecsPromise = fetchOk("qvecs.bin")
+      .then((r) => r.arrayBuffer())
+      .then((buf) => parseQvecs(buf, bundle.questions.length, m.embed.dim))
+      .catch(() => null);
+    qvecs = await qvecsPromise;
+    // the visitor may already have asked something while the file loaded
+    if (autoplayEligible({ selftest: false, questions: bundle.questions, qvecs, dim: m.embed.dim }) && !run && !last && !busy) {
+      const first = bundle.questions[0].question;
+      el.q.value = first;
+      selectOnFocus = true;
+      ask(first, { qvec: storedVector(qvecs, bundle.questions, first, m.embed.dim), autoplay: true });
+    }
+  } else {
     setBusy("selftest");
     try {
       await selftest();
