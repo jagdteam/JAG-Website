@@ -768,6 +768,13 @@ button.linkbtn {
   height: 6px;
   accent-color: var(--status-fg);
 }
+.statusbar .preload {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.statusbar .linkbtn {
+  color: var(--status-fg); /* --accent is unreadable on --status-bg */
+}
 
 /* ---------------------------------------------------------------- tables */
 .tablewrap {

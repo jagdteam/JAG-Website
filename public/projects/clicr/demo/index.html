@@ -125,7 +125,8 @@
 
       <footer class="statusbar">
         <div id="status" class="status" role="status" aria-live="polite"></div>
-        <progress id="progress" max="1" value="0" hidden aria-label="Download progress"></progress>
+        <progress id="progress" max="1" value="0" hidden role="progressbar" aria-label="Preparing models" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></progress>
+        <span id="preload" class="preload" role="status" hidden><span id="preload-text"></span> &middot; <button id="preload-cancel" class="linkbtn" type="button" aria-label="Cancel the on-device AI download">Cancel</button></span>
         <span id="answer-mode"></span>
         <span class="local">runs on your device</span>
       </footer>

@@ -73,7 +73,7 @@ export function answerModeText(webgpu, hasRecorded) {
 
 /**
  * Why Ask must not start a run now (null when it may). `busy` is the running phase (null, "search",
- * "generate" or "selftest"), `load` the data state ("loading", "failed" or "ready"). A null `text`
+ * "generate" or "selftest"; a new question interrupts "generate" before this is asked), `load` the data state ("loading", "failed" or "ready"). A null `text`
  * means ignore the submit without a message (the self-test keeps the page to itself).
  */
 export function askBlock({ question, busy, load }) {
@@ -81,7 +81,80 @@ export function askBlock({ question, busy, load }) {
   if (load === "failed") return { text: "The demo data did not load; reload the page to try again.", err: true, focus: false };
   if (load !== "ready") return { text: "Still loading the demo data; ask again in a moment.", err: false, focus: false };
   if (!String(question ?? "").trim()) return { text: "Type a question first.", err: false, focus: true };
-  if (busy === "generate") return { text: "Still writing the previous answer; ask again when it finishes.", err: false, focus: false };
   if (busy) return { text: "Still searching; ask again when it finishes.", err: false, focus: false };
   return null;
+}
+
+/**
+ * Whether the page loads and uses the on-device model by itself (the page-load preload, typed questions answered
+ * live): a capable device, unless the visitor pressed Cancel this visit. After Cancel only the "Write a fresh answer
+ * on your device" button loads the model.
+ */
+export function autoModel({ capable, cancelled }) {
+  return Boolean(capable) && !cancelled;
+}
+
+/** A typed question on a capable desktop is answered live (on the device, never from a recording) unless Cancel was pressed this visit. */
+export function answersLive({ kind, capable, cancelled }) {
+  return kind === "typed" && autoModel({ capable, cancelled });
+}
+
+/**
+ * Which model download text the status line shows while the background models load (C12b).
+ * questionKind: "suggested" (recorded answer, instant), "typed" (the visitor's own question), "manual"
+ * (the visitor pressed "Write a fresh answer on your device"), or null (no question). engineState: "idle",
+ * "loading", "ready" or "failed"; `capable` is autoModel(). Returns {status}: "none" | "embed" (embedding download
+ * text) | "engine" (on-device model text). Model download text appears only when the visitor is waiting on that model.
+ */
+export function waitingView({ embedReady, engineState, capable, questionKind }) {
+  if (questionKind === "typed" && !embedReady) return { status: "embed" };
+  const onEngine = questionKind === "manual" || (questionKind === "typed" && capable);
+  if (onEngine && engineState !== "ready" && engineState !== "failed") return { status: "engine" }; // failed: the generation retries and reports
+  return { status: "none" };
+}
+
+/** The visitor's waiting text while the on-device model loads; `frac` is 0..1 (unknown counts as 0). */
+export function engineWaitText(frac) {
+  const n = Math.round(Math.max(0, Math.min(1, Number.isFinite(frac) ? frac : 0)) * 100);
+  return `Getting the on-device model ready… ${n}%`;
+}
+
+/** Accessible name of the one bottom progress bar. */
+export const BAR_LABEL = "Preparing models";
+
+/**
+ * The one bottom progress bar over both background loads. Each part is null (not expected) or
+ * {loaded, total, done, failed}. The value is (all loaded bytes) / (all totals), never below `prev`; while an
+ * expected load has not reported its total yet the bar holds at `prev`. A part stays "not done" through engine
+ * init and warm-up, so the bar stays full until then. Failed parts drop out; the bar hides once nothing is left loading.
+ * A cancelled load is passed as null. `probing`: the capability probe has not answered yet, so the WebLLM load may
+ * still start; the bar stays up and holds (like a load without a total) until it answers. Returns {hidden, value, llmActive}.
+ */
+export function nextBar({ embed = null, llm = null, probing = false }, prev = 0) {
+  const live = [embed, llm].filter((p) => p && !p.failed);
+  if (!probing && !live.some((p) => !p.done)) return { hidden: true, value: 0, llmActive: false };
+  const llmActive = Boolean(llm && !llm.failed && !llm.done); // the WebLLM load is running: the Cancel line shows
+  let loaded = 0;
+  let total = 0;
+  let unknown = false;
+  for (const p of live) {
+    if (p.done) {
+      if (p.total > 0) {
+        loaded += p.total;
+        total += p.total;
+      }
+    } else if (p.total > 0) {
+      loaded += Math.min(p.loaded, p.total);
+      total += p.total;
+    } else {
+      unknown = true;
+    }
+  }
+  if (probing || unknown || total === 0) return { hidden: false, value: prev, llmActive };
+  return { hidden: false, value: Math.max(prev, Math.min(1, loaded / total)), llmActive };
+}
+
+/** The one line beside the bar while the WebLLM preload runs (the embedding preload has no line). `mb` is the model size from the pinned config. */
+export function preloadLineText(mb) {
+  return `Getting the on-device AI ready (${mb} MB)`;
 }
