@@ -58,7 +58,9 @@ export const profile = {
   },
   projects: [
     { slug: "clutch", myPart: "Basketball app with on-iPhone computer vision that tracks players and the ball." },
+    { local: "flip-assistant", myPart: "Building the price model from the collected price data." },
     { slug: "beeseye" },
+    { local: "clicr" },
     { local: "jit-expression-evaluator" },
   ] as ProjectRef[],
   photo: "/assets/giuseppi-photo.jpg" as string | undefined,
