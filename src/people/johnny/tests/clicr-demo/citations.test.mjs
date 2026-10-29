@@ -109,10 +109,13 @@ test("classifyPaths: line ranges", () => {
   assert.equal(kinds("src/flask/app.py")[0][1], "source"); // no lines: same file
   assert.equal(kinds("src/flask/app.py:3")[0][1], "source");
   assert.equal(kinds("src/flask/app.py:4")[0][1], "unsent"); // same file, lines not sent
-  assert.equal(kinds("src/flask/app.py:4-9")[0][1], "unsent");
+  assert.equal(kinds("src/flask/app.py:4-4")[0][1], "unsent");
   assert.equal(kinds("src/flask/app.py:9")[0][1], "nolines"); // file has 4 lines
+  assert.equal(kinds("src/flask/app.py:4-9")[0][1], "nolines"); // range end past the file
+  assert.equal(kinds("src/flask/app.py:2-99999")[0][1], "nolines"); // overlaps a source but runs past the file
+  assert.equal(kinds("src/flask/app.py:1-4")[0][1], "source"); // ends on the last line
   assert.equal(kinds("src/flask/app.py:2-3")[0][1], "source");
-  assert.equal(kinds("src/flask/app.py:3\u20135")[0][1], "source"); // en dash
+  assert.equal(kinds("src/flask/app.py:3\u20134")[0][1], "source"); // en dash
 });
 
 test("classifyPaths: normalisation", () => {
@@ -125,6 +128,8 @@ test("classifyPaths: normalisation", () => {
   assert.equal(kinds("sansio/app.py")[0][1], "unsent");
   assert.equal(kinds("sansio/README.md")[0][1], "unsent");
   assert.equal(kinds("nothere.py:3")[0][1], "missing");
+  assert.deepEqual(kinds("see src/flask/data.txt:3", { sources: [], chunkPaths: ["src/flask/data.txt"] }), []); // only .py and .md
+  assert.deepEqual(kinds("see src/flask/x.json:3"), []);
 });
 
 test("classifyPaths: code spans, fences, links, cites, urls", () => {
@@ -148,15 +153,24 @@ test("classifyPaths: no files data", () => {
 test("answerHtml: path links, labels and summary", () => {
   const html = answerHtml("Use src/flask/app.py:2 and src/flask/reranker.py:45 and src/flask/json/__init__.py, see [1].", new Map([[1, 1]]), ctx);
   assert.ok(html.includes('<a class="cite path-ref" href="#pin-1" data-pin="1">src/flask/app.py:2</a>'));
-  assert.ok(html.includes("(no such file in Flask)"));
+  assert.ok(html.includes("(not found in src/flask)"));
   assert.ok(html.includes("(not in the sources)"));
   assert.ok(html.includes('<a class="cite" href="#pin-1" data-pin="1">[1]</a>'));
-  assert.ok(html.includes("mentioned 2 file references that weren't in its sources."));
+  assert.ok(html.includes(`<p class="path-note">This answer mentions 2 file references that weren't in its sources.</p>`));
   const clean = answerHtml("Only src/flask/cli.py [2].", new Map([[2, 2]]), ctx);
   assert.ok(!clean.includes("path-label") && !clean.includes("path-note"));
   assert.ok(answerHtml("src/flask/app.py:9", null, ctx).includes("(no such lines)"));
-  assert.ok(answerHtml("one src/flask/x.py", null, ctx).includes("mentioned 1 file reference that"));
+  assert.ok(answerHtml("one src/flask/x.py", null, ctx).includes("This answer mentions 1 file reference that wasn't in its sources."));
+  assert.ok(answerHtml("tests/test_basic.py:10", null, ctx).includes("(not found in src/flask)"));
   assert.equal(answerHtml("src/flask/x.py [1]", new Map([[1, 1]])), '<p>src/flask/x.py <a class="cite" href="#pin-1" data-pin="1">[1]</a></p>'); // no paths arg: unchanged
+});
+
+test("answerHtml: the summary counts exactly the labels shown, across code fences", () => {
+  const text = ["See src/flask/nope.py:1 and src/flask/cli.py [2].", "```py", "src/flask/fenced.py:3", "```", "Then src/flask/app.py:9 and src/flask/json/__init__.py."].join(String.fromCharCode(10));
+  const html = answerHtml(text, new Map([[2, 2]]), ctx);
+  assert.equal(html.match(/class="path-label/g).length, 3);
+  assert.ok(html.includes("This answer mentions 3 file references that weren't in its sources."));
+  assert.ok(!html.includes('fenced.py:3</span>'));
 });
 
 test("recordedSourcePins", () => {

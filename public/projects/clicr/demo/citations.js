@@ -105,7 +105,7 @@ export function identityCite(n) {
 }
 
 
-const DEFAULT_EXTS = ["py", "md"];
+const PATH_RE = /(?<![\w@:/.-])((?:\.{1,2}\/)?[\w.-]+(?:\/[\w.-]+)*\.(?:py|md))(?![\w-])(?::(\d+)(?:[-–](\d+))?(?!\d))?/g;
 const lineCounts = new WeakMap();
 
 function lineCount(text) {
@@ -123,34 +123,29 @@ function linesOf(files, path) {
 
 /**
  * File-path mentions in an answer, each classified (the C14 rulings). A mention is a path with a "/" (or a bare
- * file name followed by :N) ending in a bundle extension, optionally with :N or :N-M. A leading ./ or a missing
+ * file name followed by :N) ending in .py or .md, optionally with :N or :N-M. A leading ./ or a missing
  * prefix is matched against the known files when that gives exactly one file. Fenced code and markdown links are
  * skipped; inline code is checked.
  *   kind "source":  a sent source (same file, overlapping lines or no lines); `pin` is its pin number when known
  *   kind "unsent":  the file exists but was not sent ("not in the sources")
- *   kind "missing": no such file; "nolines": the file is shorter than the lines named
+ *   kind "missing": no such file in the bundle; "nolines": the file is shorter than the lines named
  * sources: [{n?, path, start, end}]; files: files.json object (path -> text) or null; chunkPaths: fallback list of
  * existing paths. With neither files nor chunkPaths nothing is flagged.
  * Returns [{ start, end, path, lines, kind, pin? }], start/end being string offsets of the whole mention.
  */
 export function classifyPaths(text, { sources = [], files = null, chunkPaths = null } = {}) {
   const known = new Set([...Object.keys(files ?? {}), ...(chunkPaths ?? [])]);
-  const exts = [...new Set([...known].map((p) => /\.([A-Za-z0-9]+)$/.exec(p)?.[1]).filter(Boolean))];
-  const alt = (exts.length ? exts : DEFAULT_EXTS).map((e) => e.replace(/[^\w]/g, "\\$&")).join("|");
-  const re = new RegExp(String.raw`(?<![\w@:/.-])((?:\.{1,2}/)?[\w.-]+(?:/[\w.-]+)*\.(?:${alt}))(?![\w-])(?::(\d+)(?:[-–](\d+))?(?!\d))?`, "g");
+  const allPaths = new Set([...known, ...sources.map((s) => s.path)]);
   const blank = (m) => "".repeat(m.length);
   const masked = text.replace(FENCED, blank).replace(LINK, blank);
-  const cites = citeMatches(text).map((m) => [m.index, m.index + m[0].length]);
   const out = [];
-  for (const m of masked.matchAll(re)) {
+  for (const m of masked.matchAll(PATH_RE)) {
     const raw = m[1];
     const lines = m[2] ? [Number(m[2]), Number(m[3] ?? m[2])] : null;
     if (!raw.includes("/") && !lines) continue; // a bare file name without :N is ordinary prose
     const start = m.index;
     const end = start + m[0].length;
-    if (cites.some(([a, b]) => start < b && a < end)) continue;
     const norm = raw.replace(/^(?:\.{1,2}\/)+/, "");
-    const allPaths = new Set([...known, ...sources.map((s) => s.path)]);
     let path = allPaths.has(norm) ? norm : null;
     if (!path) {
       const hits = [...allPaths].filter((k) => k.endsWith("/" + norm));
@@ -162,7 +157,7 @@ export function classifyPaths(text, { sources = [], files = null, chunkPaths = n
       continue;
     }
     const total = linesOf(files, path);
-    if (lines && total !== null && (lines[0] > total || lines[0] > lines[1])) {
+    if (lines && total !== null && (lines[0] > total || lines[1] > total || lines[0] > lines[1])) {
       out.push({ start, end, path, lines, kind: "nolines" });
       continue;
     }
@@ -181,12 +176,11 @@ export function recordedSourcePins(recSources, pins) {
   });
 }
 
-const PATH_LABEL ={ unsent: "(not in the sources)", missing: "(no such file in Flask)", nolines: "(no such lines)" };
+const PATH_LABEL = { unsent: "(not in the sources)", missing: "(not found in src/flask)", nolines: "(no such lines)" };
 
 /** Answer text -> HTML: fenced code becomes <pre>; a mapped [n] links to its pin. */
 export function answerHtml(text, cite, paths = null) {
-  const found = paths ? classifyPaths(text, paths) : [];
-  const flagged = found.filter((f) => f.kind !== "source").length;
+  let flagged = 0;
   const html = text
     .split("```")
     .map((part, k) => {
@@ -195,7 +189,10 @@ export function answerHtml(text, cite, paths = null) {
       const body = part.trim();
       const items = [];
       for (const m of citeMatches(body)) items.push({ at: m.index, end: m.index + m[0].length, cite: m });
-      if (paths) for (const f of classifyPaths(body, paths)) items.push({ at: f.start, end: f.end, path: f });
+      for (const f of paths ? classifyPaths(body, paths) : []) {
+        items.push({ at: f.start, end: f.end, path: f });
+        if (f.kind !== "source") flagged++;
+      }
       items.sort((a, b) => a.at - b.at);
       let linked = "";
       let at = 0;
@@ -229,7 +226,7 @@ export function answerHtml(text, cite, paths = null) {
     })
     .join("");
   const note = flagged
-    ? `<p class="path-note">The on-device model mentioned ${flagged} file reference${flagged === 1 ? "" : "s"} that weren't in its sources.</p>`
+    ? `<p class="path-note">This answer mentions ${flagged} file reference${flagged === 1 ? " that wasn't" : "s that weren't"} in its sources.</p>`
     : "";
   return html + note;
 }

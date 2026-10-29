@@ -1222,13 +1222,6 @@ async function main() {
   setStatus(readyText);
 
   const selftestMode = new URLSearchParams(location.search).get("selftest") === "1";
-  if (new URLSearchParams(location.search).get("pathtest") === "1") {
-    // test-only: show a given text as the generated answer of the current question, through the real render path
-    window.clicrPathTest = (text) => {
-      last.gen = { phase: "done", text, sources: last.sources };
-      showAnswer("generated");
-    };
-  }
   if (!selftestMode) {
     // the embedding model downloads in the background (never awaited); stored question vectors load lazily like files.json
     preloadEmbedder();
