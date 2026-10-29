@@ -1,5 +1,6 @@
 // DOM-free citation helpers for the CliCR demo: [n] parsing (port of parse_citations in
-// src/clicr/answer/citations.py), numbered editor pins, and recorded-answer pin mapping.
+// src/clicr/answer/citations.py), numbered editor pins, recorded-answer pin mapping, and the
+// file-path check on answer text.
 import { esc } from "./html.js";
 
 const FENCED = /```[\s\S]*?(?:```|$)/g;
@@ -104,7 +105,6 @@ export function identityCite(n) {
   return new Map(Array.from({ length: n }, (_, k) => [k + 1, k + 1]));
 }
 
-
 const PATH_RE = /(?<![\w@:/.-])((?:(?<=^|[\s`(])\/|\.{1,2}\/)?[\w.-]+(?:\/[\w.-]+)*\.(?:py|md))(?![\w-])(?::(\d+)(?:[-–](\d+))?(?!\d))?/g;
 const lineCounts = new WeakMap();
 
@@ -178,7 +178,10 @@ export function recordedSourcePins(recSources, pins) {
 
 const PATH_LABEL = { unsent: "(not in the sources)", missing: "(not found in src/flask)", nolines: "(no such lines)" };
 
-/** Answer text -> HTML: fenced code becomes <pre>; a mapped [n] links to its pin. */
+/**
+ * Answer text -> HTML: fenced code becomes <pre>; a mapped [n] links to its pin. With `paths` (classifyPaths
+ * options), path mentions are linked or labelled in the same pass, plus one summary line when any are labelled.
+ */
 export function answerHtml(text, cite, paths = null) {
   let flagged = 0;
   const html = text
