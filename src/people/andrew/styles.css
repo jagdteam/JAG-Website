@@ -382,6 +382,14 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 .about p {
   margin: 0;
 }
+.about p a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.about p + p {
+  margin-top: 0.75em;
+}
 
 /* project cards */
 .grid2 {
@@ -759,6 +767,13 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
+.gal-strip button video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
 .gal-strip button img {
   display: block;
   width: 100%;
@@ -768,22 +783,6 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 .gal-strip .clip {
   font-family: system-ui, sans-serif;
   font-size: 12px;
-}
-.explore {
-  display: inline-block;
-  align-self: flex-start;
-  border: 1px solid var(--accent);
-  background: var(--hl);
-  padding: 6px 14px;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent);
-  text-decoration: none;
-}
-.explore:hover {
-  background: var(--c1b);
-  text-decoration: none;
 }
 .linkrow {
   margin-top: 8px;
@@ -867,7 +866,11 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
 }
-.card.thumbed :is(.more-head, .headrow) > .thumb {
+/* an animated thumb sits in a <picture> with a still for reduced motion */
+.thumbpic {
+  display: block;
+}
+.card.thumbed :is(.more-head, .headrow) > :is(.thumb, .thumbpic) {
   order: -1;
   margin-bottom: 14px;
 }
@@ -879,10 +882,13 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
     grid-template-columns: minmax(0, 1fr) 236px;
     column-gap: 20px;
   }
-  .card.thumbed :is(.more-head, .headrow) > .thumb {
+  .card.thumbed :is(.more-head, .headrow) > :is(.thumb, .thumbpic) {
     order: 0;
-    aspect-ratio: 4 / 3;
     align-self: start;
     margin-bottom: 0;
+  }
+  .card.thumbed :is(.more-head, .headrow) > .thumb,
+  .card.thumbed :is(.more-head, .headrow) > .thumbpic > .thumb {
+    aspect-ratio: 4 / 3;
   }
 }

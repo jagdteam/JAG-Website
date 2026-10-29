@@ -53,8 +53,8 @@ export const profile = {
     resume: undefined as string | undefined,
   },
   projects: [
-    { slug: "clutch", myPart: "Led frontend architecture in React Native and TypeScript; integrated Google OAuth sign-in and Google Maps API." },
-    { slug: "beeseye" },
+    { local: "clutch", myPart: "Led frontend architecture in React Native and TypeScript; integrated Google OAuth sign-in and Google Maps API." },
+    { local: "beeseye" },
     { local: "jit-expression-evaluator" },
   ] as ProjectRef[],
   photo: "/assets/andrew-photo.jpg" as string | undefined,
