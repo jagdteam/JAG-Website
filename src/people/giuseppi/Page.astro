@@ -19,6 +19,7 @@ interface ProjectData {
   demo?: string;
   image?: string;
   thumb?: string;
+  thumbStill?: string;
   thumbFit?: "cover" | "contain";
   description?: string;
   media?: { src: string; alt: string; kind: "image" | "gif" | "video"; poster?: string }[];
@@ -119,6 +120,7 @@ const projects = (
         team: teamText(p.team),
         tags: p.tags,
         thumb: p.thumb,
+        thumbStill: p.thumbStill,
         thumbFit: p.thumbFit,
         image: p.image,
         myPart: ref.myPart,
