@@ -105,7 +105,7 @@ export function identityCite(n) {
 }
 
 
-const PATH_RE = /(?<![\w@:/.-])((?:\.{1,2}\/)?[\w.-]+(?:\/[\w.-]+)*\.(?:py|md))(?![\w-])(?::(\d+)(?:[-–](\d+))?(?!\d))?/g;
+const PATH_RE = /(?<![\w@:/.-])((?:(?<=^|[\s`(])\/|\.{1,2}\/)?[\w.-]+(?:\/[\w.-]+)*\.(?:py|md))(?![\w-])(?::(\d+)(?:[-–](\d+))?(?!\d))?/g;
 const lineCounts = new WeakMap();
 
 function lineCount(text) {
@@ -123,7 +123,7 @@ function linesOf(files, path) {
 
 /**
  * File-path mentions in an answer, each classified (the C14 rulings). A mention is a path with a "/" (or a bare
- * file name followed by :N) ending in .py or .md, optionally with :N or :N-M. A leading ./ or a missing
+ * file name followed by :N) ending in .py or .md, optionally with :N or :N-M. A leading / or ./ or a missing
  * prefix is matched against the known files when that gives exactly one file. Fenced code and markdown links are
  * skipped; inline code is checked.
  *   kind "source":  a sent source (same file, overlapping lines or no lines); `pin` is its pin number when known
@@ -145,7 +145,7 @@ export function classifyPaths(text, { sources = [], files = null, chunkPaths = n
     if (!raw.includes("/") && !lines) continue; // a bare file name without :N is ordinary prose
     const start = m.index;
     const end = start + m[0].length;
-    const norm = raw.replace(/^(?:\.{1,2}\/)+/, "");
+    const norm = raw.replace(/^(?:\.{0,2}\/)+/, "");
     let path = allPaths.has(norm) ? norm : null;
     if (!path) {
       const hits = [...allPaths].filter((k) => k.endsWith("/" + norm));

@@ -121,6 +121,11 @@ test("classifyPaths: line ranges", () => {
 test("classifyPaths: normalisation", () => {
   assert.deepEqual(kinds("./src/flask/app.py"), [["./src/flask/app.py", "source", 1]]);
   assert.deepEqual(kinds("flask/cli.py:1"), [["flask/cli.py:1", "source", 2]]);
+  assert.deepEqual(kinds("See /src/flask/reranker.py:4"), [["/src/flask/reranker.py:4", "missing", undefined]]);
+  assert.equal(classifyPaths("See /src/flask/reranker.py:4", ctx)[0].path, "src/flask/reranker.py");
+  assert.deepEqual(kinds("/src/flask/app.py:2 first"), [["/src/flask/app.py:2", "source", 1]]);
+  assert.deepEqual(kinds("in `/src/flask/json/__init__.py` and (/src/flask/cli.py)"), [["/src/flask/json/__init__.py", "unsent", undefined], ["/src/flask/cli.py", "source", 2]]);
+  assert.deepEqual(kinds("https://x.org//src/flask/reranker.py and file:/src/flask/reranker.py"), []);
   assert.equal(kinds("flask/json/__init__.py")[0][1], "unsent");
   assert.equal(kinds("cli.py:2")[0][1], "source"); // a bare name needs :N
   assert.deepEqual(kinds("cli.py is used"), []); // bare name, no lines: prose
