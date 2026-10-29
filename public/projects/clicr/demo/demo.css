@@ -710,6 +710,26 @@ button.step[aria-current="step"] {
   font-family: var(--mono);
   font-size: 0.85em;
 }
+.path-ref {
+  font-family: var(--mono);
+  font-size: 0.9em;
+}
+.path-label {
+  font-size: 0.85em;
+  font-style: italic;
+  opacity: 0.8;
+}
+.path-warn {
+  font-style: normal;
+  font-weight: 600;
+  opacity: 1;
+  border-bottom: 1px dotted currentColor;
+}
+.path-note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-style: italic;
+}
 .answer-src {
   margin: 8px 0 0;
   padding-left: 0;

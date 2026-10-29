@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "../../../../../public/projects/clicr/demo/citations.js";
+import { answerHtml, answerStepPins, citedNumbers, classifyPaths, recordedSourcePins, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedPins } from "../../../../../public/projects/clicr/demo/citations.js";
 import { codeSpans, esc } from "../../../../../public/projects/clicr/demo/html.js";
 
 const pins = pinsFromSources([
@@ -91,4 +91,94 @@ test("firstCitedPin: the first citation in answer order that maps to a pin", () 
   assert.equal(firstCitedPin("Cited [1] but no map.", null), null);
   assert.equal(firstCitedPin(["```py", "x[1]", "``` then [2]"].join(String.fromCharCode(10)), cite), 2, "code is ignored");
   assert.equal(firstCitedPin("See [3-4].", new Map([[3, 7], [4, 8]])), 7);
+});
+
+// ---- classifyPaths (C14)
+const FILES = { "src/flask/app.py": "a\nb\nc\nd\n", "src/flask/cli.py": "x\ny\n", "src/flask/json/__init__.py": "j\n", "src/flask/sansio/app.py": "s\n", "src/flask/sansio/README.md": "r\n" };
+const SRC = [{ n: 1, path: "src/flask/app.py", start: 2, end: 3 }, { n: 2, path: "src/flask/cli.py", start: 1, end: 2 }];
+const ctx = { sources: SRC, files: FILES };
+const kinds = (t, c = ctx) => classifyPaths(t, c).map((f) => [t.slice(f.start, f.end), f.kind, f.pin]);
+
+test("classifyPaths: the three classes", () => {
+  assert.deepEqual(kinds("See src/flask/app.py:2-3 now."), [["src/flask/app.py:2-3", "source", 1]]);
+  assert.deepEqual(kinds("See src/flask/json/__init__.py."), [["src/flask/json/__init__.py", "unsent", undefined]]);
+  assert.deepEqual(kinds("See src/flask/reranker.py:45."), [["src/flask/reranker.py:45", "missing", undefined]]);
+});
+
+test("classifyPaths: line ranges", () => {
+  assert.equal(kinds("src/flask/app.py")[0][1], "source"); // no lines: same file
+  assert.equal(kinds("src/flask/app.py:3")[0][1], "source");
+  assert.equal(kinds("src/flask/app.py:4")[0][1], "unsent"); // same file, lines not sent
+  assert.equal(kinds("src/flask/app.py:4-4")[0][1], "unsent");
+  assert.equal(kinds("src/flask/app.py:9")[0][1], "nolines"); // file has 4 lines
+  assert.equal(kinds("src/flask/app.py:4-9")[0][1], "nolines"); // range end past the file
+  assert.equal(kinds("src/flask/app.py:2-99999")[0][1], "nolines"); // overlaps a source but runs past the file
+  assert.equal(kinds("src/flask/app.py:1-4")[0][1], "source"); // ends on the last line
+  assert.equal(kinds("src/flask/app.py:2-3")[0][1], "source");
+  assert.equal(kinds("src/flask/app.py:3\u20134")[0][1], "source"); // en dash
+});
+
+test("classifyPaths: normalisation", () => {
+  assert.deepEqual(kinds("./src/flask/app.py"), [["./src/flask/app.py", "source", 1]]);
+  assert.deepEqual(kinds("flask/cli.py:1"), [["flask/cli.py:1", "source", 2]]);
+  assert.deepEqual(kinds("See /src/flask/reranker.py:4"), [["/src/flask/reranker.py:4", "missing", undefined]]);
+  assert.equal(classifyPaths("See /src/flask/reranker.py:4", ctx)[0].path, "src/flask/reranker.py");
+  assert.deepEqual(kinds("/src/flask/app.py:2 first"), [["/src/flask/app.py:2", "source", 1]]);
+  assert.deepEqual(kinds("in `/src/flask/json/__init__.py` and (/src/flask/cli.py)"), [["/src/flask/json/__init__.py", "unsent", undefined], ["/src/flask/cli.py", "source", 2]]);
+  assert.deepEqual(kinds("https://x.org//src/flask/reranker.py and file:/src/flask/reranker.py"), []);
+  assert.equal(kinds("flask/json/__init__.py")[0][1], "unsent");
+  assert.equal(kinds("cli.py:2")[0][1], "source"); // a bare name needs :N
+  assert.deepEqual(kinds("cli.py is used"), []); // bare name, no lines: prose
+  assert.deepEqual(kinds("see app.py:2"), []); // ambiguous (app.py and sansio/app.py): say nothing
+  assert.equal(kinds("sansio/app.py")[0][1], "unsent");
+  assert.equal(kinds("sansio/README.md")[0][1], "unsent");
+  assert.equal(kinds("nothere.py:3")[0][1], "missing");
+  assert.deepEqual(kinds("see src/flask/data.txt:3", { sources: [], chunkPaths: ["src/flask/data.txt"] }), []); // only .py and .md
+  assert.deepEqual(kinds("see src/flask/x.json:3"), []);
+});
+
+test("classifyPaths: code spans, fences, links, cites, urls", () => {
+  assert.equal(kinds("see `src/flask/reranker.py:45` here")[0][1], "missing");
+  assert.deepEqual(kinds("```\nsrc/flask/reranker.py\n```"), []);
+  assert.deepEqual(kinds("[x](src/flask/reranker.py)"), []);
+  assert.deepEqual(kinds("https://github.com/pallets/flask/blob/main/src/flask/reranker.py"), []);
+  assert.deepEqual(kinds("version 1.2 and e.g. foo/bar and a.b"), []);
+  assert.deepEqual(kinds("a [1] cite and src/flask/cli.py."), [["src/flask/cli.py", "source", 2]]);
+});
+
+test("classifyPaths: no files data", () => {
+  assert.deepEqual(kinds("src/flask/reranker.py", { sources: SRC }), []); // nothing known: never flag
+  assert.equal(kinds("src/flask/app.py", { sources: SRC })[0][1], "source");
+  const chunkOnly = { sources: SRC, chunkPaths: Object.keys(FILES) };
+  assert.equal(kinds("src/flask/reranker.py", chunkOnly)[0][1], "missing");
+  assert.equal(kinds("src/flask/json/__init__.py", chunkOnly)[0][1], "unsent");
+  assert.equal(kinds("src/flask/app.py:900", chunkOnly)[0][1], "unsent"); // line counts need the files
+});
+
+test("answerHtml: path links, labels and summary", () => {
+  const html = answerHtml("Use src/flask/app.py:2 and src/flask/reranker.py:45 and src/flask/json/__init__.py, see [1].", new Map([[1, 1]]), ctx);
+  assert.ok(html.includes('<a class="cite path-ref" href="#pin-1" data-pin="1">src/flask/app.py:2</a>'));
+  assert.ok(html.includes("(not found in src/flask)"));
+  assert.ok(html.includes("(not in the sources)"));
+  assert.ok(html.includes('<a class="cite" href="#pin-1" data-pin="1">[1]</a>'));
+  assert.ok(html.includes(`<p class="path-note">This answer mentions 2 file references that weren't in its sources.</p>`));
+  const clean = answerHtml("Only src/flask/cli.py [2].", new Map([[2, 2]]), ctx);
+  assert.ok(!clean.includes("path-label") && !clean.includes("path-note"));
+  assert.ok(answerHtml("src/flask/app.py:9", null, ctx).includes("(no such lines)"));
+  assert.ok(answerHtml("one src/flask/x.py", null, ctx).includes("This answer mentions 1 file reference that wasn't in its sources."));
+  assert.ok(answerHtml("tests/test_basic.py:10", null, ctx).includes("(not found in src/flask)"));
+  assert.equal(answerHtml("src/flask/x.py [1]", new Map([[1, 1]])), '<p>src/flask/x.py <a class="cite" href="#pin-1" data-pin="1">[1]</a></p>'); // no paths arg: unchanged
+});
+
+test("answerHtml: the summary counts exactly the labels shown, across code fences", () => {
+  const text = ["See src/flask/nope.py:1 and src/flask/cli.py [2].", "```py", "src/flask/fenced.py:3", "```", "Then src/flask/app.py:9 and src/flask/json/__init__.py."].join(String.fromCharCode(10));
+  const html = answerHtml(text, new Map([[2, 2]]), ctx);
+  assert.equal(html.match(/class="path-label/g).length, 3);
+  assert.ok(html.includes("This answer mentions 3 file references that weren't in its sources."));
+  assert.ok(!html.includes('fenced.py:3</span>'));
+});
+
+test("recordedSourcePins", () => {
+  const got = recordedSourcePins([{ path: "src/flask/app.py", start: 3, end: 8 }, { path: "z.py", start: 1, end: 2 }], [{ n: 4, path: "src/flask/app.py", start: 1, end: 3 }]);
+  assert.deepEqual(got, [{ path: "src/flask/app.py", start: 3, end: 8, n: 4 }, { path: "z.py", start: 1, end: 2 }]);
 });

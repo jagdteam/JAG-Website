@@ -206,7 +206,7 @@ test("play-by-play styling and announcements", () => {
 test("citations jump to pins: one prepareAnswer sets pins, cite and extra; links are handled by data-pin", () => {
   assert.match(demoJs, /function prepareAnswer\(\)[\s\S]*?last\.cite =[\s\S]*?last\.extra =[\s\S]*?renderAnswerArea\(\)/, "hook sets cite and extra first");
   assert.ok(!/answerHtml\([^)]*undefined\)/.test(demoJs) && !/answerHtml\(rec\.answer, null\)/.test(demoJs), "recorded answer always has a cite map");
-  assert.match(demoJs, /answerHtml\(rec\.answer, last\.cite\)/, "fallback renders with last.cite");
+  assert.match(demoJs, /answerHtml\(rec\.answer, last\.cite[,)]/, "fallback renders with last.cite");
   assert.match(demoJs, /extraPins/, "extra pins reach buildSteps");
   assert.ok(demoJs.includes('href="#pin-${k + 1}" data-pin="${k + 1}"'), "sourceList links pins");
   assert.ok(!demoJs.includes("#src-"), "old #src- targets gone");

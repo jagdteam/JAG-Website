@@ -3,7 +3,7 @@
 // per-stage explanation, answers and the parity self-test.
 import * as S from "./search.js";
 import { codeSpans, esc } from "./html.js";
-import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources } from "./citations.js";
+import { answerHtml, answerStepPins, citedNumbers, firstCitedPin, identityCite, pinOfChunk, pinsFromSources, recordedSourcePins } from "./citations.js";
 import { AUTOPLAY_STATUS, autoplayEligible, parseQvecs, storedVector } from "./autoplay.js";
 import { isCapable } from "./capability.js";
 import { loadEngine } from "./engine.js";
@@ -111,6 +111,7 @@ let capableKnown = false; // the probe has finished (a slow first GPU start must
 let probePromise = null; // the running probe, or null (self-test)
 let gen = null; // the running generation: {last, runId, cancelled, eng}
 let last = null; // {question, qvec, run, recorded, sources, pins, steps, kind}
+let filesData = null; // files.json once loaded (the path check uses it for line counts)
 let filesPromise = null; // files.json, loaded lazily; resolves to null when it cannot be had
 let editor = null;
 let explorer = null;
@@ -511,6 +512,13 @@ function preloadEngine() {
 }
 
 // ---------------------------------------------------------------- answer area
+/** What the path check needs: the answer's sources (with pin numbers), the full files and the chunk paths. */
+function pathCtx(sources) {
+  return { sources, files: filesData, chunkPaths: [...new Set(bundle.chunks.map((c) => c.path))] };
+}
+const recordedPathCtx = () => pathCtx(recordedSourcePins(last.recorded.sources ?? [], [...last.pins, ...(last.extra ?? [])]));
+const generatedPathCtx = (sources) => pathCtx(pinsFromSources(sources));
+
 /** The recorded answer's block, or null when this question has none. */
 function recordedBlock() {
   const rec = last.recorded;
@@ -529,7 +537,7 @@ function recordedBlock() {
     .join("");
   return (
     `<p class="label">Recorded from the CLI (${esc(rec.model ?? "unknown model")}, ${esc(date)})</p>` +
-    answerHtml(rec.answer, last.cite) +
+    answerHtml(rec.answer, last.cite, recordedPathCtx()) +
     (cited ? `<p class="label">Sources it cited:</p><ul class="answer-src">${cited}</ul>` : "")
   );
 }
@@ -557,7 +565,7 @@ const GEN_NOTE = `<p class="note">Writes an answer on your device with <code>Qwe
 const GEN_BUTTON = '<button id="gen" class="ghost" type="button" data-act="generate">Write a fresh answer on your device</button>';
 
 function generatedBlock(g) {
-  return answerHtml(g.text, identityCite(g.sources.length)) + '<p class="label">Sources in the prompt:</p>' + sourceList(g.sources);
+  return answerHtml(g.text, identityCite(g.sources.length), generatedPathCtx(g.sources)) + '<p class="label">Sources in the prompt:</p>' + sourceList(g.sources);
 }
 
 /** Paint the answer area of a WebGPU browser from last.gen {phase, text, sources, error} and last.shown. */
@@ -754,7 +762,7 @@ async function runGeneration(g) {
       L.gen.text = text;
       if (!hasRec) {
         const out = el.answerBody.querySelector(".gen-out");
-        if (out) out.innerHTML = answerHtml(text, identityCite(sources.length));
+        if (out) out.innerHTML = answerHtml(text, identityCite(sources.length), generatedPathCtx(sources));
       }
       if (firstToken) {
         firstToken = false;
@@ -1136,6 +1144,7 @@ async function main() {
     .then((r) => r.json())
     .catch(() => null);
   filesPromise.then((files) => {
+    filesData = files;
     if (!files) {
       el.filesNote.textContent = "Full files did not load; the editor shows the matched chunks only.";
       el.filesNote.hidden = false;
