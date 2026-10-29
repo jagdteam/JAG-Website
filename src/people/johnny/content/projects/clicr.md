@@ -3,7 +3,7 @@ name: "CliCR"
 status: "completed"
 order: 4
 oneLiner: "Terminal tool that answers questions about a codebase with citations to file and line, running on local models through Ollama."
-team: "solo"
+team: ["Johnny", "Giuseppi"]
 tags: ["Python", "RAG", "Ollama", "tree-sitter", "Evaluation"]
 description: "Terminal tool that answers questions about a codebase with citations to file and line. tree-sitter splits code into functions and classes; vector search and BM25 keyword search (SQLite FTS5) are merged with reciprocal rank fusion; one-hop call-graph expansion, on by default, adds the definitions of functions the matches call. A cross-encoder reranker was measured and left off because it lowered accuracy on code. Chat and embeddings run locally through Ollama, and an ablation eval on pinned questions measures what each retrieval stage adds. The browser demo runs the same hybrid search over Flask's source on your device."
 repo: "https://github.com/jagdteam/clicr"
