@@ -75,7 +75,7 @@ export const profile = {
     linkedin: "https://linkedin.com/in/johnnyfok",
     resume: undefined as string | undefined,
   },
-  projects: [{ slug: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." }, { local: "flip-assistant", myPart: "Built the plugin and the price data pipeline." }, { local: "shipwatch" }, { local: "second-ear" }, { slug: "beeseye" }, { local: "clicr" }, { local: "jit-expression-evaluator" }] as ProjectRef[],
+  projects: [{ local: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." }, { local: "flip-assistant", myPart: "Built the plugin and the price data pipeline." }, { local: "shipwatch" }, { local: "second-ear" }, { local: "beeseye" }, { local: "clicr" }, { local: "jit-expression-evaluator" }] as ProjectRef[],
   // Set to an image path (e.g. "/photo.jpg") to replace the JF initials.
   photo: "/assets/johnny-photo.jpg" as string | undefined,
 };
