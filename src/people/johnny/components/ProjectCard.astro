@@ -132,7 +132,7 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
                   {media.map((m, i) => (
                     <button type="button" aria-label={m.alt} aria-pressed={i === 0 ? "true" : "false"}>
                       {m.kind === "video" ? (
-                        m.poster ? <img src={m.poster} alt="" loading="lazy" /> : <span class="clip">▶ clip</span>
+                        <video class="strip-vid" src={m.src} poster={m.poster} muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
                       ) : (
                         <img src={m.src} alt="" loading="lazy" />
                       )}
@@ -257,6 +257,8 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
   // Gallery: videos play like a GIF (silent, looping) only while the card is open.
   const videosIn = (root: ParentNode) =>
     Array.from(root.querySelectorAll<HTMLVideoElement>(".gal-main video"));
+  const stripVideos = (root: ParentNode) =>
+    Array.from(root.querySelectorAll<HTMLVideoElement>(".gal-strip video"));
   function playShown(details: HTMLDetailsElement) {
     if (reduce.matches) return;
     videosIn(details).forEach((v) => {
@@ -273,8 +275,19 @@ const external = explore ? /^https?:\/\//.test(explore.href) : false;
     (e) => {
       const d = e.target as HTMLElement;
       if (!(d instanceof HTMLDetailsElement) || !d.classList.contains("more")) return;
-      if (d.open) playShown(d);
-      else videosIn(d).forEach((v) => v.pause());
+      if (d.open) {
+        playShown(d);
+        if (!reduce.matches) {
+          stripVideos(d).forEach((v) => {
+            v.muted = true;
+            v.play()?.catch(() => {});
+          });
+        }
+      }
+      else {
+        videosIn(d).forEach((v) => v.pause());
+        stripVideos(d).forEach((v) => v.pause());
+      }
     },
     true,
   );
