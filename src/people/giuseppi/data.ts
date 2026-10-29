@@ -57,9 +57,9 @@ export const profile = {
     resume: undefined as string | undefined,
   },
   projects: [
-    { slug: "clutch", myPart: "Basketball app with on-iPhone computer vision that tracks players and the ball." },
+    { local: "clutch", myPart: "Basketball app with on-iPhone computer vision that tracks players and the ball." },
     { local: "flip-assistant", myPart: "Building the price model from the collected price data." },
-    { slug: "beeseye" },
+    { local: "beeseye" },
     { local: "clicr" },
     { local: "jit-expression-evaluator" },
   ] as ProjectRef[],
