@@ -50,10 +50,14 @@ import { promises } from "./data";
   @media (max-width: 1080px) {
     .promises-wrap { grid-column: 2; }
   }
+  /* Below 960px two columns of promises get too narrow, so they stack */
+  @media (max-width: 960px) {
+    .promises { grid-template-columns: minmax(0, 1fr); }
+    .promises li:nth-child(2) { border-top: 1px solid var(--rule); }
+  }
   @media (max-width: 760px) {
     .promises-wrap { grid-column: 1; }
-    .promises { grid-template-columns: minmax(0, 1fr); padding: 2px 18px; }
-    .promises li:nth-child(2) { border-top: 1px solid var(--rule); }
+    .promises { padding: 2px 18px; }
     .prefs-foot { padding: 12px 18px; }
   }
 </style>

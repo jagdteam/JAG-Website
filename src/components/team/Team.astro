@@ -82,8 +82,8 @@ import { people, teamFoot } from "./data";
   @media (max-width: 1080px) {
     .team-wrap { grid-column: 2; }
   }
-  @media (max-width: 760px) {
-    .team-wrap { grid-column: 1; }
+  /* Below 960px three columns get too narrow for names and links, so the dock becomes a list */
+  @media (max-width: 960px) {
     .dock { grid-template-columns: minmax(0, 1fr); margin-top: 32px; padding: 6px 18px; border-radius: 20px; }
     .dock-item {
       display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 18px; align-items: start;
@@ -100,5 +100,8 @@ import { people, teamFoot } from "./data";
     .dock-bio { margin-top: 8px; font-size: 15px; }
     .dock-go { margin-top: 0; padding-top: 10px; font-size: 15px; }
     .dock-item:hover .dock-face, .dock-item:focus-within .dock-face { transform: none; }
+  }
+  @media (max-width: 760px) {
+    .team-wrap { grid-column: 1; }
   }
 </style>
