@@ -41,7 +41,7 @@ const titleId = `${p.id}-title`;
       <span class="stack-label">Made with</span>
       <ul aria-label="Made with">{p.stack.map((s) => <li>{s}</li>)}</ul>
     </div>
-    <a class="out-link" href={p.link.href} target="_blank" rel="noopener">{p.link.label} <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>
+    <a class="out-link" href={p.link.href} target="_blank" rel="noopener noreferrer">{p.link.label} <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>
   </div>
   <div class="aside">
     <p class="comment">{p.aside.map((line) => <span class="line">{line}</span>)}</p>
