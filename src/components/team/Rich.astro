@@ -1,0 +1,11 @@
+---
+/* Renders a Rich text run (see data.ts): plain strings, plus no-wrap spans. */
+import type { Rich } from "./data";
+
+interface Props {
+  text: Rich;
+}
+const { text } = Astro.props;
+---
+
+{text.map((part) => (typeof part === "string" ? part : <span class="nowrap">{part.nowrap}</span>))}

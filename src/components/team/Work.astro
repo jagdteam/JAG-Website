@@ -1,0 +1,18 @@
+---
+/* Work: the projects we built together as JAGD. */
+import SectionMeta from "./SectionMeta.astro";
+import WorkEntry from "./WorkEntry.astro";
+import { projects } from "./data";
+---
+
+<section class="section" id="work" aria-labelledby="work-title">
+  <div class="wrap row">
+    <SectionMeta label="Work" path="~/jagd/work/" when={`${projects.length} projects`} />
+    <div class="body">
+      <h2 id="work-title">Things we've made together</h2>
+      <p class="intro">Two projects we built as JAGD. One for a client, one of our own. Real screenshots, real numbers.</p>
+    </div>
+  </div>
+
+  {projects.map((project) => <WorkEntry project={project} />)}
+</section>

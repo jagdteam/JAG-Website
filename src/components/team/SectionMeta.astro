@@ -1,0 +1,15 @@
+---
+/* The label column of a section row: label, a file path, and a small note. Styles live in global.css (.meta). */
+interface Props {
+  label: string;
+  path: string;
+  when: string;
+}
+const { label, path, when } = Astro.props;
+---
+
+<div class="meta">
+  <span class="label">{label}</span>
+  <span class="path">{path}</span>
+  <span class="when">{when}</span>
+</div>

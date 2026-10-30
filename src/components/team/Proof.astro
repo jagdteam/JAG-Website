@@ -1,0 +1,45 @@
+---
+/* Proof, as a status bar under the hero. */
+---
+
+<div class="proof" role="region" aria-label="Highlights">
+  <ul>
+    <li>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8v4a4 4 0 0 1-8 0V3z" /><path d="M6 5H3.5v1A2.5 2.5 0 0 0 6 8.5M14 5h2.5v1A2.5 2.5 0 0 1 14 8.5" /><path d="M10 11v3M7 17h6M8 14h4" /></svg>
+      <span><strong>1st place</strong>, UCI ICS Project Expo 2026</span>
+    </li>
+    <li>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="7" r="2.8" /><path d="M2.5 16.5c.6-2.9 2.6-4.4 5-4.4s4.4 1.5 5 4.4" /><path d="M13 4.6a2.6 2.6 0 0 1 0 5M15 12.4c1.4.5 2.3 1.8 2.6 4.1" /></svg>
+      <span><strong>100+ live users</strong> at a UCI event</span>
+    </li>
+    <li>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="15" height="10.5" rx="2" /><path d="M7 6V4.5A1.5 1.5 0 0 1 8.5 3h3A1.5 1.5 0 0 1 13 4.5V6M2.5 10.5h15" /></svg>
+      <span>Client: <strong>Human Proximity</strong></span>
+    </li>
+    <li class="proof-tail" aria-hidden="true">3 people · 1 inbox</li>
+  </ul>
+</div>
+
+<style>
+  .proof { grid-area: proof; margin-top: 56px; }
+  .proof ul {
+    list-style: none; margin: 0; padding: 0 6px;
+    display: flex; flex-wrap: wrap; align-items: stretch;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid var(--rule); border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(20, 24, 33, 0.05);
+  }
+  .proof li { display: flex; align-items: center; gap: 10px; padding: 13px 16px; font-size: 15px; color: var(--ink-2); line-height: 1.4; }
+  .proof li + li { border-left: 1px solid var(--rule); }
+  .proof li svg { width: 17px; height: 17px; color: var(--accent); flex: none; }
+  .proof strong { color: var(--ink); font-weight: 600; }
+  .proof .proof-tail { margin-left: auto; font: 500 12.5px/1.4 var(--mono); color: var(--ink-3); }
+
+  @media (max-width: 760px) {
+    .proof { margin-top: 36px; }
+    .proof ul { flex-direction: column; padding: 4px 16px; }
+    .proof li { padding: 11px 0; font-size: 15px; }
+    .proof li + li { border-left: 0; border-top: 1px solid var(--rule); }
+    .proof .proof-tail { display: none; }
+  }
+</style>

@@ -1,0 +1,110 @@
+---
+/*
+  A screenshot or screen recording in a decorative desktop window.
+  Videos load nothing up front, and only play (muted, looped) while on screen.
+  With reduced motion or no JS they show native controls instead.
+*/
+import Win from "./Win.astro";
+import Rich from "./Rich.astro";
+import type { Figure } from "./data";
+
+interface Props {
+  figure: Figure;
+  num: number;
+  /** Project logo for the title bar glyph. */
+  logo: string;
+}
+const { figure: f, num, logo } = Astro.props;
+---
+
+<figure class:list={["fig", { "fig-wide": f.wide }]}>
+  <Win class="win-media" title={f.file} glyphSrc={logo} glyphLazy>
+    {
+      f.kind === "video" ? (
+        <video class="auto-video" muted loop playsinline preload="none" poster={f.poster} width={f.width} height={f.height} aria-label={f.alt}>
+          <source src={f.src} type="video/mp4" />
+        </video>
+      ) : (
+        <img src={f.src} alt={f.alt} width={f.width} height={f.height} loading="lazy" />
+      )
+    }
+  </Win>
+  <figcaption>
+    <b>fig. {num}</b>
+    <span><Rich text={f.caption} />{f.kind === "video" && <> <button class="vid-toggle" type="button" hidden>Play</button></>}</span>
+  </figcaption>
+</figure>
+
+<script>
+  /* Videos: play only while on screen */
+  const PLAY = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 1.5l6 3.5-6 3.5z" fill="currentColor"/></svg>Play';
+  const PAUSE = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 1.5v7M7.5 1.5v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Pause';
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const videos = Array.from(document.querySelectorAll<HTMLVideoElement>(".auto-video"));
+  const canAuto = !reduceMotion && "IntersectionObserver" in window;
+  /** Paused by the visitor: don't restart it when it scrolls back into view. */
+  const userPaused = new WeakSet<HTMLVideoElement>();
+
+  videos.forEach((v) => {
+    const btn = v.closest(".fig")?.querySelector<HTMLButtonElement>(".vid-toggle");
+    if (!canAuto || !btn) {
+      v.controls = true;
+      return;
+    }
+    btn.hidden = false;
+    btn.innerHTML = PLAY;
+    btn.addEventListener("click", () => {
+      if (v.paused) {
+        userPaused.delete(v);
+        v.play().catch(() => {});
+      } else {
+        userPaused.add(v);
+        v.pause();
+      }
+    });
+    v.addEventListener("play", () => { btn.innerHTML = PAUSE; });
+    v.addEventListener("pause", () => { btn.innerHTML = PLAY; });
+  });
+
+  if (canAuto) {
+    const vio = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          const v = en.target as HTMLVideoElement;
+          if (en.isIntersecting && !userPaused.has(v)) {
+            v.play().catch(() => {});
+          } else if (!en.isIntersecting && !v.paused) {
+            v.pause();
+            userPaused.delete(v);
+          }
+        });
+      },
+      { threshold: 0.4 },
+    );
+    videos.forEach((v) => vio.observe(v));
+  }
+</script>
+
+<style>
+  .fig { margin: 0; }
+  .fig-wide { grid-column: 1 / -1; }
+  /* .fig prefix: outranks the window chrome's own background. */
+  .fig .win-media { background: #15171b; }
+  .win-media > img, .win-media > video { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #15171b; }
+  .fig figcaption { margin-top: 14px; padding-left: 2px; display: flex; align-items: baseline; column-gap: 10px; font-size: 15px; color: var(--ink-3); line-height: 1.5; }
+  .fig figcaption > span { flex: 0 1 auto; min-width: 0; }
+  .fig figcaption > span .vid-toggle { margin-left: 8px; vertical-align: middle; position: relative; top: -1px; }
+  .fig figcaption b { flex: none; display: inline-block; position: relative; top: -1px; font: 500 12.5px/1 var(--mono); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 5px; padding: 4px 6px; }
+  .vid-toggle {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 11px; border-radius: 7px;
+    border: 1px solid var(--rule-strong); background: var(--surface); color: var(--ink-2);
+    font: 500 13px/1 var(--sans); cursor: pointer; box-shadow: 0 1px 2px rgba(20, 24, 33, 0.06);
+  }
+  /* The icon is written by the script, so it carries no scope attribute. */
+  .vid-toggle :global(svg) { width: 10px; height: 10px; }
+  .vid-toggle:hover { border-color: var(--ink-3); color: var(--ink); }
+
+  @media (max-width: 760px) {
+    .fig figcaption { margin-top: 12px; padding-bottom: 6px; }
+  }
+</style>

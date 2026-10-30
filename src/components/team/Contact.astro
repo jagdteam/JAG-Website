@@ -1,0 +1,303 @@
+---
+/*
+  Contact: a short intro and a "New message" compose window. The form works
+  without a server for now: it validates, then shows "Message sent" in place.
+*/
+import SectionMeta from "./SectionMeta.astro";
+import Win from "./Win.astro";
+import { people, contactEmail, socials, needs, timelines } from "./data";
+---
+
+<section class="section" id="contact" aria-labelledby="contact-title">
+  <div class="wrap">
+    <div class="contact-inner">
+      <div class="contact-intro">
+        <SectionMeta label="Contact" path="~/jagd/contact" when="replies within 1 business day" />
+        <h2 id="contact-title">Write to us</h2>
+        <p>Tell us a little about what you need. One of us will write back within one business day, and we'll set up a free 30-minute call.</p>
+        <p>Prefer your own email app? That works too.</p>
+        <a class="email" href={`mailto:${contactEmail}`}>{contactEmail}</a>
+        <ul class="socials">
+          {socials.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+        </ul>
+      </div>
+
+      <Win class="compose" id="compose" title="New message" titleId="compose-title" glyph="mail">
+        <form id="lead-form" novalidate aria-label="New message to JAGD">
+          <div class="c-row to-row">
+            <span class="c-label" id="to-label">To</span>
+            <ul class="recips" aria-labelledby="to-label">
+              {people.map((p) => <li><img src={p.photo} alt="" width="22" height="22" loading="lazy" />{p.first}</li>)}
+            </ul>
+          </div>
+          <div class="c-row" id="row-name">
+            <label class="c-label" for="f-name">From</label>
+            <div class="c-field">
+              <input class="c-input" id="f-name" name="name" type="text" autocomplete="name" required placeholder="Your name" aria-describedby="e-name" />
+              <span class="err" id="e-name" aria-live="polite"></span>
+            </div>
+          </div>
+          <div class="c-row" id="row-email">
+            <label class="c-label" for="f-email">Email</label>
+            <div class="c-field">
+              <input class="c-input" id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required placeholder="you@company.com" aria-describedby="e-email" />
+              <span class="err" id="e-email" aria-live="polite"></span>
+            </div>
+          </div>
+
+          <fieldset class="need" id="f-need" aria-describedby="e-need">
+            <legend>What do you need?</legend>
+            <div class="chips">
+              {
+                needs.map((n, i) => (
+                  <label class="chip">
+                    <input type="radio" name="need" value={n.value} required={i === 0} />
+                    <span>
+                      <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.6 5.3l2.2 2.2 4.6-5" /></svg>
+                      {n.label}
+                    </span>
+                  </label>
+                ))
+              }
+            </div>
+            <span class="err" id="e-need" aria-live="polite"></span>
+          </fieldset>
+
+          <div class="c-row">
+            <label class="c-label" for="f-timeline">Timeline</label>
+            <div class="c-time">
+              <select class="c-select" id="f-timeline" name="timeline">
+                {timelines.map((t) => <option value={t.value}>{t.label}</option>)}
+              </select>
+              <span class="optional">optional</span>
+            </div>
+          </div>
+
+          <div class="c-body">
+            <label for="f-msg">Message <span class="optional">(optional)</span></label>
+            <textarea class="c-input" id="f-msg" name="message" rows="5" placeholder="A few lines about your business and what you have in mind."></textarea>
+          </div>
+
+          <div class="c-toolbar">
+            <button class="btn btn-primary" type="submit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M14.5 1.5L7 9M14.5 1.5l-4.5 13-3-5.5-5.5-3 13-4.5z" /></svg>Send</button>
+            <p class="send-note">We reply within one business day.</p>
+          </div>
+        </form>
+
+        <div class="sent" id="sent" hidden tabindex="-1" role="status">
+          <span class="sent-icon" aria-hidden="true"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8" /></svg></span>
+          <h3>Message sent</h3>
+          <p id="sent-msg">Thanks for writing. One of us will reply within one business day.</p>
+          <p class="comment"><span class="line">talk soon. J, A and G</span></p>
+        </div>
+      </Win>
+    </div>
+  </div>
+</section>
+
+<script>
+  /* New message form */
+  const form = document.getElementById("lead-form") as HTMLFormElement | null;
+  const nameIn = document.getElementById("f-name") as HTMLInputElement | null;
+  const emailIn = document.getElementById("f-email") as HTMLInputElement | null;
+  const msgIn = document.getElementById("f-msg") as HTMLTextAreaElement | null;
+  const timelineIn = document.getElementById("f-timeline") as HTMLSelectElement | null;
+  const needSet = document.getElementById("f-need");
+  const sent = document.getElementById("sent");
+  const sentMsg = document.getElementById("sent-msg");
+  const composeTitle = document.getElementById("compose-title");
+
+  if (form && nameIn && emailIn && msgIn && timelineIn && needSet && sent && sentMsg && composeTitle) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const needInput = (value?: string) =>
+      form.querySelector<HTMLInputElement>(value ? `input[name="need"][value="${value}"]` : 'input[name="need"]');
+
+    const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    const setError = (el: HTMLElement, id: string, msg: string) => {
+      el.setAttribute("aria-invalid", "true");
+      el.closest(".c-row")?.classList.add("is-invalid");
+      const err = document.getElementById(id);
+      if (err) err.textContent = msg;
+    };
+    const clearError = (el: HTMLElement, id: string) => {
+      el.removeAttribute("aria-invalid");
+      el.closest(".c-row")?.classList.remove("is-invalid");
+      const err = document.getElementById(id);
+      if (err) err.textContent = "";
+    };
+
+    nameIn.addEventListener("input", () => { if (nameIn.value.trim()) clearError(nameIn, "e-name"); });
+    emailIn.addEventListener("input", () => { if (validEmail(emailIn.value)) clearError(emailIn, "e-email"); });
+    form.addEventListener("change", (e) => {
+      if ((e.target as HTMLInputElement).name === "need") clearError(needSet, "e-need");
+    });
+
+    // Service buttons pre-select the need and jump to the message.
+    document.querySelectorAll<HTMLAnchorElement>("[data-need]").forEach((a) => {
+      a.addEventListener("click", () => {
+        const radio = needInput(a.dataset.need);
+        if (radio) {
+          radio.checked = true;
+          clearError(needSet, "e-need");
+        }
+        if (a.dataset.msg && !msgIn.value.trim()) msgIn.value = a.dataset.msg;
+        setTimeout(() => nameIn.focus({ preventScroll: true }), reduceMotion ? 0 : 450);
+      });
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      let firstBad: HTMLElement | null = null;
+      if (!nameIn.value.trim()) {
+        setError(nameIn, "e-name", "Please tell us your name.");
+        firstBad = firstBad || nameIn;
+      } else clearError(nameIn, "e-name");
+      if (!validEmail(emailIn.value)) {
+        setError(emailIn, "e-email", emailIn.value.trim() ? "That email doesn't look quite right." : "We need an email to write back to.");
+        firstBad = firstBad || emailIn;
+      } else clearError(emailIn, "e-email");
+      const need = form.querySelector<HTMLInputElement>('input[name="need"]:checked');
+      if (!need) {
+        setError(needSet, "e-need", 'Pick the one that fits best. "Not sure yet" is fine.');
+        firstBad = firstBad || needInput();
+      } else clearError(needSet, "e-need");
+      if (firstBad || !need) {
+        firstBad?.focus();
+        return;
+      }
+
+      const lead = {
+        name: nameIn.value.trim(),
+        email: emailIn.value.trim(),
+        need: need.value,
+        timeline: timelineIn.value,
+        message: msgIn.value.trim(),
+      };
+      // TODO: POST to /api/lead
+      void lead;
+
+      const first = lead.name.split(/\s+/)[0];
+      sentMsg.textContent = "Thanks, " + first + ". One of us will reply to " + lead.email + " within one business day.";
+      composeTitle.textContent = "Message sent";
+      form.hidden = true;
+      sent.hidden = false;
+      sent.focus();
+    });
+  }
+</script>
+
+<style>
+  .contact-inner { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 72px; align-items: start; }
+  .contact-intro :global(.meta) { padding-top: 0; margin-bottom: 20px; }
+  .contact-inner > :global(*) { min-width: 0; }
+  .contact-intro h2 { font-size: clamp(2.2rem, 1.55rem + 1.6vw, 2.9rem); line-height: 1.06; letter-spacing: -0.032em; }
+  .contact-intro p { margin-top: 16px; color: var(--ink-2); font-size: 18px; }
+  .contact-intro .email { display: inline-block; margin-top: 8px; font: 500 20px/1.3 var(--mono); text-decoration: none; border-bottom: 1.5px solid rgba(31, 85, 224, .35); }
+  .contact-intro .email:hover { border-bottom-color: var(--accent); }
+  .socials { list-style: none; padding: 0; margin: 22px 0 0; display: flex; gap: 20px; font-size: 15.5px; }
+  .socials a { color: var(--ink-2); }
+
+  /* .contact-inner prefix: outranks the window chrome's own shadow. */
+  .contact-inner .compose { box-shadow: var(--shadow-lift); }
+  .compose form { margin: 0; }
+  .c-row {
+    display: grid; grid-template-columns: 92px minmax(0, 1fr); column-gap: 12px; align-items: center;
+    min-height: 54px; padding: 0 22px; border-bottom: 1px solid var(--rule);
+    transition: background-color .15s, box-shadow .15s;
+  }
+  .c-label { font-size: 15px; color: var(--ink-3); }
+  .c-row:focus-within { background: var(--accent-wash-2); box-shadow: inset 0 -2px 0 var(--accent); }
+  .c-row:focus-within .c-label { color: var(--accent); }
+  .c-row.is-invalid { box-shadow: inset 0 -2px 0 var(--error); }
+  .c-field { min-width: 0; padding: 8px 0; }
+  .c-input {
+    display: block; width: 100%; min-width: 0; border: 0; background: transparent; padding: 6px 0;
+    font: 400 17px/1.4 var(--sans); color: var(--ink);
+  }
+  .c-input::placeholder { color: #8a909a; }
+  .c-input:focus, .c-input:focus-visible { outline: none; }
+  .recips { list-style: none; margin: 0; padding: 10px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .recips li {
+    display: inline-flex; align-items: center; gap: 7px; padding: 3px 10px 3px 3px;
+    background: var(--accent-wash); border-radius: 999px; font-size: 15px; font-weight: 500; color: var(--ink);
+  }
+  .recips img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+  /* When the recipients wrap, keep "To" on the first line of names */
+  .c-row.to-row { align-items: start; }
+  .c-row.to-row .c-label { padding-top: 17px; line-height: 1; }
+  .c-select {
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    max-width: 100%; min-height: 38px; padding: 0 36px 0 12px; border-radius: 8px;
+    border: 1px solid var(--rule-strong); background-color: var(--surface);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' fill='none' stroke='%233c424c' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat; background-position: right 12px center;
+    font: 500 15.5px/1 var(--sans); color: var(--ink);
+    box-shadow: 0 1px 2px rgba(20, 24, 33, 0.06);
+  }
+  .c-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .c-time { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 0; }
+  .optional { font: 400 13px/1 var(--sans); color: var(--ink-3); }
+  .err { display: block; font-size: 14px; font-weight: 500; color: var(--error); padding-bottom: 6px; }
+  .err:empty { display: none; }
+
+  .need { border: 0; margin: 0; padding: 16px 22px 18px; min-width: 0; border-bottom: 1px solid var(--rule); }
+  .need legend { padding: 0; margin-bottom: 12px; font-size: 15px; color: var(--ink-3); float: left; width: 100%; }
+  .need legend + * { clear: both; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px 10px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .chip span {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 16px;
+    font: 500 15.5px/1 var(--sans); color: var(--ink);
+    background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 999px;
+    box-shadow: 0 1px 2px rgba(20, 24, 33, 0.05);
+    cursor: pointer; transition: color .15s, border-color .15s, background-color .15s;
+  }
+  .chip span svg { width: 13px; height: 13px; display: none; }
+  .chip span:hover { border-color: var(--ink-3); }
+  .chip input:checked + span { background: var(--accent); border-color: var(--accent-deep); color: #fff; }
+  .chip input:checked + span svg { display: block; }
+  .chip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .need[aria-invalid="true"] .chip span { border-color: var(--error); }
+  .need .err { margin-top: 10px; padding-bottom: 0; }
+
+  .c-body { padding: 16px 22px 8px; }
+  .c-body label { display: block; font-size: 15px; color: var(--ink-3); }
+  .c-body label .optional { margin-left: 4px; }
+  .c-body textarea { min-height: 148px; resize: vertical; margin-top: 6px; line-height: 1.55; }
+  .c-body:focus-within label { color: var(--accent); }
+  .c-body textarea:focus-visible { outline: none; }
+  .c-body:focus-within { box-shadow: inset 2px 0 0 var(--accent); }
+  .c-toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 18px;
+    padding: 14px 22px; background: var(--surface-2); border-top: 1px solid var(--rule);
+  }
+  .send-note { font-size: 14px; color: var(--ink-3); }
+
+  .sent { padding: 40px 30px 44px; }
+  .sent-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(23, 128, 61, 0.1); color: var(--ok); margin-bottom: 18px; }
+  .sent-icon svg { width: 26px; height: 26px; }
+  .sent h3 { font-size: 30px; line-height: 1.15; letter-spacing: -0.03em; }
+  .sent p { margin-top: 10px; color: var(--ink-2); font-size: 17.5px; }
+  .sent .comment { margin-top: 18px; }
+  .sent:focus { outline: none; }
+
+  @media (max-width: 1080px) {
+    .contact-inner { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+    .compose { max-width: 720px; }
+  }
+  @media (max-width: 760px) {
+    .compose { margin-inline: -4px; }
+    .c-row { grid-template-columns: 62px minmax(0, 1fr); padding: 0 16px; column-gap: 8px; }
+    .c-label { font-size: 14.5px; }
+    .need { padding: 14px 16px 16px; }
+    .chip span { min-height: 44px; padding: 0 15px; }
+    .c-body { padding: 14px 16px 6px; }
+    .c-toolbar { padding: 14px 16px 16px; flex-direction: column; align-items: stretch; }
+    .c-toolbar .btn { width: 100%; }
+    .send-note { text-align: center; }
+    .sent { padding: 30px 20px 34px; }
+    .c-time .optional { display: none; }
+    .recips li { font-size: 14.5px; }
+  }
+</style>

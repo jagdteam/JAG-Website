@@ -1,0 +1,54 @@
+---
+/* Now: what we're up to this month, as a document window. */
+import SectionMeta from "./SectionMeta.astro";
+import Win from "./Win.astro";
+import { now } from "./data";
+---
+
+<section class="section" id="now" aria-labelledby="now-title">
+  <div class="wrap row">
+    <SectionMeta label="Now" path="~/jagd/now.md" when={now.edited} />
+    <div class="body">
+      <h2 id="now-title">What we're up to this month</h2>
+      <Win class="doc" title="now.md" glyph="doc">
+        <div class="doc-body">
+          <p class="doc-head">{now.month}</p>
+          {now.paragraphs.map((p) => <p>{p}</p>)}
+          <dl class="now-list">
+            {
+              now.list.map((item) => (
+                <>
+                  <dt>{item.term}</dt>
+                  <dd>{item.text}</dd>
+                </>
+              ))
+            }
+          </dl>
+        </div>
+      </Win>
+    </div>
+    <div class="aside">
+      <p class="comment">{now.aside.map((line) => <span class="line">{line}</span>)}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .doc { margin-top: 28px; }
+  .doc-body { padding: 26px 30px 10px; }
+  .doc-head { font: 500 12.5px/1 var(--mono); color: var(--ink-3); margin-bottom: 16px; }
+  .doc-body p { font-size: 17.5px; color: var(--ink-2); }
+  .doc-body p + p { margin-top: 14px; }
+  .now-list { margin: 24px 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 24px; }
+  .now-list dt, .now-list dd { padding: 13px 0; border-top: 1px solid var(--rule); margin: 0; }
+  .now-list dt { font: 500 13.5px/1.75 var(--mono); color: var(--accent); padding-top: 15px; }
+  .now-list dd { font-size: 16.5px; color: var(--ink); line-height: 1.5; padding-top: 14px; }
+
+  @media (max-width: 760px) {
+    .doc-body { padding: 20px 18px 6px; }
+    .doc-body p { font-size: 16.5px; }
+    .now-list { grid-template-columns: minmax(0, 1fr); }
+    .now-list dt { padding-bottom: 0; }
+    .now-list dd { border-top: 0; padding-top: 2px; }
+  }
+</style>

@@ -1,0 +1,102 @@
+---
+/* A slim menu bar: logo, section links, an Irvine clock and the main call to action. */
+const nav = [
+  { href: "#now", label: "Now" },
+  { href: "#work", label: "Work" },
+  { href: "#services", label: "Services" },
+  { href: "#how", label: "How we work" },
+  { href: "#team", label: "Team" },
+  { href: "#faq", label: "FAQ" },
+];
+---
+
+<header class="site-header" id="top">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top" aria-label="JAGD, back to top">
+      <img src="/assets/jagd-logo-96.png" alt="" width="26" height="26" />
+      <span>JAGD</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <ul>
+        {nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+      </ul>
+    </nav>
+    <div class="bar-right">
+      <span class="clock" id="clock" aria-hidden="true"></span>
+      <a class="btn btn-primary btn-sm" href="#contact">Start a project</a>
+    </div>
+  </div>
+</header>
+
+<script>
+  /* Menu bar shadow on scroll */
+  const header = document.querySelector<HTMLElement>(".site-header");
+  if (header) {
+    const onScroll = () => header.classList.toggle("is-scrolled", window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  /* Menu bar clock: Irvine local time */
+  const clock = document.getElementById("clock");
+  if (clock) {
+    try {
+      const fmtDay = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", weekday: "short" });
+      const fmtTime = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit" });
+      const tick = () => {
+        const now = new Date();
+        clock.innerHTML = '<span class="city">Irvine ·</span> ' + fmtDay.format(now) + " " + fmtTime.format(now);
+      };
+      tick();
+      setInterval(tick, 15000);
+    } catch {
+      /* no clock; it's only decoration */
+    }
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(248, 249, 251, 0.86);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border-bottom: 1px solid var(--rule);
+    transition: box-shadow .2s;
+  }
+  .site-header.is-scrolled { box-shadow: 0 6px 18px -14px rgba(20, 24, 33, 0.4); }
+  .header-inner { height: var(--header-h); display: flex; align-items: center; gap: 18px; }
+  .brand {
+    display: inline-flex; align-items: center; gap: 9px; flex-shrink: 0;
+    margin-left: -6px; padding: 5px 8px 5px 6px; border-radius: 8px;
+    text-decoration: none; color: var(--ink);
+  }
+  .brand img { width: 26px; height: 26px; border-radius: 6px; }
+  .brand span { font: 700 16px/1 var(--sans); letter-spacing: 0.08em; }
+  .brand:hover { color: var(--ink); background: rgba(20, 24, 33, 0.05); }
+  .nav ul { list-style: none; display: flex; gap: 2px; margin: 0; padding: 0; }
+  .nav a {
+    display: block; padding: 7px 11px; border-radius: 7px;
+    color: var(--ink-2); text-decoration: none; font-size: 14.5px; font-weight: 500; line-height: 1.2;
+  }
+  .nav a:hover { color: var(--ink); background: rgba(20, 24, 33, 0.06); }
+  .bar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .clock {
+    font: 500 13px/1 var(--mono); color: var(--ink-2); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  /* The clock's text is written by the script, so it carries no scope attribute. */
+  .clock :global(.city) { color: var(--ink-3); }
+  .clock:empty { display: none; }
+
+  @media (max-width: 1180px) {
+    .nav a { padding: 7px 8px; }
+  }
+  @media (max-width: 960px) {
+    .nav { display: none; }
+  }
+  @media (max-width: 760px) {
+    .clock { display: none; }
+    .header-inner .btn { min-height: 40px; }
+  }
+</style>

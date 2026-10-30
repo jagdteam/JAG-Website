@@ -1,0 +1,104 @@
+---
+/* Team: a dock of the three of us, each a link to our own page. */
+import SectionMeta from "./SectionMeta.astro";
+import { people, teamFoot } from "./data";
+---
+
+<section class="section" id="team" aria-labelledby="team-title">
+  <div class="wrap row">
+    <SectionMeta label="Team" path="~/jagd/team/" when={`${people.length} people`} />
+    <div class="body">
+      <h2 id="team-title">Who you'll be talking to</h2>
+      <p class="intro">Three engineers, one inbox. Each of us has our own page if you'd like the longer story.</p>
+    </div>
+    <div class="team-wrap">
+      <ul class="dock">
+        {
+          people.map((p) => (
+            <li class="dock-item">
+              <span class="dock-face"><img src={p.photo} alt="" width={p.photoSize} height={p.photoSize} loading="lazy" /></span>
+              <h3 class="dock-name"><a href={p.href}>{p.name}</a></h3>
+              <p class="dock-role">{p.role}</p>
+              <p class="dock-bio">{p.bio}</p>
+              <span class="dock-go" aria-hidden="true">{p.first}'s page →</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="team-foot">{teamFoot}</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .team-wrap { grid-column: 2 / 4; }
+  .dock {
+    list-style: none; margin: 82px 0 0; padding: 0 10px 26px;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: rgba(255, 255, 255, 0.86);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid var(--rule);
+    border-radius: 24px;
+    box-shadow: 0 1px 2px rgba(20, 24, 33, 0.06), 0 22px 44px -26px rgba(20, 24, 33, 0.4);
+  }
+  .dock-item {
+    position: relative; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 0 22px;
+  }
+  .dock-item + .dock-item::before {
+    content: ""; position: absolute; left: 0; top: 66px; bottom: 6px; border-left: 1px solid var(--rule);
+  }
+  .dock-face {
+    position: relative; display: block; width: 92px; height: 92px; margin-top: -46px;
+    transition: transform .3s var(--ease-out);
+  }
+  .dock-face img {
+    width: 100%; height: 100%; border-radius: 24px; object-fit: cover; object-position: 50% 20%;
+    box-shadow: 0 0 0 4px var(--surface), 0 0 0 5px var(--rule), 0 12px 22px -8px rgba(20, 24, 33, 0.45);
+  }
+  .dock-face::after {
+    content: ""; position: absolute; left: 50%; bottom: -13px; width: 5px; height: 5px; margin-left: -2.5px;
+    border-radius: 50%; background: var(--ink-3); transition: background-color .2s;
+  }
+  .dock-name { margin-top: 24px; font-size: 24px; line-height: 1.15; letter-spacing: -0.025em; }
+  .dock-name a { color: var(--ink); text-decoration: none; }
+  .dock-name a::after { content: ""; position: absolute; inset: -46px 0 0; z-index: 1; border-radius: 14px; }
+  .dock-name a:focus-visible { outline: none; }
+  .dock-name a:focus-visible::after { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .dock-role { margin-top: 6px; font: 500 12.5px/1.4 var(--mono); color: var(--ink-3); }
+  .dock-bio { margin-top: 12px; font-size: 15.5px; line-height: 1.5; color: var(--ink-2); max-width: 24em; }
+  .dock-go {
+    margin-top: auto; padding-top: 16px;
+    font-weight: 600; font-size: 15.5px; color: var(--accent);
+    text-decoration: underline; text-decoration-color: rgba(31, 85, 224, 0.35); text-decoration-thickness: 1.5px; text-underline-offset: 0.2em;
+  }
+  .dock-item:hover .dock-face, .dock-item:focus-within .dock-face { transform: translateY(-7px); }
+  .dock-item:hover .dock-face::after, .dock-item:focus-within .dock-face::after { background: var(--accent); }
+  .dock-item:hover .dock-name a { color: var(--accent); }
+  .dock-item:hover .dock-go { text-decoration-color: var(--accent); }
+  .team-foot { margin-top: 18px; font-size: 16px; color: var(--ink-2); }
+
+  @media (max-width: 1080px) {
+    .team-wrap { grid-column: 2; }
+  }
+  @media (max-width: 760px) {
+    .team-wrap { grid-column: 1; }
+    .dock { grid-template-columns: minmax(0, 1fr); margin-top: 32px; padding: 6px 18px; border-radius: 20px; }
+    .dock-item {
+      display: grid; grid-template-columns: 64px minmax(0, 1fr); column-gap: 18px; align-items: start;
+      text-align: left; padding: 20px 0;
+    }
+    .dock-item + .dock-item { border-top: 1px solid var(--rule); }
+    .dock-item + .dock-item::before { display: none; }
+    .dock-face { grid-row: 1 / 5; width: 64px; height: 64px; margin-top: 2px; }
+    .dock-face img { border-radius: 17px; box-shadow: 0 0 0 1px var(--rule), 0 8px 16px -8px rgba(20, 24, 33, 0.45); }
+    .dock-face::after { display: none; }
+    .dock-name { margin-top: 0; font-size: 21px; }
+    .dock-name a::after { inset: 0; border-radius: 14px; }
+    .dock-role { margin-top: 4px; font-size: 12px; }
+    .dock-bio { margin-top: 8px; font-size: 15px; }
+    .dock-go { margin-top: 0; padding-top: 10px; font-size: 15px; }
+    .dock-item:hover .dock-face, .dock-item:focus-within .dock-face { transform: none; }
+  }
+</style>

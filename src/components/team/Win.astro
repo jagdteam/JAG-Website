@@ -1,0 +1,148 @@
+---
+/*
+  Decorative desktop-window chrome: a title bar (glyph, file name, three
+  buttons that do nothing) around whatever is slotted in. Nothing moves.
+  Extra attributes (href, id, data-*, aria-*) go on the root element.
+*/
+interface Props {
+  /** Root element. "a" makes the whole window a link (the hero name windows). */
+  as?: "div" | "aside" | "a";
+  class?: string;
+  /** Text in the title bar, usually a file name. */
+  title: string;
+  titleId?: string;
+  /** Built-in glyph for the title bar. Ignored when glyphSrc is set. */
+  glyph?: "doc" | "settings" | "mail";
+  /** Image glyph (a logo or a face). */
+  glyphSrc?: string;
+  glyphSize?: number;
+  glyphLazy?: boolean;
+  /** Show the minimize / maximize / close buttons. */
+  buttons?: boolean;
+  /** "mini": the small, tighter chrome of the hero name windows. */
+  variant?: "default" | "mini";
+  [attr: string]: unknown;
+}
+
+const {
+  as: Tag = "div",
+  class: className,
+  title,
+  titleId,
+  glyph,
+  glyphSrc,
+  glyphSize = 18,
+  glyphLazy = false,
+  buttons = true,
+  variant = "default",
+  ...rest
+} = Astro.props;
+
+// Inside a link the bar must be phrasing content; the link's container is already aria-hidden.
+const Bar = Tag === "a" ? "span" : "div";
+const barHidden = Tag === "a" ? undefined : "true";
+---
+
+<Tag class:list={["win", { "win-mini": variant === "mini" }, className]} {...rest}>
+  <Bar class="win-bar" aria-hidden={barHidden}>
+    <span class="win-glyph">
+      {
+        glyphSrc ? (
+          <img src={glyphSrc} alt="" width={glyphSize} height={glyphSize} loading={glyphLazy ? "lazy" : undefined} />
+        ) : glyph === "doc" ? (
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+            <path d="M4 2.5h6.5L14 6v9.5H4z" />
+            <path d="M10.5 2.5V6H14M6.5 9.5h5M6.5 12h5" />
+          </svg>
+        ) : glyph === "settings" ? (
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+            <path d="M3 5h12M3 9h12M3 13h12" />
+            <circle cx="6" cy="5" r="1.6" fill="#fff" />
+            <circle cx="12" cy="9" r="1.6" fill="#fff" />
+            <circle cx="8" cy="13" r="1.6" fill="#fff" />
+          </svg>
+        ) : glyph === "mail" ? (
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round">
+            <rect x="2" y="4" width="14" height="10.5" rx="1.8" />
+            <path d="M2.6 5l6.4 5 6.4-5" />
+          </svg>
+        ) : null
+      }
+    </span>
+    <span class="win-title" id={titleId}>{title}</span>
+    {
+      buttons && (
+        <span class="win-btns">
+          <span class="win-btn">
+            <svg viewBox="0 0 10 10"><path d="M1.5 5h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+          </span>
+          <span class="win-btn">
+            <svg viewBox="0 0 10 10"><rect x="1.8" y="1.8" width="6.4" height="6.4" rx="1" fill="none" stroke="currentColor" stroke-width="1.4" /></svg>
+          </span>
+          <span class="win-btn">
+            <svg viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+          </span>
+        </span>
+      )
+    }
+  </Bar>
+  <slot />
+</Tag>
+
+<style>
+  .win {
+    position: relative; overflow: hidden;
+    border-radius: var(--win-radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-win);
+  }
+  .win-bar {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px;
+    height: 36px; padding: 0 9px 0 11px;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 3px, rgba(20, 24, 33, 0.05) 3px 4px) 0 7px / 100% 22px no-repeat,
+      linear-gradient(180deg, #f8f9fb, #eceef2);
+    border-bottom: 1px solid #d6dae1;
+    user-select: none; -webkit-user-select: none;
+    cursor: default;
+  }
+  .win-glyph { display: inline-flex; color: var(--ink-3); }
+  .win-glyph img, .win-glyph svg { width: 18px; height: 18px; border-radius: 4px; }
+  .win-title {
+    min-width: 0; padding: 4px 10px; border-radius: 5px;
+    font: 500 12px/1 var(--mono); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background: #f2f3f6; box-shadow: 0 0 0 4px #f2f3f6;
+  }
+  .win-btns { display: flex; justify-content: flex-end; gap: 6px; }
+  .win-btn {
+    display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px;
+    border: 1px solid rgba(20, 24, 33, 0.22); background: rgba(255, 255, 255, 0.7); color: var(--ink-3);
+  }
+  .win-btn svg { width: 9px; height: 9px; }
+
+  /* Mini: the hero name windows */
+  .win-mini .win-bar { height: 30px; padding: 0 7px 0 9px; gap: 8px; background-position: 0 4px, 0 0; }
+  .win-mini .win-glyph img { width: 15px; height: 15px; border-radius: 50%; object-fit: cover; }
+  .win-mini .win-title { font-size: 11.5px; padding: 3px 8px; }
+  .win-mini .win-btns { gap: 4px; }
+  .win-mini .win-btn { width: 15px; height: 15px; border-radius: 4px; }
+  .win-mini .win-btn svg { width: 7px; height: 7px; }
+
+  @media (max-width: 760px) {
+    .win { border-radius: 10px; }
+    .win-bar { height: 30px; padding: 0 7px 0 9px; gap: 8px; background-position: 0 4px, 0 0; }
+    .win-glyph img, .win-glyph svg { width: 16px; height: 16px; }
+    .win-title { font-size: 11px; padding: 3px 8px; overflow: hidden; }
+    .win-btns { gap: 5px; }
+    .win-btn { width: 16px; height: 16px; border-radius: 5px; }
+    .win-btn svg { width: 8px; height: 8px; }
+
+    .win-mini .win-bar { height: 24px; padding: 0 5px 0 6px; gap: 5px; grid-template-columns: minmax(0, 1fr) auto; }
+    .win-mini .win-glyph { display: none; }
+    .win-mini .win-title { font-size: 10px; padding: 2px 6px; box-shadow: 0 0 0 3px #f2f3f6; }
+    .win-mini .win-btns { gap: 3px; }
+    .win-mini .win-btn { width: 12px; height: 12px; border-radius: 3px; }
+    .win-mini .win-btn:not(:last-child) { display: none; }
+    .win-mini .win-btn svg { width: 6px; height: 6px; }
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+/* todo.txt: a small window in the hero. The last item is the call to action. */
+import Win from "./Win.astro";
+import { todo } from "./data";
+---
+
+<Win as="aside" class="todo" title="todo.txt" glyph="doc" aria-labelledby="todo-title">
+  <h2 class="sr-only" id="todo-title">Our to-do list</h2>
+  <div class="todo-body">
+    <ul>
+      {
+        todo.done.map((item) => (
+          <li class="done">
+            <span class="box" aria-hidden="true">
+              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M1.6 5.3l2.2 2.2 4.6-5" /></svg>
+            </span>
+            <span class="t"><span class="sr-only">Done: </span>{item}</span>
+          </li>
+        ))
+      }
+      <li class="next">
+        <span class="box" aria-hidden="true"></span>
+        <span class="t"><span class="sr-only">Next: </span><a href={todo.next.href}>{todo.next.label} <span aria-hidden="true">→</span></a></span>
+      </li>
+    </ul>
+  </div>
+</Win>
+
+<style>
+  .todo { align-self: stretch; margin-top: 20px; }
+  .todo-body { padding: 8px 18px 6px; }
+  .todo ul { list-style: none; margin: 0; padding: 0; }
+  .todo li {
+    display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 12px; align-items: start;
+    padding: 9px 0; font-size: 14.5px; line-height: 1.45; color: var(--ink-2);
+    border-bottom: 1px solid var(--rule);
+  }
+  .todo li:last-child { border-bottom: 0; }
+  .todo .box {
+    width: 16px; height: 16px; margin-top: 2px; display: grid; place-items: center;
+    border: 1.5px solid var(--rule-strong); border-radius: 4px; background: var(--surface);
+  }
+  .todo .done .box { background: var(--ink-3); border-color: var(--ink-3); }
+  .todo .done .box svg { width: 10px; height: 10px; color: #fff; }
+  .todo .done .t { color: var(--ink-3); text-decoration: line-through; text-decoration-color: rgba(20, 24, 33, 0.35); text-decoration-thickness: 1px; }
+  .todo .next .box { border-color: var(--accent); }
+  .todo .next a {
+    font-weight: 600; text-decoration: none; color: var(--accent);
+    background: var(--accent-wash); border-radius: 3px; padding: 1px 4px; margin-left: -4px;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  .todo .next a:hover { color: var(--accent-deep); text-decoration: underline; text-underline-offset: 0.18em; }
+
+  @media (max-width: 760px) {
+    .todo { grid-area: todo; justify-self: center; width: min(100%, 346px); margin: 40px 0 0; }
+  }
+</style>

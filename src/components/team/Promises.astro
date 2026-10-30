@@ -1,0 +1,59 @@
+---
+/* How we work: the promises, as a preferences checklist window. */
+import SectionMeta from "./SectionMeta.astro";
+import Win from "./Win.astro";
+import { promises } from "./data";
+---
+
+<section class="section" id="how" aria-labelledby="how-title">
+  <div class="wrap row">
+    <SectionMeta label="How we work" path="~/jagd/promises.md" when={`${promises.length} promises`} />
+    <div class="body">
+      <h2 id="how-title">Promises we keep</h2>
+      <p class="intro">Hold us to these. They're the reason three engineers is enough.</p>
+    </div>
+    <div class="promises-wrap">
+      <Win class="prefs" title="How we work · settings" glyph="settings">
+        <ol class="promises">
+          {
+            promises.map((item) => (
+              <li>
+                <span class="check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M1.6 5.3l2.2 2.2 4.6-5" /></svg>
+                </span>
+                <div><strong>{item.title}</strong><span class="d">{item.text}</span></div>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="prefs-foot comment"><span class="line">all seven are on for every project</span></p>
+      </Win>
+    </div>
+  </div>
+</section>
+
+<style>
+  .promises-wrap { grid-column: 2 / 4; }
+  .prefs { margin-top: 34px; }
+  .promises { list-style: none; margin: 0; padding: 6px 26px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 44px; }
+  .promises li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 14px; padding: 17px 0; border-top: 1px solid var(--rule); }
+  .promises li:nth-child(-n+2) { border-top: 0; }
+  .check {
+    width: 20px; height: 20px; margin-top: 1px; border-radius: 5px; display: grid; place-items: center;
+    background: var(--accent); box-shadow: inset 0 0 0 1px var(--accent-deep), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .check svg { width: 12px; height: 12px; color: #fff; }
+  .promises strong { display: block; font-weight: 600; color: var(--ink); font-size: 16.5px; line-height: 1.4; }
+  .promises span.d { display: block; margin-top: 3px; color: var(--ink-2); font-size: 15.5px; line-height: 1.5; }
+  .prefs-foot { padding: 12px 26px; border-top: 1px solid var(--rule); background: var(--surface-2); }
+
+  @media (max-width: 1080px) {
+    .promises-wrap { grid-column: 2; }
+  }
+  @media (max-width: 760px) {
+    .promises-wrap { grid-column: 1; }
+    .promises { grid-template-columns: minmax(0, 1fr); padding: 2px 18px; }
+    .promises li:nth-child(2) { border-top: 1px solid var(--rule); }
+    .prefs-foot { padding: 12px 18px; }
+  }
+</style>

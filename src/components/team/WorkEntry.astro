@@ -1,0 +1,116 @@
+---
+/* One project: story, results readout, stack, link, margin note and figures. */
+import SectionMeta from "./SectionMeta.astro";
+import Figure from "./Figure.astro";
+import Rich from "./Rich.astro";
+import type { Project } from "./data";
+
+interface Props {
+  project: Project;
+}
+const { project: p } = Astro.props;
+const titleId = `${p.id}-title`;
+---
+
+<article class="wrap row entry" aria-labelledby={titleId}>
+  <SectionMeta label={`Project ${p.num}`} path={`~/jagd/work/${p.id}`} when={p.when} />
+  <div class="body">
+    <div class="entry-title">
+      <img class:list={{ "logo-tile": p.logoTile }} src={p.logo} alt="" width="46" height="46" loading="lazy" />
+      <h3 id={titleId}>{p.name}</h3>
+    </div>
+    <p class="lede">{p.lede}</p>
+    <div class="story">
+      {p.story.map((s) => <p><span class="run-in">{s.runIn}</span> {s.text}</p>)}
+    </div>
+    <div class="readout">
+      <p class="readout-head" aria-hidden="true"><span>{p.resultsHead[0]}</span><span>{p.resultsHead[1]}</span></p>
+      <ul class="results">
+        {
+          p.results.map((r) => (
+            <li>
+              <span><Rich text={r.label} /></span>
+              <span class="lead" aria-hidden="true" />
+              <span class="num">{r.value}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <div class="stack">
+      <span class="stack-label">Made with</span>
+      <ul aria-label="Made with">{p.stack.map((s) => <li>{s}</li>)}</ul>
+    </div>
+    <a class="out-link" href={p.link.href} target="_blank" rel="noopener">{p.link.label} <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>
+  </div>
+  <div class="aside">
+    <p class="comment">{p.aside.map((line) => <span class="line">{line}</span>)}</p>
+  </div>
+
+  <div class="figs">
+    {p.figures.map((f, i) => <Figure figure={f} num={i + 1} logo={p.logo} />)}
+  </div>
+</article>
+
+<style>
+  .entry { margin-top: 88px; }
+  .entry + .entry { position: relative; margin-top: 120px; padding-top: 96px; }
+  .entry + .entry::before { content: ""; position: absolute; top: 0; left: var(--gutter); right: var(--gutter); border-top: 1px dashed var(--rule-strong); }
+  .entry-title { display: flex; align-items: center; gap: 14px; }
+  .entry-title img { width: 46px; height: 46px; border-radius: 11px; box-shadow: 0 0 0 1px rgba(20, 24, 33, 0.1), 0 2px 6px -2px rgba(20, 24, 33, 0.3); }
+  .entry-title img.logo-tile { object-fit: contain; padding: 6px; background: #1b1d22; }
+  .entry-title h3 { font-size: clamp(2.2rem, 1.6rem + 1.6vw, 2.8rem); line-height: 1; letter-spacing: -0.035em; }
+  .lede { margin-top: 16px; font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.45rem); line-height: 1.38; font-weight: 500; letter-spacing: -0.012em; color: var(--ink); }
+  .story { margin-top: 26px; }
+  .story p { font-size: 17px; color: var(--ink-2); }
+  .story p + p { margin-top: 14px; }
+  .story .run-in { font-weight: 600; color: var(--ink); margin-right: 3px; }
+
+  /* Results: a key-value readout */
+  .readout {
+    margin-top: 22px; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 10px; overflow: hidden;
+    box-shadow: 0 1px 2px rgba(20, 24, 33, 0.05);
+  }
+  .readout-head {
+    display: flex; justify-content: space-between; gap: 12px; padding: 9px 16px;
+    background: var(--surface-2); border-bottom: 1px solid var(--rule);
+    font: 500 12px/1.3 var(--mono); color: var(--ink-3);
+  }
+  .results { list-style: none; margin: 0; padding: 4px 16px; }
+  .results li {
+    display: grid; grid-template-columns: minmax(0, max-content) minmax(18px, 1fr) max-content; column-gap: 10px; align-items: baseline;
+    padding: 10px 0; font-size: 15.5px; color: var(--ink-2); line-height: 1.45;
+  }
+  .results li + li { border-top: 1px solid var(--rule); }
+  .results .lead { align-self: end; margin-bottom: 0.4em; border-bottom: 1.5px dotted var(--rule-strong); }
+  .results .num { font: 600 15px/1.45 var(--mono); color: var(--accent); white-space: nowrap; text-align: right; }
+
+  .stack { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 18px; }
+  .stack-label { font-size: 14.5px; color: var(--ink-3); margin-right: 2px; }
+  .stack ul { display: contents; list-style: none; }
+  .stack li { font: 500 12.5px/1 var(--mono); color: var(--ink-2); padding: 6px 9px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+  .out-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; font-weight: 600; font-size: 16.5px; text-decoration: none; border-bottom: 1.5px solid rgba(31, 85, 224, .35); padding-bottom: 2px; }
+  .out-link:hover { border-bottom-color: var(--accent); }
+
+  /* Figures: screenshots in desktop windows */
+  .figs { grid-column: 2 / 4; margin-top: 56px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px 40px; align-items: start; }
+  .figs > :global(*) { min-width: 0; }
+
+  @media (max-width: 1080px) {
+    .figs { grid-column: 2; }
+  }
+  @media (max-width: 760px) {
+    .entry { margin-top: 56px; }
+    .entry + .entry { margin-top: 72px; padding-top: 64px; }
+    .entry-title img { width: 40px; height: 40px; border-radius: 10px; }
+    .readout-head { padding: 9px 14px; }
+    .results { padding: 2px 14px; }
+    .results li { grid-template-columns: minmax(0, 1fr) max-content; row-gap: 0; }
+    .results .lead { display: none; }
+    .results .num { font-size: 14.5px; }
+    .figs { grid-column: 1; margin-top: 40px; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+    /* Room under the work entries so the floating button never parks on top of a caption or a Play button. */
+    .figs { padding-bottom: 24px; }
+  }
+</style>
