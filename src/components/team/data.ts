@@ -234,14 +234,16 @@ export const projects: Project[] = [
 /** Clients we can't name. Short cards only: no logos, screenshots or names. */
 export interface ConfidentialProject {
   num: string;
+  /** Card heading, e.g. "Confidential client". */
+  name: string;
   lede: string;
   scope: string;
   status: string;
 }
 
 export const confidential: ConfidentialProject[] = [
-  { num: "03", lede: "A sports-tech company.", scope: "Mobile app, website and admin dashboards", status: "In progress" },
-  { num: "04", lede: "A consumer fitness platform.", scope: "Mobile and web apps", status: "Completed" },
+  { num: "03", name: "Confidential client", lede: "A sports-tech company.", scope: "Mobile app, website and admin dashboards", status: "In progress" },
+  { num: "04", name: "Hired as a team", lede: "A consumer fitness startup brought the three of us on together as their development team.", scope: "Mobile and web apps", status: "Completed" },
 ];
 
 /** Values of the contact form's "What do you need?" choice. */

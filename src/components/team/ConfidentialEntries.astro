@@ -1,19 +1,19 @@
 ---
-/* Projects 03 and 04: clients we can't name. Short cards, no logos or screenshots. */
+/* Projects 03 and 04: companies we can't name. Short cards, no logos or screenshots. */
 import SectionMeta from "./SectionMeta.astro";
 import { confidential } from "./data";
 ---
 
 <article class="wrap row entry confidential" aria-labelledby="confidential-title">
-  <SectionMeta label="Projects 03–04" path="~/jag/work/private" when="2 private clients" />
+  <SectionMeta label="Projects 03–04" path="~/jag/work/private" when="2 private projects" />
   <div class="body">
-    <h3 id="confidential-title" class="sr-only">Confidential clients</h3>
+    <h3 id="confidential-title" class="sr-only">Private projects</h3>
     <ul class="conf-cards">
       {
         confidential.map((c) => (
           <li class="conf-card">
             <p class="conf-num">Project {c.num}</p>
-            <p class="conf-name">Confidential client</p>
+            <p class="conf-name">{c.name}</p>
             <p class="conf-lede">{c.lede}</p>
             <dl class="conf-readout">
               <div><dt>Scope</dt><dd>{c.scope}</dd></div>
@@ -23,7 +23,7 @@ import { confidential } from "./data";
         ))
       }
     </ul>
-    <p class="conf-note">We keep these clients' names and work private.</p>
+    <p class="conf-note">We keep these companies' names and work private.</p>
   </div>
 </article>
 
