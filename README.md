@@ -1,4 +1,4 @@
-# JAGD website
+# JAG website
 
 ## What this is
 
