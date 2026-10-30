@@ -2,8 +2,8 @@
 // Everything the page says lives here so copy edits never touch markup.
 // Facts only: no invented numbers, clients, logos or testimonials.
 
-/** Inline text with optional no-wrap runs, e.g. ["Live at ", { nowrap: "example.com" }, "."] */
-export type Rich = (string | { nowrap: string })[];
+/** Inline text with optional no-wrap runs and external links, e.g. ["Live at ", { link: "example.com", href: "https://example.com" }, "."] */
+export type Rich = (string | { nowrap: string } | { link: string; href: string })[];
 
 export interface Person {
   id: "johnny" | "andrew" | "giuseppi";
@@ -157,7 +157,7 @@ export const projects: Project[] = [
         width: 1600,
         height: 900,
         wide: true,
-        caption: ["The website, live at ", { nowrap: "beeseye-web.vercel.app" }, "."],
+        caption: ["The website, live at ", { link: "beeseye-web.vercel.app", href: "https://beeseye-web.vercel.app/" }, "."],
       },
       {
         kind: "image",
@@ -192,7 +192,7 @@ export const projects: Project[] = [
       { label: ["UCI ICS Project Expo 2026"], value: "1st place" },
       { label: ["Ball, hoop and player tracking on the phone"], value: "20 fps" },
       { label: ["Field-tested on recorded pickup games"], value: "10 games" },
-      { label: ["Shared code for iOS and Android"], value: "1 codebase" },
+      { label: ["Scorekeeper or wearables needed"], value: "none" },
     ],
     stack: ["React Native", "TypeScript", "Supabase", "Google Maps", "PyTorch", "YOLOv11", "TensorFlow Lite"],
     link: { href: "https://v0-clutch-web.vercel.app", label: "See the Clutch website" },
@@ -225,7 +225,7 @@ export const projects: Project[] = [
         alt: "The Clutch website: the headline \"Talent doesn't wait for a camera crew.\" over a drawing of a basketball court, with a player rating card and a live leaderboard.",
         width: 1600,
         height: 1000,
-        caption: ["The website we made, at ", { nowrap: "v0-clutch-web.vercel.app" }, "."],
+        caption: ["The website we made, at ", { link: "v0-clutch-web.vercel.app", href: "https://v0-clutch-web.vercel.app" }, "."],
       },
     ],
   },
@@ -234,14 +234,16 @@ export const projects: Project[] = [
 /** Clients we can't name. Short cards only: no logos, screenshots or names. */
 export interface ConfidentialProject {
   num: string;
+  /** Card heading, e.g. "Confidential client". */
+  name: string;
   lede: string;
   scope: string;
   status: string;
 }
 
 export const confidential: ConfidentialProject[] = [
-  { num: "03", lede: "A sports-tech company.", scope: "Mobile app, website and admin dashboards", status: "In progress" },
-  { num: "04", lede: "A consumer fitness platform.", scope: "Mobile and web apps", status: "Completed" },
+  { num: "03", name: "Confidential client", lede: "A sports-tech company.", scope: "Mobile app, website and admin dashboards", status: "In progress" },
+  { num: "04", name: "Hired as a team", lede: "A consumer fitness startup brought the three of us on together as their development team.", scope: "Mobile and web apps", status: "Completed" },
 ];
 
 /** Values of the contact form's "What do you need?" choice. */
