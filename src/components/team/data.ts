@@ -123,7 +123,7 @@ export const projects: Project[] = [
     num: "01",
     name: "BeesEye",
     logo: "/projects/beeseye/logo.webp",
-    when: "2026 · client work for Human Proximity",
+    when: "2026 · client work for Human Proximity, ongoing",
     lede: "A networking-event app that ranks everyone in the room by what you came for.",
     story: [
       {
@@ -238,6 +238,19 @@ export const projects: Project[] = [
       },
     ],
   },
+];
+
+/** Clients we can't name. Short cards only: no logos, screenshots or names. */
+export interface ConfidentialProject {
+  num: string;
+  lede: string;
+  scope: string;
+  status: string;
+}
+
+export const confidential: ConfidentialProject[] = [
+  { num: "03", lede: "A sports-tech company.", scope: "Mobile app, website and admin dashboards", status: "In progress" },
+  { num: "04", lede: "A consumer fitness platform.", scope: "Mobile and web apps", status: "Completed" },
 ];
 
 /** Values of the contact form's "What do you need?" choice. */

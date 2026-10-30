@@ -1,0 +1,50 @@
+---
+/* Projects 03 and 04: clients we can't name. Short cards, no logos or screenshots. */
+import SectionMeta from "./SectionMeta.astro";
+import { confidential } from "./data";
+---
+
+<article class="wrap row entry confidential" aria-labelledby="confidential-title">
+  <SectionMeta label="Projects 03–04" path="~/jag/work/confidential" when="2 private clients" />
+  <div class="body">
+    <h3 id="confidential-title" class="sr-only">Confidential clients</h3>
+    <ul class="conf-cards">
+      {
+        confidential.map((c) => (
+          <li class="conf-card">
+            <p class="conf-num">Project {c.num}</p>
+            <p class="conf-name">Confidential client</p>
+            <p class="conf-lede">{c.lede}</p>
+            <dl class="conf-readout">
+              <div><dt>Scope</dt><dd>{c.scope}</dd></div>
+              <div><dt>Status</dt><dd class="conf-status">{c.status}</dd></div>
+            </dl>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="conf-note">We keep these clients' names and work private.</p>
+  </div>
+</article>
+
+<style>
+  .confidential { position: relative; margin-top: 120px; padding-top: 96px; }
+  .confidential::before { content: ""; position: absolute; top: 0; left: var(--gutter); right: var(--gutter); border-top: 1px dashed var(--rule-strong); }
+  .conf-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+  .conf-card { padding: 22px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; box-shadow: 0 1px 2px rgba(20, 24, 33, 0.05); }
+  .conf-num { font: 500 12px/1.3 var(--mono); color: var(--ink-3); }
+  .conf-name { margin-top: 10px; font-size: clamp(1.4rem, 1.1rem + 0.8vw, 1.7rem); line-height: 1.1; font-weight: 600; letter-spacing: -0.03em; color: var(--ink); }
+  .conf-lede { margin-top: 10px; font-size: 17px; line-height: 1.4; color: var(--ink-2); }
+  .conf-readout { margin: 18px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(20, 24, 33, 0.05); }
+  .conf-readout div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 14px; }
+  .conf-readout div + div { border-top: 1px solid var(--rule); }
+  .conf-readout dt { font: 500 12.5px/1.45 var(--mono); color: var(--ink-3); }
+  .conf-readout dd { margin: 0; font-size: 15px; line-height: 1.45; color: var(--ink-2); text-align: right; }
+  .conf-readout dd.conf-status { font: 600 13px/1.45 var(--mono); color: var(--accent); white-space: nowrap; }
+  .conf-note { margin-top: 20px; font-size: 14.5px; color: var(--ink-3); }
+
+  @media (max-width: 760px) {
+    .confidential { margin-top: 72px; padding-top: 64px; }
+    .conf-cards { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

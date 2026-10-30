@@ -2,17 +2,19 @@
 /* Work: the projects we built together as JAG. */
 import SectionMeta from "./SectionMeta.astro";
 import WorkEntry from "./WorkEntry.astro";
-import { projects } from "./data";
+import ConfidentialEntries from "./ConfidentialEntries.astro";
+import { projects, confidential } from "./data";
 ---
 
 <section class="section" id="work" aria-labelledby="work-title">
   <div class="wrap row">
-    <SectionMeta label="Work" path="~/jag/work/" when={`${projects.length} projects`} />
+    <SectionMeta label="Work" path="~/jag/work/" when={`${projects.length + confidential.length} projects`} />
     <div class="body">
       <h2 id="work-title">Things we've made together</h2>
-      <p class="intro">Two projects we built as JAG, one for a client and one of our own. We're also building a mobile app, website and admin dashboards for a private client in sports tech, which we can't show yet.</p>
+      <p class="intro">Four projects we've built as JAG: client work for Human Proximity, Clutch, our own product, and two clients we keep confidential.</p>
     </div>
   </div>
 
   {projects.map((project) => <WorkEntry project={project} />)}
+  <ConfidentialEntries />
 </section>
