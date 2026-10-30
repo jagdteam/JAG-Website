@@ -5,7 +5,7 @@ import { confidential } from "./data";
 ---
 
 <article class="wrap row entry confidential" aria-labelledby="confidential-title">
-  <SectionMeta label="Projects 03–04" path="~/jag/work/confidential" when="2 private clients" />
+  <SectionMeta label="Projects 03–04" path="~/jag/work/private" when="2 private clients" />
   <div class="body">
     <h3 id="confidential-title" class="sr-only">Confidential clients</h3>
     <ul class="conf-cards">
@@ -38,7 +38,7 @@ import { confidential } from "./data";
   .conf-readout { margin: 18px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(20, 24, 33, 0.05); }
   .conf-readout div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 14px; }
   .conf-readout div + div { border-top: 1px solid var(--rule); }
-  .conf-readout dt { font: 500 12.5px/1.45 var(--mono); color: var(--ink-3); }
+  .conf-readout dt { flex-shrink: 0; white-space: nowrap; font: 500 12.5px/1.45 var(--mono); color: var(--ink-3); }
   .conf-readout dd { margin: 0; font-size: 15px; line-height: 1.45; color: var(--ink-2); text-align: right; }
   .conf-readout dd.conf-status { font: 600 13px/1.45 var(--mono); color: var(--accent); white-space: nowrap; }
   .conf-note { margin-top: 20px; font-size: 14.5px; color: var(--ink-3); }
