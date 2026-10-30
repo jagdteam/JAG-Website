@@ -1,0 +1,53 @@
+---
+/*
+  Layout for the team landing page only. Member pages use their own
+  src/people/<name>/Layout.astro and share nothing with this file.
+*/
+import "@fontsource/geist/400.css";
+import "@fontsource/geist/500.css";
+import "@fontsource/geist/600.css";
+import "@fontsource/geist/700.css";
+import "@fontsource/geist-mono/400.css";
+import "@fontsource/geist-mono/500.css";
+import "@fontsource/geist-mono/600.css";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const ogImage = "/assets/jagd-logo-512.png";
+
+// Absolute URLs need `site` in astro.config.mjs; until then fall back to root-relative paths.
+const abs = (path: string) => (Astro.site ? new URL(path, Astro.site).href : path);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f3f4f6" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/jagd-logo-192.png" />
+    <link rel="apple-touch-icon" href="/assets/jagd-logo-180.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="JAGD" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {Astro.site && <meta property="og:url" content={abs(Astro.url.pathname)} />}
+    <meta property="og:image" content={abs(ogImage)} />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="The JAGD logo" />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+  </body>
+</html>
