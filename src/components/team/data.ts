@@ -52,33 +52,29 @@ export const people: Person[] = [
 
 export const teamFoot = "All three of us hold a Master of Computer Science from UC Irvine.";
 
-// TODO: real email
-export const contactEmail = "hello@jagd.dev";
-export const socials = [
-  { label: "GitHub", href: "#" },
-  { label: "LinkedIn", href: "#" },
-];
+// TODO: shared JAG Gmail address (swap before merge)
+export const contactEmail = "jag.placeholder@example.com";
 
 /** The hero's todo.txt window. The last item is the call to action. */
 export const todo = {
   done: [
     "Win 1st place at the UCI ICS Project Expo 2026",
-    "Put BeesEye in front of 100+ people at a live event",
-    "Ship Clutch on iOS and Android",
+    "Launch BeesEye for Human Proximity, used live by 100+ people",
+    "Take on a private sports-tech client: mobile app, website and admin dashboards",
   ],
   next: { label: "Build your website or app", href: "#contact" },
 };
 
 /** "Now" section. Placeholder copy: the team edits this by hand each month (and the edited date with it). */
 export const now = {
-  edited: "edited Oct 29",
+  edited: "edited Oct 30",
   month: "October 2026",
   paragraphs: [
-    "Right now we're building a marketing website for a client. It has most of our attention, and we'll add it to this page once it's live and they're happy for us to show it.",
+    "Right now most of our attention goes to a private client in sports tech. We're building their mobile app, their full website and their admin dashboards.",
     "We're also booking new website and app projects for winter 2027. We keep the number small so every project gets all three of us.",
   ],
   list: [
-    { term: "Building", text: "A website for a client, launching soon" },
+    { term: "Building", text: "A mobile app, website and dashboards for a sports-tech client" },
     { term: "Booking", text: "Website and app projects for winter 2027" },
     { term: "Always", text: "Answering our own email" },
   ],
@@ -188,7 +184,7 @@ export const projects: Project[] = [
     name: "Clutch",
     logo: "/projects/clutch/logo.webp",
     logoTile: true,
-    when: "2026 · our own product",
+    when: "2026 · our own product, in development",
     lede: "An iOS and Android app that turns a phone on a tripod into an automatic scorekeeper for pickup basketball.",
     story: [
       { runIn: "The problem.", text: "Pickup games have no stats, and nobody wants to stop playing to keep score." },
@@ -325,12 +321,10 @@ export const faq: FaqItem[] = [
   {
     q: "What does a project cost?",
     a: "It depends on what you need, so every project gets a fixed quote after the free intro call, before any work starts. No hourly meter running, no surprise invoices.",
-    draft: true,
   },
   {
     q: "How long does it take?",
     a: "A marketing website usually takes a few weeks. An app, or a website and app together, takes a few months. You get a schedule with the quote, and a demo every week so you can see where things are.",
-    draft: true,
   },
   {
     q: "Who owns the code?",
@@ -343,6 +337,5 @@ export const faq: FaqItem[] = [
   {
     q: "What happens after launch?",
     a: "We stick around. We fix anything that comes up after launch and can keep building with you as you grow. We'll agree on the details of ongoing support together, up front.",
-    draft: true,
   },
 ];

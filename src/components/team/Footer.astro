@@ -1,6 +1,6 @@
 ---
 /* Footer: links, plus a slim status bar. */
-import { contactEmail, socials } from "./data";
+import { contactEmail } from "./data";
 
 const links = [
   { href: "#work", label: "Work" },
@@ -13,20 +13,19 @@ const links = [
 <footer class="site-footer" id="footer">
   <div class="wrap footer-top">
     <div class="footer-brand">
-      <img src="/assets/jagd-logo-96.png" alt="" width="40" height="40" loading="lazy" />
-      <div><div class="name">JAGD</div><div class="tag">Websites and apps, from Irvine, California.</div></div>
+      <img src="/assets/jag-logo-96.png" alt="" width="40" height="40" loading="lazy" />
+      <div><div class="name">JAG</div><div class="tag">Websites and apps, from Irvine, California.</div></div>
     </div>
     <ul class="footer-links">
       {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
       <li class="sep" aria-hidden="true"></li>
       <li><a href={`mailto:${contactEmail}`}>{contactEmail}</a></li>
-      {socials.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
     </ul>
   </div>
   <div class="statusbar">
     <div class="wrap statusbar-inner">
       <ul class="status-items">
-        <li><strong>JAGD</strong></li>
+        <li><strong>JAG</strong></li>
         <li><span class="led" aria-hidden="true"></span>3 engineers online</li>
         <li class="hide-sm">Irvine, CA</li>
         <li>© 2026</li>
