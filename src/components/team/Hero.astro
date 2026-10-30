@@ -1,7 +1,7 @@
 ---
 /*
-  Hero: what we do, in one sentence with our three names. Hovering, focusing
-  or tapping a name pops that person's window out of the stage beside it.
+  Hero: what we do, in one sentence with our three names. Hovering or focusing
+  a name lifts that person's card in the row beside it.
 */
 import NameWindows from "./NameWindows.astro";
 import Todo from "./Todo.astro";
@@ -37,7 +37,7 @@ const [johnny, andrew, giuseppi] = people;
 </section>
 
 <script>
-  /* Hero: names pop out their window */
+  /* Hero: hovering or focusing a name lifts its card */
   const stage = document.getElementById("stage");
   const heroGrid = document.getElementById("hero-grid");
   if (stage && heroGrid) {
@@ -48,7 +48,6 @@ const [johnny, andrew, giuseppi] = people;
 
     const setActive = (person: string | null) => {
       active = person;
-      stage.classList.toggle("has-active", !!person);
       wins.forEach((w) => w.classList.toggle("is-active", w.dataset.person === person));
       names.forEach((n) => n.classList.toggle("is-active", n.dataset.person === person));
     };
@@ -64,24 +63,12 @@ const [johnny, andrew, giuseppi] = people;
           if (!names.some((x) => x === document.activeElement)) setActive(null);
         }, 0);
       });
-      n.addEventListener("click", (e) => {
-        // Touch: a tap pops the window instead of navigating. The window itself links to the page.
-        if (lastPointer === "touch" || lastPointer === "pen") {
-          e.preventDefault();
-          setActive(active === person ? null : person);
-        }
-      });
     });
     wins.forEach((w) => {
       w.addEventListener("mouseenter", () => { if (lastPointer === "mouse") setActive(w.dataset.person ?? null); });
     });
     heroGrid.addEventListener("mouseleave", () => { if (lastPointer === "mouse") setActive(null); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && active) setActive(null); });
-    document.addEventListener("click", (e) => {
-      if (!active || lastPointer === "mouse") return;
-      const target = e.target as Element;
-      if (!target.closest(".name-link") && !target.closest(".stage")) setActive(null);
-    });
   }
 </script>
 
