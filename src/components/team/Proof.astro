@@ -10,13 +10,17 @@
     </li>
     <li>
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="7" r="2.8" /><path d="M2.5 16.5c.6-2.9 2.6-4.4 5-4.4s4.4 1.5 5 4.4" /><path d="M13 4.6a2.6 2.6 0 0 1 0 5M15 12.4c1.4.5 2.3 1.8 2.6 4.1" /></svg>
-      <span><strong>100+ live users</strong> at a UCI event</span>
+      <span><strong>100+ live users</strong> on BeesEye</span>
     </li>
     <li>
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="15" height="10.5" rx="2" /><path d="M7 6V4.5A1.5 1.5 0 0 1 8.5 3h3A1.5 1.5 0 0 1 13 4.5V6M2.5 10.5h15" /></svg>
       <span>Client: <strong>Human Proximity</strong></span>
     </li>
-    <li class="proof-tail" aria-hidden="true">3 people · 1 inbox</li>
+    <li>
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="15" height="10.5" rx="2" /><path d="M7 6V4.5A1.5 1.5 0 0 1 8.5 3h3A1.5 1.5 0 0 1 13 4.5V6M2.5 10.5h15" /></svg>
+      <span>Clients in <strong>sports tech</strong> and <strong>fitness</strong></span>
+    </li>
+    <li class="proof-tail" aria-hidden="true">3 engineers · 1 inbox</li>
   </ul>
 </div>
 
@@ -30,6 +34,18 @@
     box-shadow: 0 1px 2px rgba(20, 24, 33, 0.05);
   }
   .proof li { display: flex; align-items: center; gap: 10px; padding: 13px 16px; font-size: 15px; color: var(--ink-2); line-height: 1.4; }
+  @media (min-width: 1081px) {
+    .proof ul { flex-wrap: nowrap; }
+    .proof li { padding: 13px 12px; gap: 8px; font-size: 14px; }
+    .proof .proof-tail { flex: none; white-space: nowrap; }
+  }
+  @media (min-width: 761px) and (max-width: 1080px) {
+    .proof ul { display: grid; grid-template-columns: 1fr 1fr; }
+    .proof li:nth-child(even) { border-left: 1px solid var(--rule); }
+    .proof li:nth-child(odd) { border-left: 0; }
+    .proof li:nth-child(n+3) { border-top: 1px solid var(--rule); }
+    .proof .proof-tail { display: none; }
+  }
   .proof li + li { border-left: 1px solid var(--rule); }
   .proof li svg { width: 17px; height: 17px; color: var(--accent); flex: none; }
   .proof strong { color: var(--ink); font-weight: 600; }

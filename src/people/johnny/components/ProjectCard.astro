@@ -41,8 +41,8 @@ const {
   explore,
 } = Astro.props;
 const shown = links.filter(
-  (l) =>
-    l.href &&
+  (l): l is { label: string; href: string } =>
+    !!l.href &&
     l.href !== "#" &&
     !(
       (l.label === "Website" || l.label === "Repo") &&

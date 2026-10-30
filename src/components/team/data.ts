@@ -25,8 +25,8 @@ export const people: Person[] = [
     href: "/johnny",
     photo: "/assets/johnny-photo.jpg",
     photoSize: 384,
-    role: "AI and computer vision",
-    bio: "Computer vision and LLM retrieval systems, shipped to real users.",
+    role: "AI/ML and data analytics",
+    bio: "Builds AI features and the data analytics behind them.",
   },
   {
     id: "andrew",
@@ -36,7 +36,7 @@ export const people: Person[] = [
     photo: "/assets/andrew-photo.jpg",
     photoSize: 400,
     role: "Mobile and full-stack",
-    bio: "Shipped a native iOS app to the App Store and built React Native and React clients for a cycling platform.",
+    bio: "Builds iOS and Android apps and the web and backend code behind them.",
   },
   {
     id: "giuseppi",
@@ -45,41 +45,39 @@ export const people: Person[] = [
     href: "/giuseppi",
     photo: "/assets/giuseppi-photo.jpg",
     photoSize: 400,
-    role: "AI and backend",
-    bio: "LLM agents, computer vision, and FastAPI backends built to be fast and secure.",
+    role: "AI/ML and computer vision",
+    bio: "Builds AI features, computer vision models and the backends that run them.",
   },
 ];
 
-export const teamFoot = "All three of us hold a Master of Computer Science from UC Irvine.";
+export const teamFoot = "All three of us are finishing a Master's in Computer Science at UC Irvine and graduate in December 2026.";
 
-// TODO: real email
-export const contactEmail = "hello@jagd.dev";
-export const socials = [
-  { label: "GitHub", href: "#" },
-  { label: "LinkedIn", href: "#" },
-];
+// TODO: shared JAG Gmail address (swap before merge)
+export const contactEmail = "jag.placeholder@example.com";
 
 /** The hero's todo.txt window. The last item is the call to action. */
 export const todo = {
   done: [
     "Win 1st place at the UCI ICS Project Expo 2026",
-    "Put BeesEye in front of 100+ people at a live event",
-    "Ship Clutch on iOS and Android",
+    "Launch BeesEye for Human Proximity, used live by 100+ people",
+    "Deliver mobile and web apps for a consumer fitness platform",
+    "Start a mobile app, website and admin dashboards for a sports-tech company",
   ],
   next: { label: "Build your website or app", href: "#contact" },
 };
 
 /** "Now" section. Placeholder copy: the team edits this by hand each month (and the edited date with it). */
 export const now = {
-  edited: "edited Oct 29",
+  edited: "edited Oct 30",
   month: "October 2026",
   paragraphs: [
-    "Right now we're building a marketing website for a client. It has most of our attention, and we'll add it to this page once it's live and they're happy for us to show it.",
-    "We're also booking new website and app projects for winter 2027. We keep the number small so every project gets all three of us.",
+    "Right now we're building for two clients: Human Proximity, where our BeesEye work is ongoing, and a sports-tech company that needs a mobile app, a website and admin dashboards.",
+    "We're also taking on new projects now and can start right away. We keep the number small so every project gets all three of us.",
   ],
   list: [
-    { term: "Building", text: "A website for a client, launching soon" },
-    { term: "Booking", text: "Website and app projects for winter 2027" },
+    { term: "Ongoing", text: "BeesEye, client work for Human Proximity" },
+    { term: "In progress", text: "A mobile app, website and admin dashboards for a sports-tech company" },
+    { term: "Open", text: "New projects, starting right away" },
     { term: "Always", text: "Answering our own email" },
   ],
   aside: ["we update this by", "hand, so it's", "always true"],
@@ -125,7 +123,7 @@ export const projects: Project[] = [
     num: "01",
     name: "BeesEye",
     logo: "/projects/beeseye/logo.webp",
-    when: "2026 · client work for Human Proximity",
+    when: "2026 · client work for Human Proximity, ongoing",
     lede: "A networking-event app that ranks everyone in the room by what you came for.",
     story: [
       {
@@ -153,32 +151,23 @@ export const projects: Project[] = [
     figures: [
       {
         kind: "image",
-        file: "beeseye-landing.jpg",
-        src: "/projects/beeseye/landing.jpg",
-        alt: "The BeesEye landing page: a yellow bee logo and a headline inviting event guests to check in and find their best matches.",
-        width: 1440,
+        file: "beeseye-site.webp",
+        src: "/projects/beeseye/beeseye-site.webp",
+        alt: "The BeesEye website: the headline \"The room. One screen.\" over a blurred networking event, beside a hand holding a phone with a ranked list of attendees.",
+        width: 1600,
         height: 900,
         wide: true,
-        caption: ["The landing page, still live at ", { nowrap: "beeseye-web.vercel.app" }, "."],
+        caption: ["The website, live at ", { nowrap: "beeseye-web.vercel.app" }, "."],
       },
       {
         kind: "image",
-        file: "beeseye-screens-a.webp",
+        file: "beeseye-screens.webp",
         src: "/projects/beeseye/beeseye-screens-a.webp",
         alt: "Three BeesEye phone screens: check-in, a profile, and a ranked list of matches.",
         width: 1600,
         height: 1000,
+        wide: true,
         caption: ["Check-in, profile and ranked matches on a phone."],
-      },
-      {
-        kind: "video",
-        file: "beeseye-demo.mp4",
-        src: "/projects/beeseye/demo.mp4",
-        poster: "/projects/beeseye/demo-poster.jpg",
-        alt: "Screen recording walking through the BeesEye app.",
-        width: 1280,
-        height: 800,
-        caption: ["A short walkthrough."],
       },
     ],
   },
@@ -188,7 +177,7 @@ export const projects: Project[] = [
     name: "Clutch",
     logo: "/projects/clutch/logo.webp",
     logoTile: true,
-    when: "2026 · our own product",
+    when: "2026 · our own product, in development",
     lede: "An iOS and Android app that turns a phone on a tripod into an automatic scorekeeper for pickup basketball.",
     story: [
       { runIn: "The problem.", text: "Pickup games have no stats, and nobody wants to stop playing to keep score." },
@@ -223,7 +212,7 @@ export const projects: Project[] = [
         kind: "video",
         file: "clutch-demo.mp4",
         src: "/projects/clutch/demo.mp4",
-        poster: "/projects/clutch/demo-poster.jpg",
+        poster: "/projects/clutch/demo-poster.webp",
         alt: "The Clutch tracker running on an outdoor court, drawing boxes around the players, ball and hoop.",
         width: 800,
         height: 448,
@@ -231,15 +220,28 @@ export const projects: Project[] = [
       },
       {
         kind: "image",
-        file: "clutch-screens-b.webp",
-        src: "/projects/clutch/clutch-screens-b.webp",
-        alt: "Clutch match recap and player stats screens.",
+        file: "clutch-site.webp",
+        src: "/projects/clutch/clutch-site.webp",
+        alt: "The Clutch website: the headline \"Talent doesn't wait for a camera crew.\" over a drawing of a basketball court, with a player rating card and a live leaderboard.",
         width: 1600,
         height: 1000,
-        caption: ["The match recap and your stats afterwards."],
+        caption: ["The website we made, at ", { nowrap: "v0-clutch-web.vercel.app" }, "."],
       },
     ],
   },
+];
+
+/** Clients we can't name. Short cards only: no logos, screenshots or names. */
+export interface ConfidentialProject {
+  num: string;
+  lede: string;
+  scope: string;
+  status: string;
+}
+
+export const confidential: ConfidentialProject[] = [
+  { num: "03", lede: "A sports-tech company.", scope: "Mobile app, website and admin dashboards", status: "In progress" },
+  { num: "04", lede: "A consumer fitness platform.", scope: "Mobile and web apps", status: "Completed" },
 ];
 
 /** Values of the contact form's "What do you need?" choice. */
@@ -264,11 +266,6 @@ export interface Service {
   icon: "website" | "app" | "both" | "fix";
   title: string;
   text: string;
-  cta: string;
-  /** Pre-selects this need in the contact form. */
-  need: Need;
-  /** Pre-fills the message (only if it's empty). */
-  msg?: string;
 }
 
 export const services: Service[] = [
@@ -276,41 +273,32 @@ export const services: Service[] = [
     icon: "website",
     title: "A website",
     text: "Marketing sites and web apps that load fast, show up in search, and turn visitors into leads.",
-    cta: "I need a website",
-    need: "website",
   },
   {
     icon: "app",
     title: "An app",
     text: "iOS and Android from one codebase. We take it through App Store and Google Play review with you.",
-    cta: "I need an app",
-    need: "app",
   },
   {
     icon: "both",
     title: "Both",
     text: "One backend, one login and one design across your website and your mobile app.",
-    cta: "I need both",
-    need: "both",
   },
   {
     icon: "fix",
     title: "Fix what you have",
     text: "We take over existing sites and apps, fix what's broken, speed them up, or redesign them.",
-    cta: "Help with mine",
-    need: "notsure",
-    msg: "We already have a site or app that needs help: ",
   },
 ];
 
-// Proposed promises, not yet confirmed by the team. Easy to edit.
+// Confirmed by the team (2026-10-30). Only these promises, nothing else.
 export const promises = [
   { title: "A free 30-minute intro call.", text: "No pitch deck. Just a conversation about what you need." },
-  { title: "A reply within one business day.", text: "From one of us, not an auto-responder." },
+  { title: "We'll write back within one business day.", text: "From one of us, not an auto-responder." },
   { title: "A fixed quote before work starts.", text: "You know the price before we write a line of code." },
-  { title: "Weekly demos you can click through.", text: "Real builds on your phone, not slides about progress." },
-  { title: "You own all the code and accounts.", text: "Domains, hosting, app store listings, all in your name." },
-  { title: "Tests and a security review on every change.", text: "Boring, careful, and the reason things don't break." },
+  { title: "Progress at your pace.", text: "We show you working builds as often as you'd like, on the schedule that suits you." },
+  { title: "Tested, reviewed and security-checked.", text: "Every change is tested, security-reviewed and checked by a second engineer before it ships." },
+  { title: "You own the code and the accounts.", text: "The code and every account we set up for your project, like domain, hosting and app store listings." },
   { title: "You talk directly to the engineers.", text: "No account managers in between. Just the three of us." },
 ];
 
@@ -324,17 +312,19 @@ export interface FaqItem {
 export const faq: FaqItem[] = [
   {
     q: "What does a project cost?",
-    a: "It depends on what you need, so every project gets a fixed quote after the free intro call, before any work starts. No hourly meter running, no surprise invoices.",
-    draft: true,
+    a: "Every project is different, so we quote each one. After the free 30-minute intro call, we send you a fixed quote for the agreed scope before any work starts, so you know the full price up front. No hourly billing and no surprise invoices.",
   },
   {
     q: "How long does it take?",
-    a: "A marketing website usually takes a few weeks. An app, or a website and app together, takes a few months. You get a schedule with the quote, and a demo every week so you can see where things are.",
-    draft: true,
+    a: "It depends on the scope. A marketing website usually takes a few weeks; an app, or a website and app together, usually takes a few months. Your quote comes with a schedule, and you see progress as often as you like along the way.",
   },
   {
     q: "Who owns the code?",
     a: "You do. The code, the designs, and every account (domain, hosting, App Store and Google Play) are in your name from day one.",
+  },
+  {
+    q: "How do you keep our data secure?",
+    a: "Every change is tested and security-reviewed, and a second engineer checks it before it ships. Passwords and keys are kept in secure settings, never in the code itself. We only ask for the logins we actually need, and you can remove our access at any time. The code and accounts for your project belong to you.",
   },
   {
     q: "We already have a website. Can you work with it?",
@@ -343,6 +333,5 @@ export const faq: FaqItem[] = [
   {
     q: "What happens after launch?",
     a: "We stick around. We fix anything that comes up after launch and can keep building with you as you grow. We'll agree on the details of ongoing support together, up front.",
-    draft: true,
   },
 ];

@@ -121,7 +121,8 @@ const barHidden = Tag === "a" ? undefined : "true";
   .win-btn svg { width: 9px; height: 9px; }
 
   /* Mini: the hero name windows */
-  .win-mini .win-bar { height: 30px; padding: 0 7px 0 9px; gap: 8px; background-position: 0 4px, 0 0; }
+  .win-mini .win-bar { height: 30px; padding: 0 7px 0 9px; gap: 6px; grid-template-columns: auto minmax(0, 1fr) auto; background-position: 0 4px, 0 0; }
+  .win-mini .win-btn:not(:last-child) { display: none; }
   .win-mini .win-glyph img { width: 15px; height: 15px; border-radius: 50%; object-fit: cover; }
   .win-mini .win-title { font-size: 11.5px; padding: 3px 8px; }
   .win-mini .win-btns { gap: 4px; }
