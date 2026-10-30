@@ -562,6 +562,18 @@ html.js .right .sec:not(:first-child) :is(.plate, .hd).in {
 .left .trim {
   margin-bottom: 0;
 }
+.team-link {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.team-link:hover,
+.team-link:focus-visible {
+  color: var(--hov);
+  text-decoration: underline;
+}
 .photo {
   width: 176px;
   height: 176px;
