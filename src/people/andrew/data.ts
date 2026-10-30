@@ -9,8 +9,28 @@ export const profile = {
     "Software engineer building mobile apps, backends, and testing pipelines.",
     "Master of Computer Science at UC Irvine, expected Dec 2026.",
   ],
-  about:
-    "Software engineer who shipped a native iOS app to the App Store (5.0 rating) and architected an event networking app as sole engineer in React Native/Expo on Firebase. I am finishing my Master of Computer Science at UC Irvine (expected December 2026) after a BA in Computer Science and a BM in Clarinet Performance at the University of Redlands.",
+  about: [
+    [
+      "I build apps end to end: mobile and web front ends, cloud backends on AWS and Postgres, and the testing pipelines that keep every release safe.",
+    ],
+    [
+      "On the team side, I led the frontend for Clutch, an app that turns a phone into a scorekeeper for pickup basketball. I set up its React Native and TypeScript architecture and added Google sign-in and Google Maps. Clutch won ",
+      {
+        text: "1st place at the 2026 UCI ICS Project Expo",
+        href: "https://ics.uci.edu/2026/06/12/2026-uc-irvine-ics-project-expo-breaks-records/#:~:text=2026%20Project%20Expo,could%20have%20imagined.%E2%80%9D",
+      },
+      ".",
+    ],
+    [
+      "On my own, I built MyMelodic, a native iOS app for musicians with a tuner, metronome, and practice streaks. I shipped it solo in Swift with a Supabase backend and Xcode Cloud releases, and it holds a 5.0 rating on the App Store.",
+    ],
+    [
+      "Today I'm a Software Engineer at Human Proximity, where I architected an event networking app as its sole engineer, built a four-layer testing pipeline from scratch, and made its slowest API endpoints 3x faster. Before that, as a Full-Stack Engineer Intern at VeloPrimo, I owned a 51-screen React Native app and its React web app, and deployed backend services on AWS (ECS and Aurora Postgres).",
+    ],
+    [
+      "I'm finishing my Master of Computer Science at UC Irvine (Dec 2026), after a BA in Computer Science and a BM in Clarinet Performance at the University of Redlands.",
+    ],
+  ] as (string | { text: string; href: string })[][],
   contactLine: "",
   education: [
     {

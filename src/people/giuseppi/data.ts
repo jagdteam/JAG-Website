@@ -9,8 +9,25 @@ export const profile = {
     "AI/ML Engineer building LLM agents and computer vision systems.",
     "Master of Computer Science at UC Irvine, Dec 2026.",
   ],
-  about:
-    "AI/ML Engineer (Contract) at Human Proximity, previously an AI/ML Engineer Intern at VeloPrimo. I work with LLM agents, retrieval, and computer vision, and I built computer vision for Clutch, which took 1st Place at the 2026 UCI ICS Expo. I am finishing a Master of Computer Science at UC Irvine (Expected Dec 2026, Director's Fellowship Recipient) after a BS in Computer Science at UC Riverside.",
+  about: [
+    [
+      "I build with LLMs (AI language models) and computer vision, from multi-agent systems in the cloud to models that run live on a phone.",
+    ],
+    [
+      "One of my favorite projects is Clutch, an app that turns a phone into a scorekeeper for pickup basketball. I deployed custom-trained YOLO models running at 20 FPS on the iPhone with TensorFlow Lite, and built the tracking logic that keeps each player's identity even when they're blocked from view mid-air. Clutch won ",
+      {
+        text: "1st place at the 2026 UCI ICS Project Expo",
+        href: "https://ics.uci.edu/2026/06/12/2026-uc-irvine-ics-project-expo-breaks-records/#:~:text=2026%20Project%20Expo,could%20have%20imagined.%E2%80%9D",
+      },
+      ", and it was a great way to bridge academic theory and production engineering.",
+    ],
+    [
+      "Today I'm an AI/ML Engineer at Human Proximity, building BeesEye, a web app that helps people at in-person events find who they should meet. I built the Python pipeline that prepares each guest's AI profile before the event, cutting the wait for first matches from about 5 seconds to 1 second in testing. Before that, as an AI/ML Engineer Intern at VeloPrimo, I built multi-agent LLM orchestration with retrieval (looking up trusted sources before answering), guardrails, and an evaluation harness that uses LLM judges to keep answers accurate and safe.",
+    ],
+    [
+      "I'm finishing my Master of Computer Science at UC Irvine (Dec 2026) as a Director's Fellowship recipient. Outside of code, you'll find me weightlifting, playing basketball, or following Formula 1.",
+    ],
+  ] as (string | { text: string; href: string })[][],
   contactLine: "",
   education: [
     {
