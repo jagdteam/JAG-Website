@@ -212,7 +212,7 @@ export const projects: Project[] = [
         kind: "video",
         file: "clutch-demo.mp4",
         src: "/projects/clutch/demo.mp4",
-        poster: "/projects/clutch/demo-poster.jpg",
+        poster: "/projects/clutch/demo-poster.webp",
         alt: "The Clutch tracker running on an outdoor court, drawing boxes around the players, ball and hoop.",
         width: 800,
         height: 448,
