@@ -1,40 +1,33 @@
 ---
-import { getCollection } from "astro:content";
-import Shell from "../layouts/Shell.astro";
-import Placeholder from "../components/Placeholder.astro";
-
-const projects = (await getCollection("projects")).filter(
-  (p) => !p.data.draft && p.data.explore?.href === "/projects/" + p.id,
-);
-const people = await getCollection("people");
+import TeamLayout from "../layouts/TeamLayout.astro";
+import Header from "../components/team/Header.astro";
+import Hero from "../components/team/Hero.astro";
+import Now from "../components/team/Now.astro";
+import Work from "../components/team/Work.astro";
+import Services from "../components/team/Services.astro";
+import Promises from "../components/team/Promises.astro";
+import Team from "../components/team/Team.astro";
+import Faq from "../components/team/Faq.astro";
+import Contact from "../components/team/Contact.astro";
+import Footer from "../components/team/Footer.astro";
+import StickyCta from "../components/team/StickyCta.astro";
 ---
 
-<Shell title="Team">
-  <Placeholder
-    title="1. Hero"
-    note="JAGD, one honest line, three faces linking to /johnny /andrew /giuseppi. No effects."
-  />
-  <div id="projects">
-    <Placeholder
-      title="2. Projects"
-      note="Two cards: BeesEye, IoT. Screenshot, one-line pitch, stack tags, who did what, links."
-    >
-      <ul>
-        {projects.map((p) => <li><a href={`/projects/${p.id}`} target="_blank" rel="noopener noreferrer">{p.data.name}</a></li>)}
-      </ul>
-    </Placeholder>
-  </div>
-  <Placeholder
-    title="3. How we work"
-    note="Three to four lines: sprints, code review, security pass on every chunk."
-  />
-  <Placeholder
-    title="4. Team"
-    note="Three cards: photo, name, role, two lines, link to own page."
-  >
-    <ul>
-      {people.map((p) => <li><a href={`/${p.id}`} target="_blank" rel="noopener noreferrer">{p.data.name}</a></li>)}
-    </ul>
-  </Placeholder>
-  <Placeholder title="5. Contact" note="Emails, LinkedIn, GitHub." />
-</Shell>
+<TeamLayout
+  title="JAGD · Websites and apps, built by the three of us"
+  description="JAGD is a three-person studio in Irvine, California. We build websites and iOS and Android apps for companies, and you talk directly to the engineers who write the code."
+>
+  <Header />
+  <main id="main">
+    <Hero />
+    <Now />
+    <Work />
+    <Services />
+    <Promises />
+    <Team />
+    <Faq />
+    <Contact />
+  </main>
+  <Footer />
+  <StickyCta />
+</TeamLayout>
