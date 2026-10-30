@@ -1,5 +1,5 @@
 ---
-/* Renders a Rich text run (see data.ts): plain strings, plus no-wrap spans. */
+/* Renders a Rich text run (see data.ts): plain strings, no-wrap spans and external links. */
 import type { Rich } from "./data";
 
 interface Props {
@@ -8,4 +8,19 @@ interface Props {
 const { text } = Astro.props;
 ---
 
-{text.map((part) => (typeof part === "string" ? part : <span class="nowrap">{part.nowrap}</span>))}
+{
+  text.map((part) =>
+    typeof part === "string" ? (
+      part
+    ) : "href" in part ? (
+      <a class="rich-link" href={part.href} target="_blank" rel="noopener noreferrer">{part.link}<span class="sr-only"> (opens in a new tab)</span></a>
+    ) : (
+      <span class="nowrap">{part.nowrap}</span>
+    ),
+  )
+}
+
+<style>
+  .rich-link { color: var(--accent); font-weight: 600; white-space: nowrap; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+  .rich-link:hover { text-decoration-thickness: 2.5px; }
+</style>
