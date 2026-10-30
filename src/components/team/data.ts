@@ -25,8 +25,8 @@ export const people: Person[] = [
     href: "/johnny",
     photo: "/assets/johnny-photo.jpg",
     photoSize: 384,
-    role: "AI and computer vision",
-    bio: "Computer vision and LLM retrieval systems, shipped to real users.",
+    role: "AI/ML and data analytics",
+    bio: "Builds AI features and the data analytics behind them.",
   },
   {
     id: "andrew",
@@ -36,7 +36,7 @@ export const people: Person[] = [
     photo: "/assets/andrew-photo.jpg",
     photoSize: 400,
     role: "Mobile and full-stack",
-    bio: "Shipped a native iOS app to the App Store and built React Native and React clients for a cycling platform.",
+    bio: "Builds iOS and Android apps and the web and backend code behind them.",
   },
   {
     id: "giuseppi",
@@ -45,12 +45,12 @@ export const people: Person[] = [
     href: "/giuseppi",
     photo: "/assets/giuseppi-photo.jpg",
     photoSize: 400,
-    role: "AI and backend",
-    bio: "LLM agents, computer vision, and FastAPI backends built to be fast and secure.",
+    role: "AI/ML and computer vision",
+    bio: "Builds AI features, computer vision models and the backends that run them.",
   },
 ];
 
-export const teamFoot = "All three of us hold a Master of Computer Science from UC Irvine.";
+export const teamFoot = "All three of us are finishing a Master's in Computer Science at UC Irvine and graduate in December 2026.";
 
 // TODO: shared JAG Gmail address (swap before merge)
 export const contactEmail = "jag.placeholder@example.com";
@@ -60,7 +60,8 @@ export const todo = {
   done: [
     "Win 1st place at the UCI ICS Project Expo 2026",
     "Launch BeesEye for Human Proximity, used live by 100+ people",
-    "Take on a private sports-tech client: mobile app, website and admin dashboards",
+    "Deliver mobile and web apps for a consumer fitness platform",
+    "Start a mobile app, website and admin dashboards for a sports-tech company",
   ],
   next: { label: "Build your website or app", href: "#contact" },
 };
@@ -70,12 +71,13 @@ export const now = {
   edited: "edited Oct 30",
   month: "October 2026",
   paragraphs: [
-    "Right now most of our attention goes to a private client in sports tech. We're building their mobile app, their full website and their admin dashboards.",
-    "We're also booking new website and app projects for winter 2027. We keep the number small so every project gets all three of us.",
+    "Right now we're building for two clients: Human Proximity, where our BeesEye work is ongoing, and a sports-tech company that needs a mobile app, a website and admin dashboards.",
+    "We're also taking on new projects now and can start right away. We keep the number small so every project gets all three of us.",
   ],
   list: [
-    { term: "Building", text: "A mobile app, website and dashboards for a sports-tech client" },
-    { term: "Booking", text: "Website and app projects for winter 2027" },
+    { term: "Ongoing", text: "BeesEye, client work for Human Proximity" },
+    { term: "In progress", text: "A mobile app, website and admin dashboards for a sports-tech company" },
+    { term: "Open", text: "New projects, starting right away" },
     { term: "Always", text: "Answering our own email" },
   ],
   aside: ["we update this by", "hand, so it's", "always true"],
@@ -260,11 +262,6 @@ export interface Service {
   icon: "website" | "app" | "both" | "fix";
   title: string;
   text: string;
-  cta: string;
-  /** Pre-selects this need in the contact form. */
-  need: Need;
-  /** Pre-fills the message (only if it's empty). */
-  msg?: string;
 }
 
 export const services: Service[] = [
@@ -272,41 +269,32 @@ export const services: Service[] = [
     icon: "website",
     title: "A website",
     text: "Marketing sites and web apps that load fast, show up in search, and turn visitors into leads.",
-    cta: "I need a website",
-    need: "website",
   },
   {
     icon: "app",
     title: "An app",
     text: "iOS and Android from one codebase. We take it through App Store and Google Play review with you.",
-    cta: "I need an app",
-    need: "app",
   },
   {
     icon: "both",
     title: "Both",
     text: "One backend, one login and one design across your website and your mobile app.",
-    cta: "I need both",
-    need: "both",
   },
   {
     icon: "fix",
     title: "Fix what you have",
     text: "We take over existing sites and apps, fix what's broken, speed them up, or redesign them.",
-    cta: "Help with mine",
-    need: "notsure",
-    msg: "We already have a site or app that needs help: ",
   },
 ];
 
-// Proposed promises, not yet confirmed by the team. Easy to edit.
+// Confirmed by the team (2026-10-30). Only these promises, nothing else.
 export const promises = [
   { title: "A free 30-minute intro call.", text: "No pitch deck. Just a conversation about what you need." },
-  { title: "A reply within one business day.", text: "From one of us, not an auto-responder." },
+  { title: "We'll write back within one business day.", text: "From one of us, not an auto-responder." },
   { title: "A fixed quote before work starts.", text: "You know the price before we write a line of code." },
-  { title: "Weekly demos you can click through.", text: "Real builds on your phone, not slides about progress." },
-  { title: "You own all the code and accounts.", text: "Domains, hosting, app store listings, all in your name." },
-  { title: "Tests and a security review on every change.", text: "Boring, careful, and the reason things don't break." },
+  { title: "Progress at your pace.", text: "We show you working builds as often as you'd like, on the schedule that suits you." },
+  { title: "Tested, reviewed and security-checked.", text: "Every change is tested, security-reviewed and checked by a second engineer before it ships." },
+  { title: "You own the code and the accounts.", text: "The code and every account we set up for your project, like domain, hosting and app store listings." },
   { title: "You talk directly to the engineers.", text: "No account managers in between. Just the three of us." },
 ];
 
@@ -320,15 +308,19 @@ export interface FaqItem {
 export const faq: FaqItem[] = [
   {
     q: "What does a project cost?",
-    a: "It depends on what you need, so every project gets a fixed quote after the free intro call, before any work starts. No hourly meter running, no surprise invoices.",
+    a: "Every project is different, so we quote each one. After the free 30-minute intro call, we send you a fixed quote for the agreed scope before any work starts, so you know the full price up front. No hourly billing and no surprise invoices.",
   },
   {
     q: "How long does it take?",
-    a: "A marketing website usually takes a few weeks. An app, or a website and app together, takes a few months. You get a schedule with the quote, and a demo every week so you can see where things are.",
+    a: "It depends on the scope. A marketing website usually takes a few weeks; an app, or a website and app together, usually takes a few months. Your quote comes with a schedule, and you see progress as often as you like along the way.",
   },
   {
     q: "Who owns the code?",
     a: "You do. The code, the designs, and every account (domain, hosting, App Store and Google Play) are in your name from day one.",
+  },
+  {
+    q: "How do you keep our data secure?",
+    a: "Every change is tested and security-reviewed, and a second engineer checks it before it ships. Passwords and keys are kept in secure settings, never in the code itself. We only ask for the logins we actually need, and you can remove our access at any time. The code and accounts for your project belong to you.",
   },
   {
     q: "We already have a website. Can you work with it?",

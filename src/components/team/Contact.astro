@@ -12,9 +12,9 @@ import { people, contactEmail, needs, timelines } from "./data";
   <div class="wrap">
     <div class="contact-inner">
       <div class="contact-intro">
-        <SectionMeta label="Contact" path="~/jag/contact" when="replies within 1 business day" />
-        <h2 id="contact-title">Write to us</h2>
-        <p>Tell us a little about what you need. One of us will write back within one business day, and we'll set up a free 30-minute call.</p>
+        <SectionMeta label="Contact" path="~/jag/contact" when="we'll write back within one business day" />
+        <h2 id="contact-title">Contact us</h2>
+        <p>Tell us a little about what you need. We'll write back within one business day and set up a free 30-minute call.</p>
         <p>Prefer your own email app? That works too.</p>
         <a class="email" href={`mailto:${contactEmail}`}>{contactEmail}</a>
       </div>
@@ -77,14 +77,14 @@ import { people, contactEmail, needs, timelines } from "./data";
 
           <div class="c-toolbar">
             <button class="btn btn-primary" type="submit"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M14.5 1.5L7 9M14.5 1.5l-4.5 13-3-5.5-5.5-3 13-4.5z" /></svg>Send</button>
-            <p class="send-note">We reply within one business day.</p>
+            <p class="send-note">We'll write back within one business day.</p>
           </div>
         </form>
 
         <div class="sent" id="sent" hidden tabindex="-1" role="status">
           <span class="sent-icon" aria-hidden="true"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8" /></svg></span>
           <h3>Message sent</h3>
-          <p id="sent-msg">Your email app should open with your message ready. Press send there, and one of us will reply within one business day.</p>
+          <p id="sent-msg">Your email app should open with your message ready. Press send there. We'll write back within one business day.</p>
           <p class="comment"><span class="line">talk soon. J, A and G</span></p>
         </div>
       </Win>
@@ -105,7 +105,6 @@ import { people, contactEmail, needs, timelines } from "./data";
   const composeTitle = document.getElementById("compose-title");
 
   if (form && nameIn && emailIn && msgIn && timelineIn && needSet && sent && sentMsg && composeTitle) {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const needInput = (value?: string) =>
       form.querySelector<HTMLInputElement>(value ? `input[name="need"][value="${value}"]` : 'input[name="need"]');
 
@@ -127,19 +126,6 @@ import { people, contactEmail, needs, timelines } from "./data";
     emailIn.addEventListener("input", () => { if (validEmail(emailIn.value)) clearError(emailIn, "e-email"); });
     form.addEventListener("change", (e) => {
       if ((e.target as HTMLInputElement).name === "need") clearError(needSet, "e-need");
-    });
-
-    // Service buttons pre-select the need and jump to the message.
-    document.querySelectorAll<HTMLAnchorElement>("[data-need]").forEach((a) => {
-      a.addEventListener("click", () => {
-        const radio = needInput(a.dataset.need);
-        if (radio) {
-          radio.checked = true;
-          clearError(needSet, "e-need");
-        }
-        if (a.dataset.msg && !msgIn.value.trim()) msgIn.value = a.dataset.msg;
-        setTimeout(() => nameIn.focus({ preventScroll: true }), reduceMotion ? 0 : 450);
-      });
     });
 
     form.addEventListener("submit", (e) => {
@@ -183,7 +169,7 @@ import { people, contactEmail, needs, timelines } from "./data";
       ].join("\n");
       window.location.href = `mailto:${form.dataset.to ?? ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-      sentMsg.textContent = "Your email app should open with your message ready. Press send there, and one of us will reply within one business day.";
+      sentMsg.textContent = "Your email app should open with your message ready. Press send there. We'll write back within one business day.";
       composeTitle.textContent = "Message sent";
       form.hidden = true;
       sent.hidden = false;
