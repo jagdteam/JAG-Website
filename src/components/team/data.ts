@@ -52,8 +52,8 @@ export const people: Person[] = [
 
 export const teamFoot = "All three of us are finishing a Master's in Computer Science at UC Irvine and graduate in December 2026.";
 
-// TODO: shared JAG Gmail address (swap before merge)
-export const contactEmail = "jag.placeholder@example.com";
+// Web3Forms access key: public by design, it only delivers to the inbox it was created for.
+export const web3formsKey = "a7cb3cd6-29c0-4be7-ba82-a56d8a9a08be";
 
 /** The hero's todo.txt window. The last item is the call to action. */
 export const todo = {
