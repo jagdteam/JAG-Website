@@ -1,0 +1,53 @@
+---
+// A card that opens from a project or experience entry: on desktop in the
+// left column under the folded profile card, on phones right under its
+// entry. Behavior lives in scripts/showcase.ts. Without JavaScript, the
+// entry's #id link still shows the card in place through :target.
+import Chip from "./Chip.astro";
+import Pill from "./Pill.astro";
+import Gallery from "./Gallery.astro";
+import LinkList from "./LinkList.astro";
+import type { Link, Media } from "./types";
+
+interface Props {
+  id: string;
+  name: string;
+  role?: string;
+  status?: string;
+  from: string;
+  description: string;
+  tags?: string[];
+  links: Link[];
+  media: Media[];
+}
+const { id, name, role, status, from, description, tags = [], links, media } = Astro.props;
+---
+
+<section class="plate showcase in" id={id} data-showcase aria-label={name} tabindex="-1">
+  <div class="pl">
+    <span class="trim" aria-hidden="true"></span>
+    <div class="sc-head">
+      <span><strong>{name}</strong>{role && <span class="prole"> · {role}</span>}</span>
+      <button type="button" class="sc-close" data-showcase-close aria-label={`Close ${name}`}>close ×</button>
+    </div>
+    <p class="sc-from">
+      {status && <Pill label={status} />}
+      <span>{from}</span>
+    </p>
+    <Gallery media={media} />
+    {links.length > 0 && <LinkList class="sc-links" links={links} />}
+    <p class="sc-desc">{description}</p>
+    {tags.length > 0 && (
+      <span class="chips">
+        {tags.map((t) => (
+          <Chip label={t} />
+        ))}
+      </span>
+    )}
+  </div>
+</section>
+
+<script>
+  import { ShowcaseController } from "./scripts/showcase";
+  ShowcaseController.mount();
+</script>

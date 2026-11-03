@@ -1,0 +1,115 @@
+---
+// One employer on a member page, with each role's summary, stack and
+// details. An entry with a product (BeesEye) opens its Showcase card.
+import Chip from "./Chip.astro";
+import OrgLogo from "./OrgLogo.astro";
+import Opener from "./Opener.astro";
+import Showcase from "./Showcase.astro";
+import type { Experience } from "./types";
+
+interface Props {
+  experience: Experience;
+}
+const { company: org, product, showcase, logo, place, start, end, roles } = Astro.props.experience;
+const span = (from: string, to: string) => (to ? `${from} – ${to}` : from);
+const dates = span(start, end);
+const single = roles.length === 1;
+const orgName = product ? `${org} · ${product}` : org;
+const showName = product ?? org;
+---
+
+<li class="plate">
+  <div class="pl exprow withlogo">
+    <OrgLogo org={org} src={logo} />
+    <span class="d">{dates}</span>
+    <div>
+      {single ? (
+        <>
+          <p class="xtitle"><strong>{roles[0].title}</strong></p>
+          <p class="xorg"><span class="xco">{orgName}</span> · {place}</p>
+        </>
+      ) : (
+        <>
+          <strong>{orgName}</strong> · {place}
+        </>
+      )}
+      {roles.map((r, i) => (
+        <>
+          {!single && (
+            <p class="role">
+              <strong>{r.title}</strong> · {span(r.start, r.end)}
+            </p>
+          )}
+          <p class="one">{r.summary}</p>
+          {r.stack.length > 0 && (
+            <span class="chips">
+              {r.stack.map((s) => (
+                <Chip label={s} />
+              ))}
+            </span>
+          )}
+          {showcase && i === 0 && <Opener id={showcase.id} show={`See ${showName}`} hide={`Hide ${showName}`} />}
+          {r.bullets.length > 0 && (
+            <details>
+              <summary>details</summary>
+              <ul>
+                {r.bullets.map((b) => (
+                  <li>{b}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </>
+      ))}
+    </div>
+  </div>
+</li>
+{showcase && (
+  <li class="show-home" role="none">
+    <Showcase
+      id={showcase.id}
+      name={showName}
+      role={single ? roles[0].title : undefined}
+      status={showcase.status}
+      from={`${org} · ${dates}`}
+      description={showcase.description}
+      tags={showcase.tags}
+      links={showcase.links}
+      media={showcase.media}
+    />
+  </li>
+)}
+
+<script>
+  import { isOpen, setOpen } from "./scripts/details";
+
+  // A summary click toggles that role's details; a click anywhere else on an
+  // experience card toggles all of its details together.
+  let pending: ReturnType<typeof setTimeout> | undefined;
+  const selecting = () => Boolean(window.getSelection()?.toString());
+
+  function toggleAll(all: HTMLDetailsElement[]) {
+    if (selecting()) return;
+    const open = all.some((d) => !isOpen(d));
+    all.forEach((d) => setOpen(d, open));
+  }
+
+  document.addEventListener("click", (e) => {
+    const t = e.target as Element;
+    if (!t.closest || t.closest("a")) return;
+    const summary = t.closest<HTMLElement>(".exprow details > summary");
+    if (summary) {
+      e.preventDefault();
+      const d = summary.parentElement as HTMLDetailsElement;
+      setOpen(d, !isOpen(d));
+      return;
+    }
+    const all = Array.from(t.closest(".plate")?.querySelectorAll<HTMLDetailsElement>(".exprow details") ?? []);
+    if (all.length === 0) return;
+    // A double-click on bullet text selects a word; do not toggle for it.
+    clearTimeout(pending);
+    if (e.detail > 1 || selecting()) return;
+    if (t.closest(".exprow details > ul")) pending = setTimeout(() => toggleAll(all), 300);
+    else toggleAll(all);
+  });
+</script>

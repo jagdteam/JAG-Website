@@ -1,0 +1,69 @@
+---
+// A project on a member page. A project with more to show (a longer
+// description, media or a demo link) opens its Showcase card from here.
+import Chip from "./Chip.astro";
+import Pill from "./Pill.astro";
+import LinkList from "./LinkList.astro";
+import Opener from "./Opener.astro";
+import Showcase from "./Showcase.astro";
+import type { Link, Project } from "./types";
+
+interface Props {
+  id: string;
+  project: Project;
+  role?: string;
+  myPart?: string;
+}
+const { id, project: p, role, myPart } = Astro.props;
+const team = p.team === "solo" ? "solo project" : `team · ${p.team.join(", ")}`;
+const media = p.media ?? [];
+const description = p.description && p.description !== p.oneLiner ? p.description : undefined;
+// The explore link leads; a Repo or Website link to the same place is dropped.
+const links: Link[] = [
+  ...(p.explore ? [p.explore] : []),
+  ...[
+    { label: "Repo", href: p.repo },
+    { label: "Website", href: p.demo },
+  ].filter((l): l is Link => !!l.href && l.href !== "#" && l.href !== p.explore?.href),
+];
+const opens = Boolean(description || media.length > 0 || p.explore);
+const thumbAlt = p.thumbFit === "contain" ? `${p.name} logo` : `${p.name} screenshot`;
+---
+
+<div class="plate" data-opens={opens ? id : undefined}>
+  <article class:list={["pl", "card", { thumbed: Boolean(p.thumb) }]}>
+    <span class="trim" aria-hidden="true"></span>
+    <div class="card-head">
+      <div class="head-text">
+        <div class="row1">
+          <strong>{p.name}</strong>
+          {role && <span class="prole">· {role}</span>}
+          <Pill label={p.status} />
+        </div>
+        <p class="one">{p.oneLiner}</p>
+        {myPart && <p class="mypart">my part · {myPart}</p>}
+        <div class="row2">
+          <span class="team">{team}</span>
+          {p.tags.length > 0 && (
+            <span class="chips">
+              {p.tags.map((t) => (
+                <Chip label={t} />
+              ))}
+            </span>
+          )}
+        </div>
+        {opens && <Opener id={id} show="more" hide="hide" context={p.name} />}
+      </div>
+      {p.thumb && (
+        <picture class="thumbpic">
+          {p.thumbStill && <source srcset={p.thumbStill} media="(prefers-reduced-motion: reduce)" />}
+          <img class:list={["thumb", { contain: p.thumbFit === "contain" }]} src={p.thumb} alt={thumbAlt} loading="lazy" />
+        </picture>
+      )}
+    </div>
+    {links.length > 0 && <LinkList class="linkrow" links={links} />}
+  </article>
+</div>
+{opens && (
+  <Showcase id={id} name={p.name} role={role} status={p.status} from={team} description={description ?? p.oneLiner} links={links} media={media} />
+)}

@@ -1,8 +1,6 @@
-export type ProjectRef =
-  | { slug: string; myPart?: string }
-  | { local: string; myPart?: string };
+import type { Profile } from "../../components/member/types";
 
-export const profile = {
+export const profile: Profile = {
   name: "Andrew Espinosa",
   title: "Software Engineer",
   blurb: [
@@ -30,12 +28,12 @@ export const profile = {
     [
       "I'm finishing my Master of Computer Science at UC Irvine (Dec 2026), after a BA in Computer Science and a BM in Clarinet Performance at the University of Redlands.",
     ],
-  ] as (string | { text: string; href: string })[][],
+  ],
   contactLine: "",
   education: [
     {
       school: "University of California, Irvine",
-      logo: "/assets/logos/uci.svg",
+      logo: "/assets/logos/uci-monogram.svg",
       degree: "Master of Computer Science",
       gpa: "3.8",
       date: "Expected Dec. 2026",
@@ -70,12 +68,12 @@ export const profile = {
     email: "andrewde@uci.edu",
     github: "https://github.com/adespinosa14",
     linkedin: "https://linkedin.com/in/andrew-espinosa2002",
-    resume: undefined as string | undefined,
+    resume: undefined,
   },
   projects: [
     { local: "clutch", myPart: "Led frontend architecture in React Native and TypeScript; integrated Google OAuth sign-in and Google Maps API." },
     { local: "beeseye" },
     { local: "jit-expression-evaluator" },
-  ] as ProjectRef[],
-  photo: "/assets/andrew-photo.jpg" as string | undefined,
+  ],
+  photo: "/assets/andrew-photo.jpg",
 };

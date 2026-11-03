@@ -1,0 +1,114 @@
+/* experience, education, skills rows */
+.exp {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.exprow {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  font-size: 15px;
+}
+@media (max-width: 560px) {
+  .exprow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+.exprow .d {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--date);
+}
+.exprow .one {
+  margin: 4px 0 8px;
+}
+.exprow .role {
+  margin: 8px 0 0;
+}
+.exprow .xtitle {
+  margin: 0;
+  font-size: 16px;
+}
+.exprow .xorg {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+.exprow .xco {
+  color: var(--ink);
+  font-weight: 600;
+}
+.exprow details {
+  margin-top: 8px;
+}
+.plate:has(.exprow details) {
+  cursor: pointer;
+}
+.exprow summary {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.exprow details ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  list-style: disc;
+}
+.exprow details li {
+  margin: 4px 0;
+}
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* organisation logos (experience + education rows) */
+.exprow.withlogo {
+  grid-template-columns: 64px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 10px;
+  align-items: center;
+}
+.exprow.withlogo > :nth-child(3) {
+  grid-column: 1 / -1;
+}
+.logo {
+  width: 64px;
+  height: 64px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid var(--lo);
+  display: grid;
+  place-items: center;
+  padding: 6px;
+}
+.logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.logo.missing {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  background: transparent;
+}
+@container (min-width: 640px) {
+  .exprow.withlogo {
+    grid-template-columns: 64px 120px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .exprow.withlogo > :nth-child(3) {
+    grid-column: auto;
+  }
+}

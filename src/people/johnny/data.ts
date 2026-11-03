@@ -1,8 +1,6 @@
-export type ProjectRef =
-  | { slug: string; myPart?: string }
-  | { local: string; myPart?: string };
+import type { Profile } from "../../components/member/types";
 
-export const profile = {
+export const profile: Profile = {
   name: "Johnny Fok",
   title: "AI/ML Engineer",
   blurb: [
@@ -27,12 +25,12 @@ export const profile = {
     [
       "I'm finishing my MS in Computer Science at UC Irvine (Dec 2026) and looking for full-time roles in computer vision, applied ML, or ML-focused software engineering.",
     ],
-  ] as (string | { text: string; href: string })[][],
+  ],
   contactLine: "Hiring for AI/ML or computer vision work? Email is fastest.",
   education: [
     {
       school: "University of California, Irvine",
-      logo: "/assets/logos/uci.svg",
+      logo: "/assets/logos/uci-monogram.svg",
       degree: "Master of Computer Science",
       gpa: "3.85",
       date: "Expected Dec. 2026",
@@ -73,9 +71,9 @@ export const profile = {
     email: "johnny.y.fok@gmail.com",
     github: "https://github.com/JohnFok119",
     linkedin: "https://linkedin.com/in/johnnyfok",
-    resume: undefined as string | undefined,
+    resume: undefined,
   },
-  projects: [{ local: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." }, { local: "flip-assistant", myPart: "Built the plugin and the price data pipeline." }, { local: "shipwatch" }, { local: "second-ear" }, { local: "beeseye" }, { local: "clicr" }, { local: "jit-expression-evaluator" }] as ProjectRef[],
+  projects: [{ local: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." }, { local: "flip-assistant", myPart: "Built the plugin and the price data pipeline." }, { local: "shipwatch" }, { local: "second-ear" }, { local: "beeseye" }, { local: "clicr" }, { local: "jit-expression-evaluator" }],
   // Set to an image path (e.g. "/photo.jpg") to replace the JF initials.
-  photo: "/assets/johnny-photo.jpg" as string | undefined,
+  photo: "/assets/johnny-photo.jpg",
 };

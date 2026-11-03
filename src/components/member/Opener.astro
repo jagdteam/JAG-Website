@@ -1,0 +1,15 @@
+---
+// The link that opens a showcase card (Showcase.astro, scripts/showcase.ts).
+// It reads `show` while the card is closed and `hide` while it is open; the
+// arrow points to where the card appears (left on desktop, down on phones).
+// `context` is read out to screen readers after the label ("more: Clutch").
+interface Props {
+  id: string;
+  show: string;
+  hide: string;
+  context?: string;
+}
+const { id, show, hide, context } = Astro.props;
+---
+
+<p class="opener-row"><a class="opener" href={`#${id}`} data-showcase-open={id} aria-controls={id} aria-expanded="false"><span class="op-show">{show}</span><span class="op-hide">{hide}</span>{context && <span class="vh">: {context}</span>}</a><span class="showing-tag" aria-hidden="true">open in panel ←</span></p>

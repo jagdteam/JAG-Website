@@ -1,0 +1,126 @@
+/* showcase: the card a project or experience entry opens (Showcase.astro, scripts/showcase.ts) */
+.show-home {
+  display: contents;
+}
+.show-slot:not(:has(.showcase.open)) {
+  display: none;
+}
+.left .show-slot {
+  margin-top: 24px;
+}
+.showcase {
+  display: none;
+  scroll-margin-top: 16px;
+}
+.showcase.open {
+  display: block;
+  animation: intro 0.45s ease-out;
+}
+html:not(.js) .showcase:target {
+  display: block;
+}
+.showcase:focus {
+  outline: none;
+}
+.showcase .pl {
+  display: block;
+}
+.showcase .trim {
+  margin-bottom: 10px;
+}
+.sc-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+}
+.sc-head strong {
+  font-size: 19px;
+}
+.sc-close {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--lo);
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.sc-close:hover,
+.sc-close:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.sc-from {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 6px 0 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.sc-desc {
+  margin: 12px 0 10px;
+}
+/* the panel is narrow: keep the strip on one row and shrink the thumbs */
+.showcase .gal-strip {
+  flex-wrap: nowrap;
+}
+.showcase .gal-strip button {
+  flex: 0 1 92px;
+  width: auto;
+  min-width: 0;
+}
+.sc-links {
+  margin: 12px 0 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .showcase.open {
+    animation: none;
+  }
+}
+
+/* the opener (Opener.astro): "more ←" closed, "hide" open; the arrow points down on phones */
+.opener-row {
+  margin: 8px 0 0;
+}
+.opener {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+}
+.op-show::after {
+  content: " ↓";
+}
+.op-hide,
+.opener[aria-expanded="true"] .op-show {
+  display: none;
+}
+.opener[aria-expanded="true"] .op-hide {
+  display: inline;
+}
+@media (min-width: 900px) {
+  .op-show::after {
+    content: " ←";
+  }
+}
+
+/* the entry whose card is open in the side panel (desktop only) */
+.showing-tag {
+  display: none;
+  margin-left: 10px;
+  padding: 0 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--face);
+  background: var(--accent);
+}
+.plate.showing {
+  --sh: var(--accent);
+}
+.plate.showing .showing-tag {
+  display: inline-block;
+}
