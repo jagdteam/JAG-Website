@@ -1,0 +1,147 @@
+---
+// A member's page. Every member page uses this; what differs is read from
+// src/people/<person>/: data.ts and the Markdown in content/.
+import MemberLayout from "../../layouts/MemberLayout.astro";
+import LeftColumn from "./LeftColumn.astro";
+import Section from "./Section.astro";
+import ProjectCard from "./ProjectCard.astro";
+import ExperienceRow from "./ExperienceRow.astro";
+import OrgLogo from "./OrgLogo.astro";
+import Chip from "./Chip.astro";
+import { loadMember } from "./load";
+
+interface Props {
+  person: string;
+}
+const { person } = Astro.props;
+const { profile, projects, experience } = await loadMember(person);
+
+const nav = [
+  { label: "About", href: "#about" },
+  { label: "Experience", href: "#experience" },
+  { label: "Projects", href: "#projects" },
+  { label: "Skills", href: "#skills" },
+  { label: "Contact", href: "#contact" },
+];
+const c = profile.contact;
+const social = [
+  { label: "GitHub", href: c.github },
+  ...(c.linkedin ? [{ label: "LinkedIn", href: c.linkedin }] : []),
+  ...(c.email ? [{ label: "Email", href: `mailto:${c.email}` }] : []),
+  ...(c.resume ? [{ label: "Resume (PDF)", href: c.resume }] : []),
+];
+---
+
+<MemberLayout person={person} profile={profile}>
+  <div class="page">
+    <div class="layout">
+      <LeftColumn
+        name={profile.name}
+        title={profile.title}
+        photo={profile.photo}
+        blurb={profile.blurb}
+        nav={nav}
+        social={social}
+      />
+      <main class="right" id="main">
+        <Section id="about" title="About">
+          <div class="plate">
+            <div class="pl about">
+              {profile.about.map((para) => (
+                <p>
+                  {para.map((part) =>
+                    typeof part === "string" ? (
+                      part
+                    ) : (
+                      <strong>
+                        <a href={part.href} target="_blank" rel="noopener noreferrer">{part.text}</a>
+                      </strong>
+                    ),
+                  )}
+                </p>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        <Section id="experience" title="Experience">
+          <ul class="exp">
+            {experience.map((e) => (
+              <ExperienceRow experience={e} />
+            ))}
+          </ul>
+          <p class="variant">Education</p>
+          <ul class="exp">
+            {profile.education.map((e) => (
+              <li class="plate">
+                <div class="pl exprow withlogo">
+                  <OrgLogo org={e.school} src={e.logo} />
+                  <span class="d">{e.date}</span>
+                  <span>
+                    <strong>{e.school}</strong>
+                    {e.degree ? ` · ${e.degree}` : ""}
+                    {e.gpa ? ` · GPA ${e.gpa}` : ""}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="projects" title="Projects">
+          <div class="grid2">
+            {projects.map((p) => (
+              <ProjectCard id={p.local} project={p.project} role={p.role} myPart={p.myPart} />
+            ))}
+          </div>
+        </Section>
+
+        <Section id="skills" title="Skills">
+          <ul class="exp">
+            {profile.skills.map((sk) => (
+              <li class="plate">
+                <div class="pl exprow">
+                  <span class="d">{sk.label}</span>
+                  <span class="chips">{sk.list.map((s) => <Chip label={s} />)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Section>
+
+        <Section id="contact" title="Contact">
+          <div class="plate">
+            <div class="pl about">
+              {profile.contactLine && <p>{profile.contactLine}</p>}
+              <div class="contact-links">
+                {social.map((l) => (
+                  <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Section>
+      </main>
+    </div>
+  </div>
+</MemberLayout>
+
+<script>
+  // Sections below the first fade in as they scroll into view (styles/base.css).
+  const targets = document.querySelectorAll(".right .sec:not(:first-child) :is(.plate, .hd)");
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          en.target.classList.add("in");
+          io.unobserve(en.target);
+        });
+      },
+      { threshold: 0.1 },
+    );
+    targets.forEach((el) => io.observe(el));
+  } else {
+    targets.forEach((el) => el.classList.add("in"));
+  }
+</script>

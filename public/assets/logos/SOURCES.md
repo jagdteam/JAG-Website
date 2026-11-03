@@ -3,3 +3,4 @@ seo-usa.png - https://www.seo-usa.org/wp-content/uploads/2018/05/cropped-SEO-fav
 redlands.png - https://www.redlands.edu/apple-touch-icon.png (site icon of redlands.edu)
 ucr.png - monogram cropped from https://brand.ucr.edu/sites/default/files/Logotype%20and%20monogram%20img-2x.png (official UCR brand page)
 ca-dir.png - "DIR" emblem cropped from https://www.dir.ca.gov/images/template-logo.png (site header logo of dir.ca.gov)
+uci-monogram.svg - UCI monogram in UC Irvine Blue #0064A4, supplied by Giuseppi as University_of_California,_Irvine_logo.svg (current marks: https://brand.uci.edu/logos/index.php)

@@ -1,0 +1,158 @@
+/* left column */
+.left .pl {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.left .trim {
+  margin-bottom: 0;
+}
+.team-link {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.team-link:hover,
+.team-link:focus-visible {
+  color: var(--hov);
+  text-decoration: underline;
+}
+.photo {
+  width: 176px;
+  height: 176px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--phb);
+  color: var(--phf);
+  font-family: var(--mono);
+  font-size: 44px;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.nm {
+  font-size: 44px;
+  line-height: 1.05;
+  margin: 0;
+}
+.title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--muted);
+}
+.blurb {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+.nav {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nav a {
+  display: block;
+  padding-left: 8px;
+  border-left: 2px solid transparent;
+  color: var(--muted);
+}
+.nav a.active {
+  color: var(--act);
+  border-left-color: var(--act);
+}
+.nav a:not(.active):hover {
+  color: var(--hov);
+}
+.social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.vent {
+  margin-top: 8px;
+  width: 52px;
+  height: 18px;
+  background: repeating-linear-gradient(0deg, var(--vent) 0 3px, transparent 3px 6px);
+}
+
+@media (max-width: 899px) {
+  .photo {
+    width: 112px;
+    height: 112px;
+    font-size: 30px;
+  }
+  .nm {
+    font-size: 30px;
+  }
+  .nav {
+    display: none;
+  }
+}
+
+/* profile card: photo and name group, plus the part that folds away */
+.idn,
+.idn-text,
+.fold-in {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fold {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s ease,
+    margin-top 0.4s ease;
+}
+.fold-in {
+  min-height: 0;
+  overflow: hidden;
+  /* room for focus rings inside the clip */
+  padding: 3px;
+  margin: -3px;
+}
+/* folded while a showcase is open beside it (desktop only, set by scripts/showcase.ts) */
+.left .plate.compact .idn {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+.left .plate.compact .photo {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  font-size: 20px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.left .plate.compact .idn-text {
+  gap: 2px;
+}
+.left .plate.compact .nm {
+  font-size: 28px;
+}
+.left .plate.compact .title {
+  font-size: 15px;
+}
+.left .plate.compact .fold {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: -12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fold {
+    transition: none;
+  }
+}

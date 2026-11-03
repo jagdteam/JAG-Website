@@ -3,7 +3,7 @@ name: "Just-in-Time Compiler"
 status: "completed"
 order: 6
 oneLiner: "A from-scratch compiler for math in C: it optimizes the formula, writes x86-64 machine code straight into memory, and runs live in your browser through WebAssembly."
-team: "solo"
+team: ["Johnny", "Andrew", "Giuseppi"]
 tags: ["C", "x86-64", "WebAssembly", "Compilers"]
 repo: "https://github.com/JohnFok119/JIT-Compiler"
 explore: { href: "/projects/jit-v2/demo/", label: "Try it live" }

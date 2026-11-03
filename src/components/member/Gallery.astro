@@ -1,0 +1,53 @@
+---
+// Media gallery: one big view, a thumbnail strip and prev/next arrows.
+// Behavior lives in scripts/gallery.ts. Renders nothing without media.
+import type { Media } from "./types";
+interface Props {
+  media: Media[];
+}
+const { media } = Astro.props;
+---
+
+{media.length > 0 && (
+  <div class="gal">
+    <div class="gal-view">
+      <div class="gal-main">
+        {media.map((m, i) =>
+          m.kind === "video" ? (
+            <video src={m.src} poster={m.poster} loop muted playsinline preload="none" aria-label={m.alt} hidden={i !== 0} />
+          ) : (
+            <img class:list={{ gif: m.kind === "gif" }} src={m.src} alt={m.alt} loading="lazy" hidden={i !== 0} />
+          ),
+        )}
+      </div>
+    </div>
+    <div class="gal-bar">
+      {media.length >= 2 && (
+        <button type="button" class="gal-arrow prev" aria-label="Previous">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
+        </button>
+      )}
+      <div class="gal-strip">
+        {media.map((m, i) => (
+          <button type="button" aria-label={m.alt} aria-pressed={i === 0 ? "true" : "false"}>
+            {m.kind === "video" ? (
+              <video class="strip-vid" src={m.src} poster={m.poster} muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" />
+            ) : (
+              <img src={m.src} alt="" loading="lazy" />
+            )}
+          </button>
+        ))}
+      </div>
+      {media.length >= 2 && (
+        <button type="button" class="gal-arrow next" aria-label="Next">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" /></svg>
+        </button>
+      )}
+    </div>
+  </div>
+)}
+
+<script>
+  import { Gallery } from "./scripts/gallery";
+  Gallery.mountAll();
+</script>

@@ -6,7 +6,7 @@ const D = new URL("../../../../../public/projects/clicr/demo/", import.meta.url)
 const html = readFileSync(new URL("index.html", D), "utf8");
 const css = readFileSync(new URL("demo.css", D), "utf8");
 const demoJs = readFileSync(new URL("demo.js", D), "utf8");
-const layout = readFileSync(new URL("../../Layout.astro", import.meta.url), "utf8");
+const layout = readFileSync(new URL("../../../../layouts/MemberLayout.astro", import.meta.url), "utf8");
 
 /** The markup of <div class="ide"> ... its matching </div>. */
 function ideMarkup() {
@@ -93,7 +93,7 @@ test("head: the site's theme loader runs as a classic inline script before the s
   const from = layout.indexOf("try {");
   const to = layout.indexOf("document.documentElement.dataset.theme = t;") + "document.documentElement.dataset.theme = t;".length;
   const lines = layout.slice(from, to).split("\n").map((l) => l.trim());
-  assert.equal(lines.length, 6, "Layout.astro theme lines");
+  assert.equal(lines.length, 6, "MemberLayout.astro theme lines");
   const head = html.slice(0, html.indexOf("</head>"));
   const script = head.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(script, "a classic <script> without type or src");

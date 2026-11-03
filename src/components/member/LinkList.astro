@@ -1,0 +1,19 @@
+---
+// A row of links: "Website ↗ · Repo ↗". External links get ↗, links on this site →.
+import type { Link } from "./types";
+interface Props {
+  links: Link[];
+  class?: string;
+}
+const { links, class: extra } = Astro.props;
+const external = (href: string) => /^https?:\/\//.test(href);
+---
+
+<p class:list={["links", extra]}>
+  {links.map((l, i) => (
+    <>
+      {i > 0 && " · "}
+      <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label} {external(l.href) ? "↗" : "→"}</a>
+    </>
+  ))}
+</p>

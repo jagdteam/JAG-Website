@@ -1,0 +1,157 @@
+/* project cards */
+.grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  margin-bottom: 14px;
+}
+.grid2 > .plate {
+  height: 100%;
+}
+.card {
+  font-size: 15px;
+}
+.row1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.row1 strong {
+  font-size: 19px;
+}
+/* "· Team Lead" after a name, on cards and in the side panel */
+.prole {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.row1 .prole {
+  margin-left: -4px;
+}
+.pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--pb);
+  color: var(--pf);
+  border: 1px solid var(--pbd);
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.one {
+  margin: 8px 0 10px;
+}
+.row2 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.team {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 0 6px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.chip img {
+  width: 14px;
+  height: 14px;
+  display: block;
+  flex: none;
+}
+.chip:nth-child(4n + 1) {
+  background: var(--c1b);
+  color: var(--c1f);
+}
+.chip:nth-child(4n + 2) {
+  background: var(--c2b);
+  color: var(--c2f);
+}
+.chip:nth-child(4n + 3) {
+  background: var(--c3b);
+  color: var(--c3f);
+}
+.chip:nth-child(4n + 4) {
+  background: var(--c4b);
+  color: var(--c4f);
+}
+:root[data-theme="dark"] .chip img {
+  background: #f3f4f6;
+  border-radius: 3px;
+  padding: 1px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip img {
+    background: #f3f4f6;
+    border-radius: 3px;
+    padding: 1px;
+  }
+}
+.mypart {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.linkrow {
+  margin-top: 8px;
+}
+/* a card that opens a showcase opens on a click anywhere outside its links */
+.plate[data-opens] {
+  cursor: pointer;
+}
+
+/* project picture: on top on narrow cards, on the right on wide ones */
+.thumb {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--hl);
+  border: 2px solid var(--frame);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+}
+.thumb.contain {
+  object-fit: contain;
+  padding: 8%;
+}
+.card.thumbed .card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+/* the thumb sits in a <picture>, with a still frame for reduced motion */
+.thumbpic {
+  display: block;
+}
+.card.thumbed .thumbpic {
+  order: -1;
+  margin-bottom: 14px;
+}
+.head-text {
+  min-width: 0;
+}
+@container (min-width: 640px) {
+  .card.thumbed .card-head {
+    grid-template-columns: minmax(0, 1fr) 236px;
+    column-gap: 20px;
+  }
+  .card.thumbed .thumbpic {
+    order: 0;
+    align-self: start;
+    margin-bottom: 0;
+  }
+  .card.thumbed .thumb {
+    aspect-ratio: 4 / 3;
+  }
+}
