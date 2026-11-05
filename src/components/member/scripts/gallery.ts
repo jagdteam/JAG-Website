@@ -5,6 +5,7 @@ const SHIFT = 28; // px the items travel while switching
 const SWIPE_MIN = 40; // px a swipe has to travel sideways
 const WHEEL_STEP = 50; // px of sideways scrolling that moves one item
 const GESTURE_END = 200; // ms without wheel events that ends a trackpad gesture
+const DWELL = 5000; // ms an image (or a clip that cannot play) stays before the gallery moves on
 
 type Dir = 1 | -1;
 
@@ -12,12 +13,20 @@ type Dir = 1 | -1;
  * One media gallery (Gallery.astro): a main view, a thumbnail strip and
  * prev/next arrows. Items change with the thumbs, the arrows, the arrow keys,
  * a swipe or a sideways trackpad scroll, and slide in from the direction of travel.
+ *
+ * While it is on screen it also moves on by itself: a clip plays once to its
+ * end, an image stays DWELL ms, then the next item comes in, wrapping round.
+ * A mouse over it or keyboard focus in it holds the current item. Off under
+ * reduced motion.
  */
 export class Gallery {
   private readonly items: HTMLElement[];
   private readonly thumbs: HTMLButtonElement[];
   private index = 0;
   private leaving: { el: HTMLElement; anim: Animation } | null = null;
+  private onScreen = false;
+  private hovered = false;
+  private timer: ReturnType<typeof setTimeout> | undefined;
 
   static mountAll() {
     document.querySelectorAll<HTMLElement>(".gal").forEach((root) => new Gallery(root));
@@ -41,6 +50,57 @@ export class Gallery {
       this.bindSwipe(main);
       this.bindWheel(main);
     }
+    if (!reducedMotion.matches) this.bindAutoplay();
+  }
+
+  private bindAutoplay() {
+    this.items.forEach((it) => {
+      if (!(it instanceof HTMLVideoElement)) return;
+      it.loop = false; // a clip ends so the next item can come in
+      it.addEventListener("ended", () => {
+        if (it !== this.items[this.index] || !this.onScreen) return;
+        if (this.held()) void playMuted(it); // held: replay instead of moving on
+        else this.step(1);
+      });
+    });
+    new IntersectionObserver(([e]) => {
+      this.onScreen = e.isIntersecting;
+      this.schedule();
+    }).observe(this.root);
+    this.root.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "mouse") return;
+      this.hovered = true;
+      this.schedule();
+    });
+    this.root.addEventListener("pointerleave", () => {
+      this.hovered = false;
+      this.schedule();
+    });
+    // focusout fires before focus lands elsewhere, so check on the next frame
+    const refocus = () => requestAnimationFrame(() => this.schedule());
+    this.root.addEventListener("focusin", refocus);
+    this.root.addEventListener("focusout", refocus);
+  }
+
+  private held() {
+    return this.hovered || this.root.querySelector(":focus-visible") !== null;
+  }
+
+  // Set up the move to the next item: an image after DWELL ms, a clip when it
+  // ends (or after DWELL ms if the browser will not play it).
+  private schedule() {
+    clearTimeout(this.timer);
+    this.timer = undefined;
+    if (!this.onScreen || this.held() || reducedMotion.matches) return;
+    const cur = this.items[this.index];
+    const later = () => {
+      this.timer = setTimeout(() => this.step(1), DWELL);
+    };
+    if (!(cur instanceof HTMLVideoElement)) return later();
+    if (!cur.paused) return;
+    void playMuted(cur).then((ok) => {
+      if (!ok && cur === this.items[this.index] && this.onScreen && !this.held() && !this.timer) later();
+    });
   }
 
   step(dir: Dir) {
@@ -61,7 +121,8 @@ export class Gallery {
     if (!reducedMotion.matches && this.visible()) this.slide(from, to, d);
     else from.hidden = true;
     this.thumbs.forEach((b, i) => b.setAttribute("aria-pressed", String(i === n)));
-    if (to instanceof HTMLVideoElement && this.visible()) playMuted(to);
+    if (to instanceof HTMLVideoElement && this.visible()) void playMuted(to);
+    this.schedule();
   }
 
   // The outgoing item fades out on top of the incoming one, then hides.

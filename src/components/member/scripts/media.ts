@@ -4,14 +4,19 @@ import { reducedMotion } from "./env";
 // autoplay. Both are expected here; anything else is worth a warning.
 const EXPECTED = new Set(["AbortError", "NotAllowedError"]);
 
-/** Play a clip like a GIF: silent and looping. Never under reduced motion. */
-export function playMuted(video: HTMLVideoElement) {
-  if (reducedMotion.matches) return;
+/** Play a clip like a GIF: silent. Never under reduced motion. Resolves to whether it started. */
+export function playMuted(video: HTMLVideoElement): Promise<boolean> {
+  if (reducedMotion.matches) return Promise.resolve(false);
   video.muted = true;
-  video.play().catch((err: unknown) => {
-    if (err instanceof DOMException && EXPECTED.has(err.name)) return;
-    console.warn("Video failed to play:", video.currentSrc, err);
-  });
+  return video.play().then(
+    () => true,
+    (err: unknown) => {
+      if (!(err instanceof DOMException && EXPECTED.has(err.name))) {
+        console.warn("Video failed to play:", video.currentSrc, err);
+      }
+      return false;
+    },
+  );
 }
 
 /** Play every shown clip under `root` (the gallery's current item and its strip), or pause them all. */
