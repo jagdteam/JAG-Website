@@ -9,7 +9,7 @@ Layout: `/` fixed team page, `/projects/<slug>` one per project, `/<name>` one p
 Members: Johnny (JohnFok119), Andrew (adespinosa14), Giuseppi (giuseppi).
 
 - Pushes to this org repo need Johnny's explicit go every time (not covered by the JohnFok119 standing go).
-- State and history: `C:\Users\johnn\personal\private\projects\jagd-website\context.md`.
+- State and history: `C:\Users\johnn\personal\private\projects\jagd-website\jagd-website.md`.
 - Secrets: none expected. `.env*` is git-ignored anyway.
 
 ## Issue Log
