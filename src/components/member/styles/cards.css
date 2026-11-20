@@ -108,7 +108,8 @@
   margin-top: 8px;
 }
 /* a card that opens a showcase opens on a click anywhere outside its links */
-.plate[data-opens] {
+.plate[data-opens],
+.plate:has(.card-details) {
   cursor: pointer;
 }
 

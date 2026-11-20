@@ -61,6 +61,16 @@ const thumbAlt = p.thumbFit === "contain" ? `${p.name} logo` : `${p.name} screen
         </picture>
       )}
     </div>
+    {p.bullets && p.bullets.length > 0 && (
+      <details class="card-details">
+        <summary>details</summary>
+        <ul>
+          {p.bullets.map((b) => (
+            <li>{b}</li>
+          ))}
+        </ul>
+      </details>
+    )}
     {links.length > 0 && <LinkList class="linkrow" links={links} />}
   </article>
 </div>

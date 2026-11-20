@@ -60,6 +60,8 @@ const memberProjects = defineCollection({
     team: z.union([z.array(z.string()), z.literal("solo")]),
     // Still frame shown instead of an animated thumb under reduced motion.
     thumbStill: z.string().optional(),
+    // Optional bullets, shown under a "details" toggle on the card.
+    bullets: z.array(z.string()).optional(),
   }),
 });
 

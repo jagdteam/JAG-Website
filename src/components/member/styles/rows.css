@@ -42,24 +42,61 @@
   color: var(--ink);
   font-weight: 600;
 }
-.exprow details {
+.exprow details,
+.card-details {
   margin-top: 8px;
 }
 .plate:has(.exprow details) {
   cursor: pointer;
 }
-.exprow summary {
+/* the "details" toggle on experience rows and project cards: an outlined pill
+   with an arrow that flips when open, so it reads as something to click */
+.exprow summary,
+.card-details > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
   font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
   cursor: pointer;
+  list-style: none;
 }
-.exprow details ul {
+.exprow summary::-webkit-details-marker,
+.card-details > summary::-webkit-details-marker {
+  display: none;
+}
+.exprow summary::after,
+.card-details > summary::after {
+  content: "▾";
+  transition: transform 0.2s ease-out;
+}
+.exprow details[open] > summary::after,
+.card-details[open] > summary::after {
+  transform: rotate(180deg);
+}
+.exprow summary:hover,
+.card-details > summary:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .exprow summary::after,
+  .card-details > summary::after {
+    transition: none;
+  }
+}
+.exprow details ul,
+.card-details ul {
   margin: 6px 0 0;
   padding-left: 20px;
   list-style: disc;
 }
-.exprow details li {
+.exprow details li,
+.card-details li {
   margin: 4px 0;
 }
 .contact-links {

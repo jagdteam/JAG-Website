@@ -18,7 +18,7 @@ const orgName = product ? `${org} · ${product}` : org;
 const showName = product ?? org;
 ---
 
-<li class="plate">
+<li class="plate" data-opens={showcase?.id}>
   <div class="pl exprow withlogo">
     <OrgLogo org={org} src={logo} />
     <span class="d">{dates}</span>
@@ -80,36 +80,3 @@ const showName = product ?? org;
   </li>
 )}
 
-<script>
-  import { isOpen, setOpen } from "./scripts/details";
-
-  // A summary click toggles that role's details; a click anywhere else on an
-  // experience card toggles all of its details together.
-  let pending: ReturnType<typeof setTimeout> | undefined;
-  const selecting = () => Boolean(window.getSelection()?.toString());
-
-  function toggleAll(all: HTMLDetailsElement[]) {
-    if (selecting()) return;
-    const open = all.some((d) => !isOpen(d));
-    all.forEach((d) => setOpen(d, open));
-  }
-
-  document.addEventListener("click", (e) => {
-    const t = e.target as Element;
-    if (!t.closest || t.closest("a")) return;
-    const summary = t.closest<HTMLElement>(".exprow details > summary");
-    if (summary) {
-      e.preventDefault();
-      const d = summary.parentElement as HTMLDetailsElement;
-      setOpen(d, !isOpen(d));
-      return;
-    }
-    const all = Array.from(t.closest(".plate")?.querySelectorAll<HTMLDetailsElement>(".exprow details") ?? []);
-    if (all.length === 0) return;
-    // A double-click on bullet text selects a word; do not toggle for it.
-    clearTimeout(pending);
-    if (e.detail > 1 || selecting()) return;
-    if (t.closest(".exprow details > ul")) pending = setTimeout(() => toggleAll(all), 300);
-    else toggleAll(all);
-  });
-</script>

@@ -75,6 +75,7 @@ export const techIcons: Record<string, string> = {
   "Xcode Cloud": "xcode-original.svg",
   YOLO: "roboflow.svg",
   YOLOv11: "roboflow.svg",
+  YOLO11: "roboflow.svg",
   YOLOv8: "roboflow.svg",
   "YOLO (v8, v11)": "roboflow.svg",
 };

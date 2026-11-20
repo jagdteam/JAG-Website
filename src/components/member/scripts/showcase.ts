@@ -1,5 +1,6 @@
 import { desktop, reducedMotion, scrollBehavior } from "./env";
 import { setPlaying } from "./media";
+import { isOpen, setOpen } from "./details";
 
 /** The profile card at the top of the left column. It folds to a slim header while a showcase is open beside it. */
 class ProfileCard {
@@ -48,16 +49,34 @@ interface Item {
 
 const plainUrl = () => location.pathname + location.search;
 
+/** An experience or project card: one with a "details" list or a showcase to open. */
+const CARD = ".plate:is([data-opens], :has(.exprow details), :has(.card-details))";
+
+/** Open or close every "details" list on a card. */
+function setDetails(card: HTMLElement, open: boolean) {
+  card.querySelectorAll<HTMLDetailsElement>(".exprow details, .card-details").forEach((d) => {
+    if (isOpen(d) !== open) setOpen(d, open);
+  });
+}
+
 /**
  * Opens one showcase card (Showcase.astro) at a time. On desktop the card
  * moves into the left column under the folded profile; on phones it opens
  * right under its entry. The address carries #id while a card is open, so
  * Back closes it and a shared link opens straight to it. Switching cards
  * replaces that history entry instead of stacking new ones.
+ *
+ * It also keeps one experience or project card active at a time. A click on a
+ * card opens its details and its showcase (if it has one). A second click on
+ * the same card closes both, and a click on another card closes the first.
  */
 export class ShowcaseController {
   private readonly items = new Map<string, Item>();
   private current: Item | null = null;
+  /** The experience or project card whose details are open. */
+  private active: HTMLElement | null = null;
+  /** The scroll position to keep while closing the showcase for another card. */
+  private stay: number | null = null;
 
   static mount() {
     const plate = document.querySelector<HTMLElement>(".left > .plate");
@@ -88,6 +107,34 @@ export class ShowcaseController {
   toggle(item: Item) {
     if (this.current === item) this.close();
     else this.open(item);
+  }
+
+  /** A click on a card: make it the active one, or close it if it already is. */
+  clickCard(card: HTMLElement) {
+    if (this.active === card) {
+      this.setActive(null);
+      if (this.current?.entry === card) this.close();
+      return;
+    }
+    this.setActive(card);
+    const item = this.itemFor(card.dataset.opens);
+    if (item) this.open(item);
+    else {
+      // Switching to a card with no showcase: close the open one without
+      // scrolling back to its entry, so the page stays on the card just clicked.
+      // close() may finish later, on popstate, so render() clears the flag.
+      if (this.current) {
+        this.stay = window.scrollY;
+        this.close();
+      }
+    }
+  }
+
+  private setActive(card: HTMLElement | null) {
+    if (this.active === card) return;
+    if (this.active) setDetails(this.active, false);
+    this.active = card;
+    if (card) setDetails(card, true);
   }
 
   open(item: Item) {
@@ -128,7 +175,16 @@ export class ShowcaseController {
     if (prev) this.show(prev, false);
     if (next) this.show(next, true);
     this.profile?.setCompact(!!next && desktop.matches);
-    if (prev && !next) this.returnFrom(prev);
+    const stay = this.stay;
+    this.stay = null;
+    // Closing through history.back() lets the browser restore an old scroll
+    // position, so put the page back where the click happened.
+    if (stay !== null) requestAnimationFrame(() => window.scrollTo({ top: stay, behavior: "instant" }));
+    else if (prev && !next) this.returnFrom(prev);
+    // Keep the active card in step when the panel opens or closes another way
+    // (its close button, Escape, Back, or a shared link).
+    if (next?.entry) this.setActive(next.entry);
+    else if (!next && prev?.entry && this.active === prev.entry) this.setActive(null);
   }
 
   private show(item: Item, open: boolean) {
@@ -146,7 +202,11 @@ export class ShowcaseController {
     if (!open) return;
     item.card.focus({ preventScroll: true });
     if (!desktop.matches) {
-      window.scrollTo({ top: pageTop(item.card) - 16, behavior: scrollBehavior() });
+      // Wait for the entry's details to finish sliding open (details.ts, 250 ms)
+      // so the card's place on the page is final before scrolling to it.
+      setTimeout(() => {
+        if (this.current === item) window.scrollTo({ top: pageTop(item.card) - 16, behavior: scrollBehavior() });
+      }, 280);
     }
   }
 
@@ -159,21 +219,23 @@ export class ShowcaseController {
 
   private bind() {
     this.items.forEach((item) => {
-      item.openers.forEach((a) =>
-        a.addEventListener("click", (e) => {
-          e.preventDefault();
-          this.toggle(item);
-        }),
-      );
       item.card.querySelector("[data-showcase-close]")?.addEventListener("click", () => this.close());
     });
-    // A click anywhere else on a project card works like its opener.
+    // A click anywhere on a card, including its opener link and its "details"
+    // toggle, works the same way. Other links and buttons keep their own job.
+    // A double-click on bullet text selects a word, so a click there waits a
+    // moment and is dropped if a double-click follows.
+    let pending: ReturnType<typeof setTimeout> | undefined;
     document.addEventListener("click", (e) => {
       const t = e.target as Element;
-      const entry = t.closest?.<HTMLElement>("[data-opens]");
-      if (!entry || t.closest("a, button") || window.getSelection()?.toString()) return;
-      const item = this.itemFor(entry.dataset.opens);
-      if (item) this.toggle(item);
+      const card = t.closest?.<HTMLElement>(CARD);
+      if (!card) return;
+      if (t.closest("a:not(.opener), button")) return;
+      if (t.closest("a.opener, summary")) e.preventDefault();
+      clearTimeout(pending);
+      if (e.detail > 1 || window.getSelection()?.toString()) return;
+      if (t.closest(".exprow details > ul, .card-details > ul")) pending = setTimeout(() => this.clickCard(card), 300);
+      else this.clickCard(card);
     });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") this.close();

@@ -127,6 +127,11 @@ const social = [
 </MemberLayout>
 
 <script>
+  // Cards and the side panel (scripts/showcase.ts). Mounted here so cards with
+  // only a "details" list work on a page with no showcase at all.
+  import { ShowcaseController } from "./scripts/showcase";
+  ShowcaseController.mount();
+
   // Sections below the first fade in as they scroll into view (styles/base.css).
   const targets = document.querySelectorAll(".right .sec:not(:first-child) :is(.plate, .hd)");
   if ("IntersectionObserver" in window) {

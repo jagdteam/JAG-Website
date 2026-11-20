@@ -5,7 +5,7 @@ showcase:
   {
     "id": "beeseye",
     "status": "live · ongoing",
-    "description": "Check in on one screen, build a profile from a few spoken sentences or a resume, then see everyone in the room ranked, with reasons to meet.",
+    "description": "Check in with one tap, build a profile from a few spoken sentences or a resume, then see everyone in the room ranked, with reasons to meet.",
     "tags": ["FastAPI", "Next.js", "Firestore", "Pinecone", "OpenAI API"],
     "links": [{ "label": "Website", "href": "https://beeseye-web.vercel.app/" }],
     "media":
@@ -27,15 +27,16 @@ roles:
       "title": "AI/ML Engineer (Contract)",
       "start": "Oct 2026",
       "end": "Present",
-      "summary": "BeesEye is a matchmaking web app for in-person events, used live by 100+ attendees at a UCI event. I built the FastAPI service on GCP Cloud Run that precomputes each guest's embeddings and LLM profile, cutting time to first AI matches from 4.9s to 1.0s.",
-      "stack": ["Python", "FastAPI", "GCP Cloud Run", "OpenAI API", "Next.js", "Firestore", "Pinecone"],
+      "summary": "BeesEye is a matchmaking web app for in-person events, used at 2 live events. I built the FastAPI service that prepares each guest's AI profile before they join, cutting time to first matches from 4.9s to 1.0s in testing.",
+      "stack": ["Python", "FastAPI", "TypeScript", "GCP Cloud Run", "OpenAI API", "Next.js", "Firestore", "Pinecone"],
       "bullets":
         [
-          "Built a Python (FastAPI) service on GCP Cloud Run that precomputes each guest’s OpenAI embeddings and LLM profile before they join, cutting the wait from signing up to first AI matches from 4.9s to 1.0s in local tests.",
-          "Rebuilt event check in from 3 typed or spoken steps into 1 screen of tappable choices in Next.js, adding LLM resume parsing and asynchronous prefetching of each guest’s AI matching data.",
-          "Made every AI call fault tolerant with 30s timeouts, per-user rate limits and fallbacks, and skipped repeat model calls by caching output on a SHA-256 profile fingerprint, backed by 114 new tests.",
-          "Rewrote Firestore security rules for least privilege access, limiting each user to their own records and moving every write behind the FastAPI backend, with 25 emulator tests in CI.",
-          "Closed 4 API security holes and kept emails and phone numbers out of LLM prompts, the Pinecone index and match results with Python PII filters and a backfill script for saved matches.",
+          "Built a Python (FastAPI) pipeline on GCP Cloud Run that precomputes each guest's OpenAI embeddings and profile before they join, cutting the wait for first AI matches from 4.9s to 1.0s in testing.",
+          "Developed event registration, peer QR check in, and profile flows in React (TypeScript) for an app used at 2 live events.",
+          "Closed 4 API security holes and kept emails and phone numbers out of the Pinecone index and match results with a shared Python PII filter and a backfill script for saved matches.",
+          "Rewrote Firestore and Storage security rules for least privilege access, closing every direct client write so changes go through the FastAPI backend.",
+          "Made the prep's AI calls fault tolerant with 30s timeouts, a per-user rate limit and fallbacks, and skipped repeat model calls by caching on a profile fingerprint.",
+          "Fixed an endless “Finding your best matches” spinner by saving empty rankings, with tests that reproduced the user's exact case.",
         ],
     },
   ]
