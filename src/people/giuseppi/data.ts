@@ -17,7 +17,7 @@ export const profile: Profile = {
         text: "1st place at the 2026 UCI ICS Project Expo",
         href: "https://ics.uci.edu/2026/06/12/2026-uc-irvine-ics-project-expo-breaks-records/#:~:text=2026%20Project%20Expo,could%20have%20imagined.%E2%80%9D",
       },
-      " with Clutch, an app that keeps score of pickup basketball games using a phone's camera.",
+      " with Clutch, a mobile app that uses computer vision and object tracking to keep score of basketball games and track player stats.",
     ],
     [
       "Today I'm an AI/ML Engineer at Human Proximity, building BeesEye, an app that helps people at events find who to meet. I'm also building Heimdall, a GPS-free indoor drone system, with my teammates. Before that, I interned at VeloPrimo, where I deployed a cycling AI assistant to AWS.",
