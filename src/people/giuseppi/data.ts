@@ -9,21 +9,21 @@ export const profile: Profile = {
   ],
   about: [
     [
-      "I build computer vision and LLM (AI language model) systems, from models that run live on a phone to an indoor drone system and multi-agent systems in the cloud.",
+      "I'm finishing my Master's in Computer Science at UC Irvine this December, and I like building software that works in the real world.",
     ],
     [
-      "One of my favorite projects is Clutch, an app that turns a phone into a scorekeeper for pickup basketball. I was the team lead, setting the project's scope and leading software development. Johnny and I labeled 1,944 frames to train custom YOLO models that run on the iPhone with TensorFlow Lite at a 20 FPS target, and I built the phone's player and ball tracking, with Kalman filters that follow the ball's arc through brief gaps, and the shot state machine that calls makes and misses. Clutch won ",
+      "I studied computer science at UC Riverside, spent a few years working, and came back to school because I wanted to build things with real impact. Since then I led my team to ",
       {
         text: "1st place at the 2026 UCI ICS Project Expo",
         href: "https://ics.uci.edu/2026/06/12/2026-uc-irvine-ics-project-expo-breaks-records/#:~:text=2026%20Project%20Expo,could%20have%20imagined.%E2%80%9D",
       },
-      ", and in our Python test harness it caught 10 of 10 made shots with no false points.",
+      " with Clutch, an app that keeps score of pickup basketball games using a phone's camera.",
     ],
     [
-      "Today I'm an AI/ML Engineer at Human Proximity, building BeesEye, a web app that helps people at in-person events find who they should meet. I built the Python pipeline that prepares each guest's AI profile before they join, cutting the wait for first matches from about 5 seconds to 1 second in testing. Before that, as an AI/ML Engineer Intern at VeloPrimo, I built multi-agent LLM orchestration with retrieval (looking up trusted sources before answering), guardrails, and an evaluation harness that uses LLM judges to keep answers accurate and safe. Now I'm also building Heimdall, a GPS-free indoor drone system, where I built the step where our server stores every signed sensor reading before confirming it, and the monitoring dashboard.",
+      "Today I'm an AI/ML Engineer at Human Proximity, building BeesEye, an app that helps people at events find who to meet. I'm also building Heimdall, a GPS-free indoor drone system, with my teammates. Before that, I interned at VeloPrimo, where I deployed a cycling AI assistant to AWS.",
     ],
     [
-      "I'm finishing my Master of Computer Science at UC Irvine (Dec 2026) as a Director's Fellowship recipient. Outside of code, you'll find me weightlifting, playing basketball, or following Formula 1.",
+      "I'm looking for full-time software engineering roles starting in 2027, especially in computer vision and full-stack development. Outside of code, you'll find me weightlifting, playing basketball, or following Formula 1.",
     ],
   ],
   contactLine: "",
