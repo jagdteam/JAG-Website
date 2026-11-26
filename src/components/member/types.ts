@@ -39,6 +39,8 @@ export interface Profile {
   skills: { label: string; list: string[] }[];
   contact: {
     email?: string;
+    /** Shown as a call link in the Contact section. */
+    phone?: string;
     github: string;
     linkedin?: string;
     resume?: string;
