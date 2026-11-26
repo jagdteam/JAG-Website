@@ -73,7 +73,18 @@ export const profile: Profile = {
     linkedin: "https://linkedin.com/in/johnnyfok",
     resume: undefined,
   },
-  projects: [{ local: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." }, { local: "flip-assistant", myPart: "Built the plugin and the price data pipeline." }, { local: "shipwatch" }, { local: "second-ear" }, { local: "beeseye" }, { local: "clicr" }, { local: "jit-expression-evaluator" }],
+  projects: [
+    { local: "clutch", myPart: "Trained the YOLOv11n detector, built the 26-keypoint court model, and designed the shot state machine." },
+    { local: "heimdall", myPart: "Wrote the sensor node's firmware and the ground control desktop app, and I'm building hold mode." },
+    { local: "flip-assistant", myPart: "Built the plugin and the price data pipeline." },
+    { local: "second-ear" },
+    { local: "shipwatch" },
+    { local: "beeseye" },
+    { local: "fast-track", myPart: "Built the server routes: the whole-city action plan and an optional Claude explanation step that can only cite the app's own rules." },
+    { local: "clicr" },
+    { local: "lootbox" },
+    { local: "jit-expression-evaluator" },
+  ],
   // Set to an image path (e.g. "/photo.jpg") to replace the JF initials.
   photo: "/assets/johnny-photo.jpg",
 };
