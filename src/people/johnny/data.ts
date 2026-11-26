@@ -5,7 +5,7 @@ export const profile: Profile = {
   title: "AI/ML Engineer",
   blurb: ["Focused on computer vision.", "Graduating MCS."],
   about: [
-    ["Hey, I'm Johnny! I build things with AI, mostly computer vision, and I like seeing them actually work out in the real world."],
+    ["Hey, I'm Johnny. I love building things with AI, mostly computer vision. Lately I've been learning how LLMs work, and building and refining my own AI agent harness."],
     ["Outside of that, I'm usually playing video games, watching Formula One, or catching up on anime. I'll also lose an hour to cooking videos or a good fight night."],
     ["To stay active I lift weights and do a little boxing, and lately I've been reading up on kinesiology: how the body moves and gets stronger."],
     ["Right now I'm an AI/ML Engineer at Human Proximity and finishing my master's at UC Irvine."],
